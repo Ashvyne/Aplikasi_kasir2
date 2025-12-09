@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Kasir Modern</title>
+  <title>Aplikasi Kasir</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="container">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo">
+      <div class="sidebar-header">
         <h2>💳 KASIR</h2>
       </div>
-      <nav class="nav-menu">
-        <a href="#" class="nav-item active" data-page="pos">
-          <span class="icon">🛒</span> POS
+      <nav class="nav-menu" id="navMenu">
+        <a href="#pos" class="nav-item active" data-page="pos">
+          <span class="icon">🛒</span>
+          <span class="text">POS</span>
         </a>
-        <a href="#" class="nav-item" data-page="products">
-          <span class="icon">📦</span> Produk
+        <a href="#products" class="nav-item" data-page="products">
+          <span class="icon">📦</span>
+          <span class="text">Produk</span>
         </a>
-        <a href="#" class="nav-item" data-page="transactions">
-          <span class="icon">📝</span> Transaksi
+        <a href="#transactions" class="nav-item" data-page="transactions">
+          <span class="icon">📋</span>
+          <span class="text">Transaksi</span>
         </a>
-        <a href="#" class="nav-item" data-page="reports">
-          <span class="icon">📊</span> Laporan
+        <a href="#reports" class="nav-item" data-page="reports">
+          <span class="icon">📊</span>
+          <span class="text">Laporan</span>
         </a>
       </nav>
     </aside>
@@ -33,69 +37,47 @@
     <main class="main-content">
       <!-- Header -->
       <header class="header">
-        <h1 id="pageTitle">Point of Sale</h1>
+        <h1 id="pageTitle">🛒 Point of Sale</h1>
         <div class="header-info">
           <span id="currentTime"></span>
-          <span class="user">👤 <span id="userDisplay">Admin</span></span>
+          <span class="user">👤 <span id="userDisplay">User</span></span>
           <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
       </header>
 
-      <!-- Pages Content -->
-      <div class="content">
+      <!-- Pages -->
+      <div class="pages-container">
         
         <!-- POS Page -->
         <div id="pos-page" class="page active">
-          <div class="pos-container">
-            <div class="products-list">
-              <h3>Produk Tersedia</h3>
+          <div class="page-header">
+            <h2>🛒 Point of Sale</h2>
+          </div>
+          <div class="pos-layout">
+            <div class="products-section">
               <div class="search-bar">
-                <input type="text" id="productSearch" placeholder="Cari produk...">
+                <input type="text" id="searchProduct" placeholder="🔍 Cari..." onkeyup="searchProducts()">
               </div>
               <div id="productsGrid" class="products-grid"></div>
             </div>
-            
             <div class="cart-section">
-              <h3>🛒 Keranjang Belanja</h3>
+              <h3>🛒 Keranjang</h3>
               <div id="cartItems" class="cart-items"></div>
-              
               <div class="cart-summary">
-                <div class="summary-row">
-                  <span>Subtotal:</span>
-                  <span id="subtotal">Rp 0</span>
-                </div>
-                <div class="summary-row">
-                  <span>Diskon:</span>
-                  <input type="number" id="discount" value="0" min="0">
-                </div>
-                <div class="summary-row total">
-                  <span>Total:</span>
-                  <span id="total">Rp 0</span>
-                </div>
-              </div>
-              
-              <div class="payment-section">
-                <label>Metode Pembayaran:</label>
-                <select id="paymentMethod">
-                  <option value="cash">Tunai</option>
-                  <option value="card">Kartu</option>
-                  <option value="transfer">Transfer</option>
-                </select>
-              </div>
-              
-              <div id="cashSection" class="payment-input">
-                <label>Uang Diterima:</label>
-                <input type="number" id="cashReceived" placeholder="0" min="0">
-                <div class="change-display">
-                  <span>Kembalian:</span>
-                  <span id="changeAmount">Rp 0</span>
+                <div class="summary-row"><span>Subtotal:</span><span id="subtotal">Rp 0</span></div>
+                <div class="summary-row"><span>Diskon:</span><input type="number" id="discount" value="0" onchange="updateTotal()" style="width: 100px;"></div>
+                <div class="summary-row total"><span>Total:</span><span id="total">Rp 0</span></div>
+                <div style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                  <div class="summary-row"><span>Metode:</span><select id="paymentMethod"><option>Tunai</option><option>Kartu</option></select></div>
+                  <div class="summary-row"><span>Diterima:</span><input type="number" id="cashReceived" placeholder="0" onchange="calculateChange()" style="width: 80px;"></div>
+                  <div class="summary-row" style="background: #f0f0f0; padding: 8px; margin-top: 8px;">
+                    <span style="color: green; font-weight: bold;">Kembalian:</span>
+                    <span id="changeAmount" style="color: green; font-weight: bold;">Rp 0</span>
+                  </div>
                 </div>
               </div>
-              
-              <div class="btn-group">
-                <button class="btn btn-secondary" onclick="clearCart()">Batal</button>
-                <button class="btn btn-primary" onclick="checkout()">Bayar</button>
-              </div>
+              <button class="btn btn-success" onclick="checkoutTransaction()" style="width: 100%; margin-top: 10px;">✓ Checkout</button>
+              <button class="btn btn-secondary" onclick="clearCart()" style="width: 100%; margin-top: 5px;">✕ Batal</button>
             </div>
           </div>
         </div>
@@ -103,62 +85,29 @@
         <!-- Products Page -->
         <div id="products-page" class="page">
           <div class="page-header">
-            <h2>Manajemen Produk</h2>
-            <button class="btn btn-primary" onclick="openProductModal()">+ Tambah Produk</button>
+            <h2>📦 Manajemen Produk</h2>
+            <button class="btn btn-primary" onclick="openProductModal()">+ Tambah</button>
           </div>
-          
-          <div class="products-table">
-            <table>
+          <div class="table-container">
+            <table class="table">
               <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nama Produk</th>
-                  <th>SKU</th>
-                  <th>Harga</th>
-                  <th>Stok</th>
-                  <th>Aksi</th>
-                </tr>
+                <tr><th>No</th><th>Nama</th><th>SKU</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr>
               </thead>
               <tbody id="productsTableBody"></tbody>
             </table>
-          </div>
-
-          <!-- Product Modal -->
-          <div id="productModal" class="modal">
-            <div class="modal-content">
-              <span class="close" onclick="closeProductModal()">&times;</span>
-              <h3 id="modalTitle">Tambah Produk</h3>
-              <form id="productForm" onsubmit="saveProduct(event)">
-                <input type="hidden" id="productId">
-                <input type="text" id="productName" placeholder="Nama Produk" required>
-                <input type="text" id="productSku" placeholder="SKU" required>
-                <select id="productCategory" required>
-                  <option value="">Pilih Kategori</option>
-                </select>
-                <input type="number" id="productPrice" placeholder="Harga" required>
-                <input type="number" id="productStock" placeholder="Stok" required>
-                <button type="submit" class="btn btn-primary">Simpan</button>
-              </form>
-            </div>
           </div>
         </div>
 
         <!-- Transactions Page -->
         <div id="transactions-page" class="page">
           <div class="page-header">
-            <h2>Riwayat Transaksi</h2>
+            <h2>📋 Riwayat Transaksi</h2>
+            <button class="btn btn-primary" onclick="exportSalesExcel()">📥 Export</button>
           </div>
-          
-          <div class="transactions-table">
-            <table>
+          <div class="table-container">
+            <table class="table">
               <thead>
-                <tr>
-                  <th>No Invoice</th>
-                  <th>Tanggal</th>
-                  <th>Total</th>
-                  <th>Metode</th>
-                  <th>Aksi</th>
-                </tr>
+                <tr><th>Invoice</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Aksi</th></tr>
               </thead>
               <tbody id="transactionsTableBody"></tbody>
             </table>
@@ -168,40 +117,34 @@
         <!-- Reports Page -->
         <div id="reports-page" class="page">
           <div class="page-header">
-            <h2>Laporan Penjualan</h2>
-            <div style="display: flex; gap: 10px;">
-              <button class="btn btn-primary" onclick="exportSalesExcel()">📥 Export Excel</button>
-              <button class="btn btn-primary" onclick="exportProductsExcel()">📦 Export Produk</button>
+            <h2>📊 Laporan</h2>
+            <button class="btn btn-primary" onclick="exportProductsExcel()">📦 Export</button>
+          </div>
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h3>Hari Ini</h3>
+              <div class="analytics-value" id="todayTransactions">0</div>
+              <p class="analytics-label">Transaksi</p>
+            </div>
+            <div class="analytics-card">
+              <h3>Pendapatan</h3>
+              <div class="analytics-value" id="todayRevenue">Rp 0</div>
+            </div>
+            <div class="analytics-card">
+              <h3>Minggu Ini</h3>
+              <div class="analytics-value" id="weekTransactions">0</div>
+              <p class="analytics-label">Transaksi</p>
+            </div>
+            <div class="analytics-card">
+              <h3>Stok Habis</h3>
+              <div class="analytics-value" id="lowStockCount">0</div>
             </div>
           </div>
-          
-          <div class="reports-grid">
-            <div class="report-card">
-              <h4>Penjualan Hari Ini</h4>
-              <div class="stat-value" id="todaySales">Rp 0</div>
-              <small id="todayTransactions">0 transaksi</small>
-            </div>
-            
-            <div class="report-card">
-              <h4>Rata-rata Transaksi</h4>
-              <div class="stat-value" id="avgTransaction">Rp 0</div>
-            </div>
-            
-            <div class="report-card">
-              <h4>Stok Rendah</h4>
-              <div class="stat-value" id="lowStock">0 produk</div>
-            </div>
-          </div>
-
-          <div class="report-section">
-            <h3>Produk Terlaris</h3>
-            <table>
+          <h3 style="margin-top: 30px;">Produk Terlaris</h3>
+          <div class="table-container">
+            <table class="table">
               <thead>
-                <tr>
-                  <th>Produk</th>
-                  <th>Terjual</th>
-                  <th>Revenue</th>
-                </tr>
+                <tr><th>Rank</th><th>Produk</th><th>Terjual</th><th>Pendapatan</th></tr>
               </thead>
               <tbody id="topProductsBody"></tbody>
             </table>
@@ -212,7 +155,40 @@
     </main>
   </div>
 
-  <script src="js/utils.js"></script>
+  <!-- Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Tambah Produk</h2>
+        <button class="close-btn" onclick="closeProductModal()">&times;</button>
+      </div>
+      <form onsubmit="saveProduct(event)">
+        <div class="form-group">
+          <label>Nama</label>
+          <input type="text" id="productName" required>
+        </div>
+        <div class="form-group">
+          <label>SKU</label>
+          <input type="text" id="productSku" required>
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="productCategory"><option value="1">Makanan</option><option value="2">Minuman</option><option value="3">Snack</option></select>
+        </div>
+        <div class="form-group">
+          <label>Harga</label>
+          <input type="number" id="productPrice" required>
+        </div>
+        <div class="form-group">
+          <label>Stok</label>
+          <input type="number" id="productStock" required>
+        </div>
+        <button type="submit" class="btn btn-success">Simpan</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/debug.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

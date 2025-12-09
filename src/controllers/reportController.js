@@ -74,14 +74,17 @@ exports.getDashboardAnalytics = (req, res) => {
     `SELECT 
       (SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) = ?) as today_transactions,
       (SELECT SUM(total_amount) FROM transactions WHERE DATE(transaction_date) = ?) as today_revenue,
-      (SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) = DATE('now', '-7 days')) as week_transactions,
+      (SELECT COUNT(*) FROM transactions WHERE DATE(transaction_date) >= DATE('now', '-7 days')) as week_transactions,
       (SELECT SUM(total_amount) FROM transactions WHERE DATE(transaction_date) >= DATE('now', '-7 days')) as week_revenue,
       (SELECT COUNT(*) FROM products WHERE stock < 20) as low_stock_count,
       (SELECT COUNT(*) FROM products) as total_products
     `,
     [today, today],
     (err, row) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error('getDashboardAnalytics error:', err);
+        return res.status(500).json({ error: err.message });
+      }
       res.json(row[0] || {});
     }
   );
@@ -95,8 +98,11 @@ exports.getSalesByPaymentMethod = (req, res) => {
     WHERE DATE(transaction_date) = DATE('now')
     GROUP BY payment_method`,
     (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
+      if (err) {
+        console.error('getSalesByPaymentMethod error:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json(rows || []);
     }
   );
 };
@@ -113,8 +119,11 @@ exports.getMonthlyRevenue = (req, res) => {
     ORDER BY month DESC
     LIMIT 12`,
     (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
+      if (err) {
+        console.error('getMonthlyRevenue error:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json(rows || []);
     }
   );
 };
