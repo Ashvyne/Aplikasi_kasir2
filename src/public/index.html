@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Kasir Modern</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <h2>💳 KASIR</h2>
+      </div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-page="pos">
+          <span class="icon">🛒</span> POS
+        </a>
+        <a href="#" class="nav-item" data-page="products">
+          <span class="icon">📦</span> Produk
+        </a>
+        <a href="#" class="nav-item" data-page="transactions">
+          <span class="icon">📝</span> Transaksi
+        </a>
+        <a href="#" class="nav-item" data-page="reports">
+          <span class="icon">📊</span> Laporan
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 id="pageTitle">Point of Sale</h1>
+        <div class="header-info">
+          <span id="currentTime"></span>
+          <span class="user">👤 <span id="userDisplay">Admin</span></span>
+          <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+      </header>
+
+      <!-- Pages Content -->
+      <div class="content">
+        
+        <!-- POS Page -->
+        <div id="pos-page" class="page active">
+          <div class="pos-container">
+            <div class="products-list">
+              <h3>Produk Tersedia</h3>
+              <div class="search-bar">
+                <input type="text" id="productSearch" placeholder="Cari produk...">
+              </div>
+              <div id="productsGrid" class="products-grid"></div>
+            </div>
+            
+            <div class="cart-section">
+              <h3>🛒 Keranjang Belanja</h3>
+              <div id="cartItems" class="cart-items"></div>
+              
+              <div class="cart-summary">
+                <div class="summary-row">
+                  <span>Subtotal:</span>
+                  <span id="subtotal">Rp 0</span>
+                </div>
+                <div class="summary-row">
+                  <span>Diskon:</span>
+                  <input type="number" id="discount" value="0" min="0">
+                </div>
+                <div class="summary-row total">
+                  <span>Total:</span>
+                  <span id="total">Rp 0</span>
+                </div>
+              </div>
+              
+              <div class="payment-section">
+                <label>Metode Pembayaran:</label>
+                <select id="paymentMethod">
+                  <option value="cash">Tunai</option>
+                  <option value="card">Kartu</option>
+                  <option value="transfer">Transfer</option>
+                </select>
+              </div>
+              
+              <div id="cashSection" class="payment-input">
+                <label>Uang Diterima:</label>
+                <input type="number" id="cashReceived" placeholder="0" min="0">
+                <div class="change-display">
+                  <span>Kembalian:</span>
+                  <span id="changeAmount">Rp 0</span>
+                </div>
+              </div>
+              
+              <div class="btn-group">
+                <button class="btn btn-secondary" onclick="clearCart()">Batal</button>
+                <button class="btn btn-primary" onclick="checkout()">Bayar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Page -->
+        <div id="products-page" class="page">
+          <div class="page-header">
+            <h2>Manajemen Produk</h2>
+            <button class="btn btn-primary" onclick="openProductModal()">+ Tambah Produk</button>
+          </div>
+          
+          <div class="products-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nama Produk</th>
+                  <th>SKU</th>
+                  <th>Harga</th>
+                  <th>Stok</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Product Modal -->
+          <div id="productModal" class="modal">
+            <div class="modal-content">
+              <span class="close" onclick="closeProductModal()">&times;</span>
+              <h3 id="modalTitle">Tambah Produk</h3>
+              <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="productId">
+                <input type="text" id="productName" placeholder="Nama Produk" required>
+                <input type="text" id="productSku" placeholder="SKU" required>
+                <select id="productCategory" required>
+                  <option value="">Pilih Kategori</option>
+                </select>
+                <input type="number" id="productPrice" placeholder="Harga" required>
+                <input type="number" id="productStock" placeholder="Stok" required>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions Page -->
+        <div id="transactions-page" class="page">
+          <div class="page-header">
+            <h2>Riwayat Transaksi</h2>
+          </div>
+          
+          <div class="transactions-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>No Invoice</th>
+                  <th>Tanggal</th>
+                  <th>Total</th>
+                  <th>Metode</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div id="reports-page" class="page">
+          <div class="page-header">
+            <h2>Laporan Penjualan</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-primary" onclick="exportSalesExcel()">📥 Export Excel</button>
+              <button class="btn btn-primary" onclick="exportProductsExcel()">📦 Export Produk</button>
+            </div>
+          </div>
+          
+          <div class="reports-grid">
+            <div class="report-card">
+              <h4>Penjualan Hari Ini</h4>
+              <div class="stat-value" id="todaySales">Rp 0</div>
+              <small id="todayTransactions">0 transaksi</small>
+            </div>
+            
+            <div class="report-card">
+              <h4>Rata-rata Transaksi</h4>
+              <div class="stat-value" id="avgTransaction">Rp 0</div>
+            </div>
+            
+            <div class="report-card">
+              <h4>Stok Rendah</h4>
+              <div class="stat-value" id="lowStock">0 produk</div>
+            </div>
+          </div>
+
+          <div class="report-section">
+            <h3>Produk Terlaris</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Produk</th>
+                  <th>Terjual</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody id="topProductsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
