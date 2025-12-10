@@ -1,20 +1,13 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
+const Product = require('../models/Product');
 const router = express.Router();
 
-// In-memory database (ganti dengan database sesungguhnya)
-let products = [
-  { id: 1, name: 'Nasi Goreng', sku: 'NG001', category: '1', price: 25000, stock: 15, createdAt: new Date() },
-  { id: 2, name: 'Mie Ayam', sku: 'MA001', category: '1', price: 20000, stock: 10, createdAt: new Date() },
-  { id: 3, name: 'Es Teh Manis', sku: 'ETM001', category: '2', price: 5000, stock: 50, createdAt: new Date() }
-];
-
-let nextId = 4;
-
 // GET all products
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('✓ GET /api/products');
+    const products = await Product.findAll();
     res.json({ 
       success: true,
       products: products,
@@ -27,9 +20,9 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // GET single product
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const product = products.find(p => p.id === parseInt(req.params.id));
+    const product = await Product.findByPk(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Produk tidak ditemukan' });
     }
@@ -41,7 +34,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // POST create product
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, sku, category, price, stock } = req.body;
 
@@ -51,28 +44,25 @@ router.post('/', authenticateToken, (req, res) => {
     }
 
     // Cek SKU duplikat
-    if (products.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
+    const existingSku = await Product.findOne({ where: { sku: sku.toLowerCase() } });
+    if (existingSku) {
       return res.status(400).json({ message: 'SKU sudah digunakan' });
     }
 
     // Create new product
-    const newProduct = {
-      id: nextId++,
+    const product = await Product.create({
       name,
       sku,
       category: category || '1',
       price: parseInt(price),
-      stock: parseInt(stock) || 0,
-      createdAt: new Date()
-    };
+      stock: parseInt(stock) || 0
+    });
 
-    products.push(newProduct);
-    console.log('✓ POST /api/products - Created:', newProduct.name);
+    console.log('✓ POST /api/products - Created:', product.name);
     res.status(201).json({ 
       success: true,
       message: 'Produk berhasil ditambahkan', 
-      id: newProduct.id,
-      product: newProduct 
+      product 
     });
   } catch (error) {
     console.error('❌ Error creating product:', error);
@@ -81,9 +71,9 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // PUT update product (untuk edit nama, harga, kategori dan update stok)
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const product = products.find(p => p.id === parseInt(req.params.id));
+    const product = await Product.findByPk(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Produk tidak ditemukan' });
     }
@@ -91,16 +81,14 @@ router.put('/:id', authenticateToken, (req, res) => {
     const { name, sku, category, price, stock } = req.body;
     
     // Jika SKU diubah, cek duplikat
-    if (sku && sku !== product.sku && products.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
-      return res.status(400).json({ message: 'SKU sudah digunakan' });
+    if (sku && sku !== product.sku) {
+      const existingSku = await Product.findOne({ where: { sku } });
+      if (existingSku) {
+        return res.status(400).json({ message: 'SKU sudah digunakan' });
+      }
     }
 
-    // Update data produk
-    if (name) product.name = name;
-    if (sku) product.sku = sku;
-    if (category) product.category = category;
-    if (price) product.price = parseInt(price);
-    if (stock !== undefined) product.stock = parseInt(stock); // Update stok
+    await product.update({ name, sku, category, price, stock });
 
     console.log('✓ PUT /api/products/:id - Updated:', product.name);
     res.json({ 
@@ -114,37 +102,22 @@ router.put('/:id', authenticateToken, (req, res) => {
   }
 });
 
-// ⭐ ROUTE REDUCE-STOCK HARUS SEBELUM DELETE/:ID
-// Route untuk mengurangi stok saat checkout
-router.put('/:id/reduce-stock', authenticateToken, (req, res) => {
+// PUT reduce stock
+router.put('/:id/reduce-stock', authenticateToken, async (req, res) => {
   try {
-    console.log('🔍 PUT /:id/reduce-stock endpoint hit');
-    console.log('   Product ID:', req.params.id);
-    console.log('   Body:', req.body);
-    
-    const product = products.find(p => p.id === parseInt(req.params.id));
+    const product = await Product.findByPk(req.params.id);
     if (!product) {
-      console.warn(`⚠️ Product not found - ID: ${req.params.id}`);
-      return res.status(404).json({ 
-        success: false,
-        message: 'Produk tidak ditemukan' 
-      });
+      return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
     }
 
     const { quantity } = req.body;
-    
-    if (!quantity || isNaN(quantity) || quantity <= 0) {
-      console.warn(`⚠️ Invalid quantity: ${quantity}`);
-      return res.status(400).json({ 
-        success: false,
-        message: 'Quantity harus angka positif' 
-      });
-    }
-
     const quantityToReduce = parseInt(quantity);
 
+    if (!quantity || isNaN(quantity) || quantity <= 0) {
+      return res.status(400).json({ success: false, message: 'Quantity harus angka positif' });
+    }
+
     if (product.stock < quantityToReduce) {
-      console.warn(`⚠️ Insufficient stock - Product: ${product.name}, Need: ${quantityToReduce}, Available: ${product.stock}`);
       return res.status(400).json({ 
         success: false,
         message: `Stok tidak cukup. Tersedia: ${product.stock}, Diminta: ${quantityToReduce}` 
@@ -152,11 +125,9 @@ router.put('/:id/reduce-stock', authenticateToken, (req, res) => {
     }
 
     const oldStock = product.stock;
-    product.stock -= quantityToReduce;
+    await product.update({ stock: product.stock - quantityToReduce });
 
-    console.log(`✓ Stock reduced for "${product.name}"`);
-    console.log(`  Old Stock: ${oldStock} → New Stock: ${product.stock}`);
-    console.log(`  Reduced by: ${quantityToReduce} units`);
+    console.log(`✓ Stock reduced: ${product.name} (${oldStock} → ${product.stock})`);
 
     res.json({ 
       success: true,
@@ -170,31 +141,28 @@ router.put('/:id/reduce-stock', authenticateToken, (req, res) => {
         sku: product.sku
       }
     });
-
   } catch (error) {
     console.error('❌ Error reducing stock:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Terjadi kesalahan saat mengurangi stok',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 });
 
-// DELETE product (HARUS SETELAH reduce-stock)
-router.delete('/:id', authenticateToken, (req, res) => {
+// DELETE product
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const index = products.findIndex(p => p.id === parseInt(req.params.id));
-    if (index === -1) {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) {
       return res.status(404).json({ message: 'Produk tidak ditemukan' });
     }
 
-    const deleted = products.splice(index, 1);
-    console.log('✓ DELETE /api/products/:id - Deleted:', deleted[0].name);
+    const deletedProduct = product;
+    await product.destroy();
+
+    console.log('✓ DELETE /api/products/:id - Deleted:', deletedProduct.name);
     res.json({ 
       success: true,
       message: 'Produk berhasil dihapus', 
-      product: deleted[0] 
+      product: deletedProduct
     });
   } catch (error) {
     console.error('❌ Error deleting product:', error);
@@ -202,9 +170,4 @@ router.delete('/:id', authenticateToken, (req, res) => {
   }
 });
 
-// Export products untuk digunakan oleh routes lain
 module.exports = router;
-module.exports.getProducts = () => products;
-module.exports.setProducts = (newProducts) => {
-  products = newProducts;
-};

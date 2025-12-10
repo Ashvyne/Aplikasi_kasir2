@@ -1098,19 +1098,55 @@ function viewTransaction(transactionId) {
         minute: '2-digit'
       });
       
+      // Parse items jika berupa JSON string (dari database)
+      let items = trans.items;
+      if (typeof items === 'string') {
+        try {
+          items = JSON.parse(items);
+        } catch (e) {
+          console.warn('⚠️ Failed to parse items:', e);
+          items = [];
+        }
+      }
+      
+      // Validasi items adalah array
+      if (!Array.isArray(items)) {
+        items = [];
+      }
+      
       // Buat daftar items
       let itemsList = '<div style="text-align: left; margin-top: 15px;">';
-      if (trans.items && trans.items.length > 0) {
-        trans.items.forEach((item, index) => {
+      if (items && items.length > 0) {
+        items.forEach((item, index) => {
+          const itemPrice = parseInt(item.price) || 0;
+          const itemQty = parseInt(item.quantity) || 1;
+          const itemTotal = itemPrice * itemQty;
+          
           itemsList += `
             <div style="padding: 8px 0; border-bottom: 1px solid #eee;">
-              <strong>${index + 1}. ${escapeHtml(item.name)}</strong><br>
-              <small>Qty: ${item.quantity} × Rp ${formatPrice(item.price)} = Rp ${formatPrice(item.quantity * item.price)}</small>
+              <strong>${index + 1}. ${escapeHtml(item.name || 'Unknown')}</strong><br>
+              <small>Qty: ${itemQty} × Rp ${formatPrice(itemPrice)} = Rp ${formatPrice(itemTotal)}</small>
             </div>
           `;
         });
+      } else {
+        itemsList += '<div style="padding: 8px 0;"><em class="text-muted">Tidak ada item</em></div>';
       }
       itemsList += '</div>';
+      
+      // Hitung subtotal dari items
+      let subtotal = 0;
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          const price = parseInt(item.price) || 0;
+          const qty = parseInt(item.quantity) || 1;
+          subtotal += price * qty;
+        });
+      }
+      
+      // Ambil data transaksi
+      const total = parseInt(trans.total) || 0;
+      const discount = parseInt(trans.discount) || 0;
       
       // Tampilkan SweetAlert2 dengan detail transaksi
       Swal.fire({
@@ -1118,31 +1154,31 @@ function viewTransaction(transactionId) {
         html: `
           <div style="text-align: left;">
             <div style="margin-bottom: 15px;">
-              <strong>No. Invoice:</strong> ${escapeHtml(trans.invoiceNumber)}<br>
+              <strong>No. Invoice:</strong> ${escapeHtml(trans.invoiceNumber || 'N/A')}<br>
               <strong>Tanggal:</strong> ${date}<br>
-              <strong>Metode Pembayaran:</strong> <span class="badge bg-success">${escapeHtml(trans.paymentMethod)}</span>
+              <strong>Metode Pembayaran:</strong> <span class="badge bg-success">${escapeHtml(trans.paymentMethod || 'Tunai')}</span>
             </div>
             
             <hr style="margin: 15px 0;">
             
-            <strong>Item:</strong>
+            <strong>Item (${items.length} item):</strong>
             ${itemsList}
             
             <hr style="margin: 15px 0;">
             
             <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
               <span>Subtotal:</span>
-              <span>Rp ${formatPrice(trans.total + (trans.discount || 0))}</span>
+              <span>Rp ${formatPrice(subtotal)}</span>
             </div>
-            ${trans.discount ? `
+            ${discount > 0 ? `
             <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #28a745;">
               <span>Diskon:</span>
-              <span>-Rp ${formatPrice(trans.discount)}</span>
+              <span>-Rp ${formatPrice(discount)}</span>
             </div>
             ` : ''}
             <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
-              <span>Total:</span>
-              <span>Rp ${formatPrice(trans.total)}</span>
+              <span>Total Bayar:</span>
+              <span>Rp ${formatPrice(total)}</span>
             </div>
           </div>
         `,
@@ -1158,7 +1194,7 @@ function viewTransaction(transactionId) {
     }
   } catch (error) {
     console.error('❌ View transaction error:', error);
-    showAlertModal('Error!', 'Terjadi kesalahan', 'danger');
+    showAlertModal('Error!', 'Terjadi kesalahan: ' + error.message, 'danger');
   }
 }
 

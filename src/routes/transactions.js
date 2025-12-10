@@ -1,15 +1,15 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
+const Transaction = require('../models/Transaction');
 const router = express.Router();
-const productsRouter = require('./products');
 
-let transactions = [];
 let nextInvoiceNumber = 1001;
 
 // GET all transactions
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('✓ GET /api/transactions');
+    const transactions = await Transaction.findAll({ order: [['createdAt', 'DESC']] });
     res.json({ 
       success: true,
       transactions: transactions,
@@ -22,9 +22,9 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // GET single transaction
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const transaction = transactions.find(t => t.id === parseInt(req.params.id));
+    const transaction = await Transaction.findByPk(req.params.id);
     if (!transaction) {
       return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
     }
@@ -35,58 +35,36 @@ router.get('/:id', authenticateToken, (req, res) => {
   }
 });
 
-// POST create transaction dengan pengurangan stok
-router.post('/', authenticateToken, (req, res) => {
+// POST create transaction
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { items, total, paymentMethod, discount } = req.body;
 
-    // Validasi input
     if (!items || items.length === 0 || !total) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Items dan total harus diisi' 
-      });
+      return res.status(400).json({ success: false, message: 'Items dan total harus diisi' });
     }
 
-    // Buat invoice number
     const invoiceNumber = 'INV-' + nextInvoiceNumber++;
     
-    // Buat object transaksi
-    const newTransaction = {
-      id: transactions.length + 1,
-      invoiceNumber: invoiceNumber,
-      items: items,
+    const transaction = await Transaction.create({
+      invoiceNumber,
+      items,
       total: parseInt(total),
       discount: parseInt(discount) || 0,
       paymentMethod: paymentMethod || 'Tunai',
-      userId: req.user.id,
-      createdAt: new Date()
-    };
-
-    // Simpan transaksi
-    transactions.push(newTransaction);
-    
-    console.log('✓ POST /api/transactions - Created:', invoiceNumber);
-    console.log('📊 Transaction details:', {
-      invoice: invoiceNumber,
-      items: items.length,
-      total: total,
-      discount: discount || 0
+      userId: req.user.id
     });
 
+    console.log('✓ POST /api/transactions - Created:', invoiceNumber);
     res.status(201).json({ 
       success: true,
       message: 'Transaksi berhasil disimpan',
       invoiceNumber: invoiceNumber,
-      id: newTransaction.id,
-      transaction: newTransaction
+      transaction
     });
   } catch (error) {
     console.error('❌ Error creating transaction:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Terjadi kesalahan' 
-    });
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 });
 

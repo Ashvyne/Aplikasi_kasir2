@@ -4,16 +4,25 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 
-const { initDatabase } = require('./config/database');
+const { sequelize, initDatabase } = require('./config/database');
 const { runMigrations } = require('./config/migrate');
 const { verifyToken } = require('./middleware/authMiddleware');
+const Product = require('./models/Product');
+const Transaction = require('./models/Transaction');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Database and Migrations
-initDatabase();
-runMigrations();
+// Initialize Database
+(async () => {
+  try {
+    await initDatabase();
+    await sequelize.sync({ alter: true }); // Auto sync models
+    console.log('✓ Database tables synced');
+  } catch (error) {
+    console.error('❌ Database sync error:', error);
+  }
+})();
 
 // Middleware
 app.use(cors());
