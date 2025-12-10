@@ -21,42 +21,99 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
+// ============ ROUTES (HARUS SEBELUM 404 HANDLER) ============
+
+// Routes untuk API
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/transactions', require('./routes/transactions'));
-app.use('/api/reports', verifyToken, require('./routes/reports'));
-app.use('/api/exports', verifyToken, require('./routes/exports'));
+app.use('/api/reports', require('./routes/reports'));
 
-// Home route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
+// Serve login page
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Serve index page
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: '✓ Server running' });
+});
+
+// Chrome DevTools well-known
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Favicon
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
+
+// ============ 404 HANDLER (HARUS DI PALING AKHIR) ============
+
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  // Untuk request API yang tidak ditemukan
+  if (req.url.startsWith('/api/')) {
+    console.warn('❌ 404 API Not Found:', req.method, req.url);
+    return res.status(404).json({ message: 'API Route not found', path: req.url });
+  }
+  
+  // Untuk request halaman, redirect ke index.html
+  console.warn('⚠️ Route not found, redirecting to index.html:', req.method, req.url);
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Error handling middleware
+// ============ ERROR HANDLER ============
+
+// Error handler (HARUS PALING AKHIR)
 app.use((err, req, res, next) => {
   console.error('❌ Server Error:', err);
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { details: err.stack })
+  res.status(500).json({ 
+    message: 'Internal server error', 
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Unknown error'
   });
 });
 
-// Delay server start untuk tunggu migration
-setTimeout(() => {
-  app.listen(PORT, () => {
-    console.log(`\n✓ Server berjalan di http://localhost:${PORT}`);
-    console.log(`✓ Database siap`);
-    console.log(`✓ Ready untuk digunakan!\n`);
-    console.log('Akses: http://localhost:3000/login\n');
-  });
-}, 1000);
+app.listen(PORT, () => {
+  console.log(`
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║           🚀 Aplikasi Kasir Modern Running                ║
+║                                                            ║
+║  Server: http://localhost:${PORT}                          ║
+║  Login:  http://localhost:${PORT}/login                    ║
+║  Dashboard: http://localhost:${PORT}/                      ║
+║                                                            ║
+║  Demo Credentials:                                         ║
+║  • Username: admin                                         ║
+║  • Password: 123456                                        ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+  `);
+  console.log('📍 API Endpoints:');
+  console.log('   POST   /api/auth/login');
+  console.log('   GET    /api/products');
+  console.log('   POST   /api/products');
+  console.log('   PUT    /api/products/:id');
+  console.log('   PUT    /api/products/:id/reduce-stock ✓ NEW');
+  console.log('   DELETE /api/products/:id');
+  console.log('   GET    /api/transactions');
+  console.log('   POST   /api/transactions');
+  console.log('   GET    /api/reports');
+  console.log('   GET    /api/health');
+});

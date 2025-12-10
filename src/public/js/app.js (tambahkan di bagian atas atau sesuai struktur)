@@ -1,0 +1,44 @@
+// Function untuk menampilkan alert Bootstrap 5
+function showAlert(message, type = 'info', containerId = 'posAlertContainer', duration = 5000) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const alertId = 'alert-' + Date.now();
+  const alertHTML = `
+    <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-${getAlertIcon(type)} me-2"></i>
+        <div>${message}</div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+  
+  container.insertAdjacentHTML('beforeend', alertHTML);
+  
+  // Auto remove after duration
+  if (duration > 0) {
+    setTimeout(() => {
+      const alert = document.getElementById(alertId);
+      if (alert) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+      }
+    }, duration);
+  }
+}
+
+// Helper function untuk icon
+function getAlertIcon(type) {
+  const icons = {
+    'success': 'check-circle',
+    'danger': 'exclamation-circle',
+    'warning': 'exclamation-triangle',
+    'info': 'info-circle'
+  };
+  return icons[type] || 'info-circle';
+}
+
+// Contoh penggunaan:
+// showAlert('Produk berhasil ditambahkan!', 'success', 'posAlertContainer');
+// showAlert('Error saat menyimpan!', 'danger', 'posAlertContainer');

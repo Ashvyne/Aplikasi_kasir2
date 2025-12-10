@@ -1,153 +1,394 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <!-- Meta Tags -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Kasir</title>
+  <title>Aplikasi Kasir Modern</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
+  
+  <!-- SweetAlert2 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>💳 KASIR</h2>
+  <!-- Main Layout Container -->
+  <div class="d-flex" style="height: 100vh;">
+    
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar bg-white border-end">
+      <!-- Sidebar Header dengan Logo -->
+      <div class="sidebar-header p-4 border-bottom">
+        <h4 class="mb-0">
+          <i class="bi bi-cart3 text-primary"></i> KASIR
+        </h4>
       </div>
-      <nav class="nav-menu" id="navMenu">
-        <a href="#pos" class="nav-item active" data-page="pos">
-          <span class="icon">🛒</span>
-          <span class="text">POS</span>
+      
+      <!-- Navigation Menu Items -->
+      <div class="nav flex-column p-3" id="navMenu">
+        <!-- POS Page Link -->
+        <a href="#pos" class="nav-link nav-item active" data-page="pos">
+          <i class="bi bi-bag-check me-2"></i> POS
         </a>
-        <a href="#products" class="nav-item" data-page="products">
-          <span class="icon">📦</span>
-          <span class="text">Produk</span>
+        
+        <!-- Products Page Link -->
+        <a href="#products" class="nav-link nav-item" data-page="products">
+          <i class="bi bi-box me-2"></i> Produk
         </a>
-        <a href="#transactions" class="nav-item" data-page="transactions">
-          <span class="icon">📋</span>
-          <span class="text">Transaksi</span>
+        
+        <!-- Transactions Page Link -->
+        <a href="#transactions" class="nav-link nav-item" data-page="transactions">
+          <i class="bi bi-receipt me-2"></i> Transaksi
         </a>
-        <a href="#reports" class="nav-item" data-page="reports">
-          <span class="icon">📊</span>
-          <span class="text">Laporan</span>
+        
+        <!-- Reports Page Link -->
+        <a href="#reports" class="nav-link nav-item" data-page="reports">
+          <i class="bi bi-bar-chart me-2"></i> Laporan
         </a>
-      </nav>
-    </aside>
+      </div>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Header -->
-      <header class="header">
-        <h1 id="pageTitle">🛒 Point of Sale</h1>
-        <div class="header-info">
-          <span id="currentTime"></span>
-          <span class="user">👤 <span id="userDisplay">User</span></span>
-          <button class="logout-btn" onclick="logout()">Logout</button>
+    <!-- Main Content Area -->
+    <main class="main-content flex-grow-1 d-flex flex-column">
+      
+      <!-- Top Header Navigation -->
+      <header class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+        <div class="container-fluid">
+          <!-- Page Title -->
+          <h5 class="navbar-brand mb-0" id="pageTitle">Point of Sale</h5>
+          
+          <!-- Header Right Items (Time & User Menu) -->
+          <div class="d-flex align-items-center gap-3">
+            <!-- Current Time Display -->
+            <span id="currentTime" class="text-muted small"></span>
+            
+            <!-- User Dropdown Menu -->
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle"></i> <span id="userDisplay">User</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </header>
 
-      <!-- Pages -->
-      <div class="pages-container">
+      <!-- Pages Container -->
+      <div class="pages-container flex-grow-1 overflow-auto">
         
-        <!-- POS Page -->
+        <!-- ============== POS PAGE ============== -->
         <div id="pos-page" class="page active">
-          <div class="page-header">
-            <h2>🛒 Point of Sale</h2>
-          </div>
-          <div class="pos-layout">
-            <div class="products-section">
-              <div class="search-bar">
-                <input type="text" id="searchProduct" placeholder="🔍 Cari..." onkeyup="searchProducts()">
+          <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h2 class="mb-1">🛒 Penjualan</h2>
+                <small class="text-muted">Kelola transaksi penjualan dengan mudah</small>
               </div>
-              <div id="productsGrid" class="products-grid"></div>
             </div>
-            <div class="cart-section">
-              <h3>🛒 Keranjang</h3>
-              <div id="cartItems" class="cart-items"></div>
-              <div class="cart-summary">
-                <div class="summary-row"><span>Subtotal:</span><span id="subtotal">Rp 0</span></div>
-                <div class="summary-row"><span>Diskon:</span><input type="number" id="discount" value="0" onchange="updateTotal()" style="width: 100px;"></div>
-                <div class="summary-row total"><span>Total:</span><span id="total">Rp 0</span></div>
-                <div style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
-                  <div class="summary-row"><span>Metode:</span><select id="paymentMethod"><option>Tunai</option><option>Kartu</option></select></div>
-                  <div class="summary-row"><span>Diterima:</span><input type="number" id="cashReceived" placeholder="0" onchange="calculateChange()" style="width: 80px;"></div>
-                  <div class="summary-row" style="background: #f0f0f0; padding: 8px; margin-top: 8px;">
-                    <span style="color: green; font-weight: bold;">Kembalian:</span>
-                    <span id="changeAmount" style="color: green; font-weight: bold;">Rp 0</span>
+            
+            <!-- Alert Container untuk POS Page -->
+            <div id="posAlertContainer" class="mb-4"></div>
+            
+            <!-- Main POS Content -->
+            <div class="row g-4">
+              <!-- Products Section (Left Column) -->
+              <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                  <!-- Search Product Section -->
+                  <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-3 fw-bold"><i class="bi bi-search me-2"></i>Cari Produk</h6>
+                    <div class="input-group">
+                      <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search"></i>
+                      </span>
+                      <input type="text" class="form-control border-start-0 form-control-lg" id="searchProduct" 
+                             placeholder="Cari nama produk, SKU, atau kategori..." onkeyup="searchProducts()">
+                    </div>
+                  </div>
+                  
+                  <!-- Products Grid -->
+                  <div class="card-body p-4">
+                    <div id="productsGrid" class="row g-3">
+                      <!-- Products will be loaded here -->
+                    </div>
                   </div>
                 </div>
               </div>
-              <button class="btn btn-success" onclick="checkoutTransaction()" style="width: 100%; margin-top: 10px;">✓ Checkout</button>
-              <button class="btn btn-secondary" onclick="clearCart()" style="width: 100%; margin-top: 5px;">✕ Batal</button>
+              
+              <!-- Shopping Cart Section (Right Column) -->
+              <div class="col-lg-4">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                  <!-- Cart Header -->
+                  <div class="card-header bg-primary text-white border-0">
+                    <h6 class="mb-0 fw-bold">
+                      <i class="bi bi-bag-check me-2"></i> Keranjang Belanja
+                    </h6>
+                  </div>
+                  
+                  <!-- Cart Items & Calculation -->
+                  <div class="card-body p-3">
+                    <!-- Cart Items List -->
+                    <div id="cartItems" class="cart-items mb-3" style="max-height: 280px; overflow-y: auto;">
+                      <div class="text-center py-5">
+                        <i class="bi bi-bag-x" style="font-size: 2.5rem; color: #ccc;"></i>
+                        <p class="text-muted mt-2 mb-0">Keranjang kosong</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Separator -->
+                    <hr class="my-2">
+                    
+                    <!-- Calculation Details -->
+                    <div class="mb-3">
+                      <!-- Subtotal -->
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <strong id="subtotal" class="text-dark">Rp 0</strong>
+                      </div>
+                      
+                      <!-- Discount Input -->
+                      <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text bg-white">
+                          <i class="bi bi-percent"></i>
+                        </span>
+                        <input type="number" id="discount" class="form-control" 
+                               placeholder="Diskon (Rp)" value="0" onchange="updateTotal()" min="0">
+                      </div>
+                      
+                      <!-- Total Amount -->
+                      <div class="alert alert-info mb-3 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <span class="fw-bold">Total</span>
+                          <strong id="total" style="font-size: 1.2rem;">Rp 0</strong>
+                        </div>
+                      </div>
+                      
+                      <!-- Payment Method Selection -->
+                      <div class="mb-3">
+                        <label for="paymentMethod" class="form-label small fw-bold mb-2">
+                          <i class="bi bi-credit-card me-1"></i> Metode Pembayaran
+                        </label>
+                        <select id="paymentMethod" class="form-select form-select-sm">
+                          <option><i class="bi bi-cash-coin"></i> Tunai</option>
+                          <option>Kartu Debit</option>
+                          <option>Kartu Kredit</option>
+                          <option>Transfer</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Cash Received Input -->
+                      <div class="mb-3">
+                        <label for="cashReceived" class="form-label small fw-bold mb-2">
+                          <i class="bi bi-wallet2 me-1"></i> Uang Diterima
+                        </label>
+                        <input type="number" id="cashReceived" class="form-control form-control-sm" 
+                               placeholder="0" onchange="calculateChange()" min="0">
+                      </div>
+                      
+                      <!-- Change Amount Display -->
+                      <div class="alert alert-success mb-0 py-2">
+                        <small class="text-muted d-block mb-1">Kembalian</small>
+                        <div class="h5 mb-0 text-success" id="changeAmount">Rp 0</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Action Buttons -->
+                  <div class="card-footer bg-light border-top p-3">
+                    <!-- Checkout Button -->
+                    <button class="btn btn-success w-100 mb-2 fw-bold" onclick="checkoutTransaction()">
+                      <i class="bi bi-check-circle me-1"></i> Selesaikan Transaksi
+                    </button>
+                    
+                    <!-- Cancel Button -->
+                    <button class="btn btn-outline-danger w-100 fw-bold" onclick="clearCart()">
+                      <i class="bi bi-x-circle me-1"></i> Batalkan
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Products Page -->
+        <!-- ============== PRODUCTS PAGE ============== -->
         <div id="products-page" class="page">
-          <div class="page-header">
-            <h2>📦 Manajemen Produk</h2>
-            <button class="btn btn-primary" onclick="openProductModal()">+ Tambah</button>
-          </div>
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr><th>No</th><th>Nama</th><th>SKU</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr>
-              </thead>
-              <tbody id="productsTableBody"></tbody>
-            </table>
+          <div class="container-fluid p-4">
+            <!-- Page Header dengan Action Button -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2>📦 Daftar Produk</h2>
+              <!-- Add Product Button -->
+              <button class="btn btn-primary" onclick="openProductModal()">
+                <i class="bi bi-plus-circle"></i> Tambah Produk
+              </button>
+            </div>
+            
+            <!-- Alert Container untuk Products Page -->
+            <div id="productsAlertContainer" class="mb-4"></div>
+            
+            <!-- Products Table -->
+            <div class="card border-0 shadow-sm">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>No</th>
+                      <th>Nama Produk</th>
+                      <th>SKU</th>
+                      <th>Kategori</th>
+                      <th>Harga</th>
+                      <th>Stok</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="productsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Transactions Page -->
+        <!-- ============== TRANSACTIONS PAGE ============== -->
         <div id="transactions-page" class="page">
-          <div class="page-header">
-            <h2>📋 Riwayat Transaksi</h2>
-            <button class="btn btn-primary" onclick="exportSalesExcel()">📥 Export</button>
-          </div>
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr><th>Invoice</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Aksi</th></tr>
-              </thead>
-              <tbody id="transactionsTableBody"></tbody>
-            </table>
+          <div class="container-fluid p-4">
+            <!-- Page Header dengan Export Button -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2>📋 Riwayat Penjualan</h2>
+              <!-- Export Excel Button -->
+              <button class="btn btn-primary" onclick="exportSalesExcel()">
+                <i class="bi bi-download"></i> Export Excel
+              </button>
+            </div>
+            
+            <!-- Alert Container untuk Transactions Page -->
+            <div id="transactionAlertContainer" class="mb-4"></div>
+            
+            <!-- Transactions Table -->
+            <div class="card border-0 shadow-sm">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>No. Invoice</th>
+                      <th>Tanggal & Jam</th>
+                      <th>Item</th>
+                      <th>Total</th>
+                      <th>Metode</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transactionsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Reports Page -->
+        <!-- ============== REPORTS PAGE ============== -->
         <div id="reports-page" class="page">
-          <div class="page-header">
-            <h2>📊 Laporan</h2>
-            <button class="btn btn-primary" onclick="exportProductsExcel()">📦 Export</button>
-          </div>
-          <div class="analytics-grid">
-            <div class="analytics-card">
-              <h3>Hari Ini</h3>
-              <div class="analytics-value" id="todayTransactions">0</div>
-              <p class="analytics-label">Transaksi</p>
+          <div class="container-fluid p-4">
+            <!-- Page Header dengan Export Button -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2>📊 Laporan & Analitik</h2>
+              <!-- Export Data Button -->
+              <button class="btn btn-primary" onclick="exportProductsExcel()">
+                <i class="bi bi-download"></i> Export Data
+              </button>
             </div>
-            <div class="analytics-card">
-              <h3>Pendapatan</h3>
-              <div class="analytics-value" id="todayRevenue">Rp 0</div>
+            
+            <!-- Dashboard Cards (KPI) -->
+            <div class="row g-4 mb-4">
+              <!-- Today Transactions Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Transaksi Hari Ini</p>
+                        <h4 class="mb-0" id="todayTransactions">0</h4>
+                        <small class="text-muted">transaksi</small>
+                      </div>
+                      <i class="bi bi-bag-check text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Today Revenue Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Pendapatan Hari Ini</p>
+                        <h5 class="mb-0" id="todayRevenue">Rp 0</h5>
+                      </div>
+                      <i class="bi bi-cash-coin text-success" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Weekly Transactions Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Transaksi Minggu Ini</p>
+                        <h4 class="mb-0" id="weekTransactions">0</h4>
+                        <small class="text-muted">transaksi</small>
+                      </div>
+                      <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Low Stock Count Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Stok Habis</p>
+                        <h4 class="mb-0" id="lowStockCount">0</h4>
+                        <small class="text-muted">produk</small>
+                      </div>
+                      <i class="bi bi-exclamation-circle text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="analytics-card">
-              <h3>Minggu Ini</h3>
-              <div class="analytics-value" id="weekTransactions">0</div>
-              <p class="analytics-label">Transaksi</p>
+            
+            <!-- Top Products Section -->
+            <h5 class="mb-3">🏆 Produk Terlaris</h5>
+            <div class="card border-0 shadow-sm">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Peringkat</th>
+                      <th>Nama Produk</th>
+                      <th>Terjual</th>
+                      <th>Pendapatan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="topProductsBody"></tbody>
+                </table>
+              </div>
             </div>
-            <div class="analytics-card">
-              <h3>Stok Habis</h3>
-              <div class="analytics-value" id="lowStockCount">0</div>
-            </div>
-          </div>
-          <h3 style="margin-top: 30px;">Produk Terlaris</h3>
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr><th>Rank</th><th>Produk</th><th>Terjual</th><th>Pendapatan</th></tr>
-              </thead>
-              <tbody id="topProductsBody"></tbody>
-            </table>
           </div>
         </div>
 
@@ -155,40 +396,201 @@
     </main>
   </div>
 
-  <!-- Modal -->
-  <div id="productModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Tambah Produk</h2>
-        <button class="close-btn" onclick="closeProductModal()">&times;</button>
+  <!-- ============== MODALS ============== -->
+  
+  <!-- Alert Modal untuk Success/Danger/Warning Messages -->
+  <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow-lg">
+        <!-- Alert Content -->
+        <div class="modal-body text-center p-4">
+          <!-- Alert Icon -->
+          <div id="alertIcon" class="mb-3" style="font-size: 3rem;"></div>
+          <!-- Alert Title -->
+          <h5 id="alertTitle" class="mb-2 fw-bold"></h5>
+          <!-- Alert Message -->
+          <p id="alertMessage" class="text-muted mb-0"></p>
+        </div>
+        <!-- Modal Footer -->
+        <div class="modal-footer bg-light border-top">
+          <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">
+            <i class="bi bi-check-circle me-2"></i> OK
+          </button>
+        </div>
       </div>
-      <form onsubmit="saveProduct(event)">
-        <div class="form-group">
-          <label>Nama</label>
-          <input type="text" id="productName" required>
-        </div>
-        <div class="form-group">
-          <label>SKU</label>
-          <input type="text" id="productSku" required>
-        </div>
-        <div class="form-group">
-          <label>Kategori</label>
-          <select id="productCategory"><option value="1">Makanan</option><option value="2">Minuman</option><option value="3">Snack</option></select>
-        </div>
-        <div class="form-group">
-          <label>Harga</label>
-          <input type="number" id="productPrice" required>
-        </div>
-        <div class="form-group">
-          <label>Stok</label>
-          <input type="number" id="productStock" required>
-        </div>
-        <button type="submit" class="btn btn-success">Simpan</button>
-      </form>
     </div>
   </div>
 
+  <!-- Product Form Modal untuk Add/Edit Produk -->
+  <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <!-- Modal Header -->
+        <div class="modal-header bg-gradient border-0">
+          <h5 class="modal-title fw-bold" id="modalTitle">
+            <i class="bi bi-plus-circle"></i> Tambah Produk Baru
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <!-- Form -->
+        <form onsubmit="saveProduct(event)" id="productForm">
+          <!-- Modal Body -->
+          <div class="modal-body p-4">
+            <!-- Hidden Product ID untuk Edit Mode -->
+            <input type="hidden" id="productId">
+            
+            <!-- Product Name Input -->
+            <div class="mb-3">
+              <label for="productName" class="form-label fw-500">
+                <i class="bi bi-tag"></i> Nama Produk
+              </label>
+              <input type="text" class="form-control form-control-lg" id="productName" 
+                     required placeholder="Cth: Nasi Goreng" autocomplete="off">
+              <div class="form-text">Masukkan nama produk dengan jelas</div>
+            </div>
+
+            <!-- SKU & Category Inputs -->
+            <div class="row g-3">
+              <!-- SKU Input -->
+              <div class="col-md-6">
+                <label for="productSku" class="form-label fw-500">
+                  <i class="bi bi-barcode"></i> SKU / Barcode
+                </label>
+                <input type="text" class="form-control form-control-lg" id="productSku" 
+                       required placeholder="Cth: NG001" autocomplete="off">
+                <div class="form-text">Kode unik produk</div>
+              </div>
+              
+              <!-- Category Selection -->
+              <div class="col-md-6">
+                <label for="productCategory" class="form-label fw-500">
+                  <i class="bi bi-list"></i> Kategori
+                </label>
+                <select class="form-select form-select-lg" id="productCategory">
+                  <option value="1">🍜 Makanan</option>
+                  <option value="2">🥤 Minuman</option>
+                  <option value="3">🍿 Snack</option>
+                  <option value="4">📱 Elektronik</option>
+                  <option value="5">📦 Lainnya</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Price & Stock Inputs -->
+            <div class="row g-3 mt-1">
+              <!-- Price Input -->
+              <div class="col-md-6">
+                <label for="productPrice" class="form-label fw-500">
+                  <i class="bi bi-cash-coin"></i> Harga Jual (Rp)
+                </label>
+                <input type="number" class="form-control form-control-lg" id="productPrice" 
+                       required placeholder="0" min="0" autocomplete="off">
+                <div class="form-text">Harga penjualan produk</div>
+              </div>
+              
+              <!-- Stock Input -->
+              <div class="col-md-6">
+                <label for="productStock" class="form-label fw-500">
+                  <i class="bi bi-boxes"></i> Stok Awal
+                </label>
+                <input type="number" class="form-control form-control-lg" id="productStock" 
+                       required placeholder="0" min="0" autocomplete="off">
+                <div class="form-text">Jumlah stok awal</div>
+              </div>
+            </div>
+
+            <!-- Alert Container untuk Form Errors -->
+            <div id="alertContainer" style="margin-top: 20px;"></div>
+          </div>
+
+          <!-- Modal Footer dengan Buttons -->
+          <div class="modal-footer bg-light border-top">
+            <!-- Cancel Button -->
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle"></i> Batal
+            </button>
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-success" id="submitBtn">
+              <i class="bi bi-check-circle"></i> Simpan Produk
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== SCRIPTS ============== -->
+  
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- SweetAlert2 Library untuk notifikasi yang lebih cantik -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  
+  <!-- Debug Script -->
   <script src="js/debug.js"></script>
+  
+  <!-- Main Application Script -->
   <script src="js/app.js"></script>
+  
+  <!-- SweetAlert2 Handler untuk Alert Modal -->
+  <script>
+    // Function untuk menampilkan SweetAlert2 dengan tipe success/danger/warning/info
+    function showAlertModal(title, message, type = 'success') {
+      // Map tipe alert ke icon SweetAlert2
+      const iconMap = {
+        'success': 'success',
+        'danger': 'error',
+        'warning': 'warning',
+        'info': 'info'
+      };
+
+      // Map tipe alert ke warna confirm button
+      const colorMap = {
+        'success': '#28a745',
+        'danger': '#dc3545',
+        'warning': '#ffc107',
+        'info': '#17a2b8'
+      };
+
+      console.log(`🔔 Showing SweetAlert2: ${type} - ${title}`);
+      
+      // Tampilkan SweetAlert2
+      Swal.fire({
+        title: title,
+        text: message,
+        icon: iconMap[type] || 'info',
+        confirmButtonColor: colorMap[type] || '#0d6efd',
+        confirmButtonText: '✓ OK',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      });
+    }
+
+    // Modal backdrop handling untuk product modal
+    const productModalEl = document.getElementById('productModal');
+    
+    // Hide backdrop ketika modal ditutup
+    productModalEl.addEventListener('hidden.bs.modal', function () {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      // Remove all lingering backdrops
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(el => el.remove());
+      // Reset form
+      document.getElementById('productForm').reset();
+    });
+
+    // Hide backdrop saat modal dibuka
+    productModalEl.addEventListener('show.bs.modal', function () {
+      setTimeout(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+          backdrop.style.display = 'none';
+        }
+      }, 0);
+    });
+  </script>
 </body>
 </html>
