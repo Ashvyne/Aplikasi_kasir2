@@ -14,6 +14,90 @@ let isLoading = false;
 // Menyimpan referensi instance modal
 let currentModalInstance = null;
 
+// ============ DARK MODE MANAGEMENT ============
+
+/**
+ * Initialize dark mode from localStorage or system preference
+ */
+function initializeDarkMode() {
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const savedTheme = localStorage.getItem('theme');
+  
+  // Tentukan theme berdasarkan preferensi tersimpan atau sistem
+  let theme = savedTheme;
+  if (!theme) {
+    // Cek preferensi sistem
+    theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
+      ? 'dark' 
+      : 'light';
+  }
+  
+  // Terapkan theme
+  applyTheme(theme);
+  
+  // Setup event listener untuk dark mode toggle button
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+  }
+  
+  // Dengarkan perubahan preferensi sistem
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+}
+
+/**
+ * Terapkan theme ke dokumen
+ * @param {string} theme - 'light' atau 'dark'
+ */
+function applyTheme(theme) {
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if (darkModeToggle) {
+      darkModeToggle.innerHTML = '<i class="bi bi-sun-fill"></i>';
+      darkModeToggle.title = 'Toggle Light Mode';
+    }
+    console.log('🌙 Dark mode enabled');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    if (darkModeToggle) {
+      darkModeToggle.innerHTML = '<i class="bi bi-moon-fill"></i>';
+      darkModeToggle.title = 'Toggle Dark Mode';
+    }
+    console.log('☀️ Light mode enabled');
+  }
+  
+  // Simpan preferensi
+  localStorage.setItem('theme', theme);
+}
+
+/**
+ * Toggle dark mode on/off
+ */
+let isTogglingTheme = false;
+
+function toggleDarkMode() {
+  // Prevent rapid consecutive toggles
+  if (isTogglingTheme) return;
+  
+  isTogglingTheme = true;
+  
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(newTheme);
+  
+  // Reset toggle flag after animation completes
+  setTimeout(() => {
+    isTogglingTheme = false;
+  }, 100);
+}
+
 // ============ INITIALIZATION ============
 
 // Event listener ketika halaman selesai dimuat
@@ -50,6 +134,9 @@ window.addEventListener('load', () => {
 function initializeApp() {
   try {
     console.log('🔧 Initializing app...');
+    
+    // Initialize dark mode
+    initializeDarkMode();
     
     // Check server health
     console.log('🏥 Checking server health...');
@@ -874,6 +961,8 @@ async function checkoutTransaction() {
       discount: parseInt(document.getElementById('discount').value) || 0
     };
     
+    console.log('📝 Transaction Data:', JSON.stringify(transactionData, null, 2));
+    
     // Tampilkan loading
     Swal.fire({
       title: 'Memproses Transaksi',
@@ -886,28 +975,27 @@ async function checkoutTransaction() {
       }
     });
     
-    console.log('📝 Transaction Data:', transactionData);
-    
     // Kirim transaksi ke API
+    const token = localStorage.getItem('token');
     const response = await fetch('/api/transactions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(transactionData)
     });
     
     console.log('📊 Transaction Response Status:', response.status);
+    const responseData = await response.json();
+    console.log('📊 Response Data:', responseData);
     
     // Jika transaksi berhasil disimpan
-    if (response.ok) {
-      const data = await response.json();
+    if (response.ok && responseData.success) {
+      const data = responseData;
       
       console.log('✓ Transaction saved successfully');
       console.log('📦 Invoice Number:', data.invoiceNumber);
-      console.log('📦 Starting stock reduction for items...');
-      console.log('📦 Items to process:', cart.map(i => ({ name: i.name, qty: i.quantity })));
       
       // Array untuk track stock reduction results
       let stockReduceResults = [];
@@ -917,85 +1005,59 @@ async function checkoutTransaction() {
       for (const item of cart) {
         try {
           console.log(`📦 Reducing stock for product ID ${item.id} (${item.name})...`);
-          console.log(`   Quantity: ${item.quantity}`);
           
           const stockResponse = await fetch(`/api/products/${item.id}/reduce-stock`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+              'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ quantity: item.quantity })
           });
           
-          console.log(`   Response Status: ${stockResponse.status}`);
-          
           const stockData = await stockResponse.json();
-          console.log('   Response Data:', stockData);
+          console.log('   Response:', stockData);
           
           if (stockResponse.ok && stockData.success) {
-            // Stock reduction berhasil
             console.log(`✓ Stock reduced: ${item.name}`);
-            console.log(`  Old: ${stockData.product.oldStock} → New: ${stockData.product.newStock}`);
-            
             stockReduceResults.push({
               productId: item.id,
               productName: item.name,
               success: true,
               oldStock: stockData.product.oldStock,
-              newStock: stockData.product.newStock,
-              reduced: item.quantity
+              newStock: stockData.product.newStock
             });
           } else {
-            // Stock reduction gagal
             console.warn(`⚠️ Stock reduction failed for ${item.name}`);
-            console.warn(`   Error: ${stockData.message}`);
-            
             stockReduceResults.push({
               productId: item.id,
               productName: item.name,
               success: false,
               error: stockData.message
             });
-            
             allStockReduced = false;
           }
         } catch (error) {
           console.error(`❌ Error reducing stock for product ${item.id}:`, error);
-          
           stockReduceResults.push({
             productId: item.id,
             productName: item.name,
             success: false,
             error: error.message
           });
-          
           allStockReduced = false;
         }
       }
       
-      console.log('📋 Stock Reduction Results:', stockReduceResults);
+      let stockMessage = allStockReduced ? 'Semua stok berhasil diperbarui ✓' : '⚠️ Beberapa item gagal update stok';
       
-      // Buat pesan detail untuk hasil stock reduction
-      let stockMessage = '';
-      let failedItems = stockReduceResults.filter(r => !r.success);
-      
-      if (allStockReduced) {
-        stockMessage = 'Semua stok berhasil diperbarui ✓';
-        console.log('✓ All stock reductions completed successfully');
-      } else if (failedItems.length > 0) {
-        stockMessage = `⚠️ ${failedItems.length} item gagal update stok:\n${failedItems.map(f => `• ${f.productName}`).join('\n')}`;
-        console.warn(`⚠️ ${failedItems.length} stock reductions failed`);
-        console.warn('Failed items:', failedItems);
-      }
-      
-      // Tampilkan success alert dengan detail stock
+      // Tampilkan success alert
       Swal.fire({
         title: 'Transaksi Berhasil! 🎉',
         html: `
           <div style="text-align: left;">
             <div style="margin-bottom: 12px;">
-              <strong>No. Invoice:</strong> ${data.invoiceNumber || data.id}<br>
+              <strong>No. Invoice:</strong> ${data.invoiceNumber}<br>
               <strong>Total:</strong> Rp ${formatPrice(total)}<br>
               <strong>Stok:</strong> ${stockMessage}
             </div>
@@ -1015,23 +1077,20 @@ async function checkoutTransaction() {
         document.getElementById('cashReceived').value = '';
         document.getElementById('changeAmount').textContent = 'Rp 0';
         
-        console.log('✓ Cart cleared');
-        
-        // Reload semua data untuk update tampilan stok
+        // Reload semua data
         loadProducts();
         loadTransactions();
         loadReports();
-        
-        console.log('✓ All data reloaded');
       });
     } else {
-      // Transaksi gagal disimpan
-      const errorData = await response.json();
-      console.error('❌ Transaction failed:', errorData.message);
-      showAlertModal('Gagal!', errorData.message || 'Gagal memproses transaksi', 'danger');
+      // Transaksi gagal
+      const errorMsg = responseData.message || 'Gagal memproses transaksi';
+      console.error('❌ Transaction failed:', errorMsg);
+      showAlertModal('Gagal!', errorMsg, 'danger');
     }
   } catch (error) {
     console.error('❌ Checkout error:', error);
+    console.error('   Stack:', error.stack);
     showAlertModal('Error!', 'Terjadi kesalahan: ' + error.message, 'danger');
   }
 }

@@ -12,15 +12,17 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
       if (err) {
-        console.warn('⚠️ Invalid token:', err.message);
+        console.warn('⚠️ Token verification failed:', err.message);
         return res.status(403).json({ message: 'Token tidak valid' });
       }
+
       req.user = user;
+      console.log('✓ Token verified for user:', user.username);
       next();
     });
   } catch (error) {
-    console.error('❌ Auth error:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan' });
+    console.error('❌ Auth middleware error:', error);
+    res.status(500).json({ message: 'Authentication error' });
   }
 };
 
