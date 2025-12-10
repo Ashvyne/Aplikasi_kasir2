@@ -81,7 +81,7 @@ Langkah:
 
 Clone repository
 
-git clone https://github.com/username/Aplikasi_kasir2.git
+git clone [https://github.com/username/Aplikasi_kasir2.git](https://github.com/Ashvyne/Aplikasi_kasir2.git)
 
 
 Masuk ke folder

@@ -51,6 +51,17 @@ function initializeApp() {
   try {
     console.log('🔧 Initializing app...');
     
+    // Check server health
+    console.log('🏥 Checking server health...');
+    fetch('/api/health')
+      .then(res => res.json())
+      .then(data => {
+        console.log('✓ Server health:', data);
+      })
+      .catch(err => {
+        console.warn('⚠️ Health check failed:', err.message);
+      });
+    
     // Update waktu saat ini
     updateTime();
     
@@ -60,15 +71,23 @@ function initializeApp() {
     // Setup navigation menu
     setupNavigation();
     
-    // Load semua data
-    loadProducts();
-    loadTransactions();
-    loadReports();
+    // Load semua data dengan error handling
+    console.log('📦 Loading initial data...');
+    Promise.all([
+      loadProducts().catch(e => console.warn('⚠️ Products load failed:', e)),
+      loadTransactions().catch(e => console.warn('⚠️ Transactions load failed:', e)),
+      loadReports().catch(e => console.warn('⚠️ Reports load failed:', e))
+    ]).then(() => {
+      console.log('✓ All data loaded');
+    }).catch(error => {
+      console.error('❌ Data loading error:', error);
+    });
     
     console.log('✓ App initialized successfully');
   } catch (error) {
     console.error('❌ Initialization error:', error);
-    alert('❌ Gagal menginisialisasi aplikasi. Refresh halaman.');
+    console.error('Stack:', error.stack);
+    showAlertModal('❌ Error!', 'Gagal menginisialisasi aplikasi. Refresh halaman.', 'danger');
   }
 }
 
@@ -1201,9 +1220,12 @@ function viewTransaction(transactionId) {
 // Function untuk export transaksi ke Excel menggunakan SweetAlert2
 async function exportSalesExcel() {
   try {
+    console.log('📊 Starting sales export...');
+    
+    // Show loading
     Swal.fire({
       title: 'Memproses Export',
-      html: '<p>Sedang mempersiapkan file Excel...</p>',
+      html: '<p>Sedang membuat file Excel...</p>',
       icon: 'info',
       allowOutsideClick: false,
       allowEscapeKey: false,
@@ -1211,76 +1233,116 @@ async function exportSalesExcel() {
         Swal.showLoading();
       }
     });
-    
-    console.log('📊 Exporting sales to Excel...');
-    
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    showAlertModal(
-      '⏳ Sedang Dikembangkan',
-      'Fitur export ke Excel sedang dalam pengembangan. Silakan coba lagi nanti.',
-      'info'
-    );
-    
-    console.log('⚠️ Export feature not yet implemented');
-  } catch (error) {
-    console.error('❌ Export error:', error);
-    showAlertModal('Error!', 'Terjadi kesalahan saat export', 'danger');
-  }
-}
 
-// ============ REPORTS ============
-
-// Function untuk load laporan dari API
-async function loadReports() {
-  try {
-    console.log('📊 Loading reports...');
-    const response = await fetch('/api/reports', {
+    const token = localStorage.getItem('token');
+    
+    // Fetch export data
+    const response = await fetch('/api/export/sales-excel', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       }
     });
-    
-    if (response.ok) {
-      const data = await response.json();
-      displayReports(data);
-    }
-  } catch (error) {
-    console.error('⚠️ Error loading reports:', error);
-    displayReports({});
-  }
-}
 
-// Function untuk menampilkan laporan di dashboard
-function displayReports(data) {
-  try {
-    document.getElementById('todayTransactions').textContent = data.todayTransactions || 0;
-    document.getElementById('todayRevenue').textContent = 'Rp ' + formatPrice(data.todayRevenue || 0);
-    document.getElementById('weekTransactions').textContent = data.weekTransactions || 0;
-    document.getElementById('lowStockCount').textContent = data.lowStockCount || 0;
-    
-    const tbody = document.getElementById('topProductsBody');
-    tbody.innerHTML = '';
-    
-    if (data.topProducts && data.topProducts.length > 0) {
-      data.topProducts.forEach((product, index) => {
-        const row = tbody.insertRow();
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${escapeHtml(product.name)}</td>
-          <td>${product.sold} unit</td>
-          <td>Rp ${formatPrice(product.revenue)}</td>
-        `;
-      });
+    if (!response.ok) {
+      throw new Error('Export gagal');
     }
+
+    // Create blob dari response
+    const blob = await response.blob();
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Laporan_Penjualan_${new Date().getTime()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    console.log('✓ Export completed successfully');
+    
+    Swal.fire({
+      title: 'Berhasil! ✓',
+      text: 'File telah didownload',
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      confirmButtonText: '✓ OK'
+    });
   } catch (error) {
-    console.error('❌ Display reports error:', error);
+    console.error('❌ Export error:', error);
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat export: ' + error.message,
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      confirmButtonText: '✓ OK'
+    });
   }
 }
 
 // Function untuk export produk ke Excel
 async function exportProductsExcel() {
-  alert('⏳ Fitur export sedang dalam pengembangan');
+  try {
+    console.log('📊 Starting products export...');
+    
+    // Show loading
+    Swal.fire({
+      title: 'Memproses Export',
+      html: '<p>Sedang membuat file Excel...</p>',
+      icon: 'info',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    const token = localStorage.getItem('token');
+    
+    // Fetch export data
+    const response = await fetch('/api/export/products-excel', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Export gagal');
+    }
+
+    // Create blob dari response
+    const blob = await response.blob();
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Daftar_Produk_${new Date().getTime()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    console.log('✓ Export completed successfully');
+    
+    Swal.fire({
+      title: 'Berhasil! ✓',
+      text: 'File telah didownload',
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      confirmButtonText: '✓ OK'
+    });
+  } catch (error) {
+    console.error('❌ Export error:', error);
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat export: ' + error.message,
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      confirmButtonText: '✓ OK'
+    });
+  }
 }
 
 // ============ HELPERS ============
@@ -1376,3 +1438,101 @@ function showAlertModal(title, message, type = 'success') {
 
 // Log ketika script berhasil dimuat
 console.log('✓ App.js loaded successfully');
+
+// ============ REPORTS ============
+
+// Function untuk load laporan dari API
+async function loadReports() {
+  try {
+    console.log('📊 Loading reports...');
+    const response = await fetch('/api/reports', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    console.log('📊 Reports response status:', response.status);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('📊 Reports data:', data);
+      displayReports(data);
+    } else {
+      const errorData = await response.json();
+      console.error('❌ Reports error:', errorData);
+      displayReports({});
+    }
+  } catch (error) {
+    console.error('⚠️ Error loading reports:', error);
+    displayReports({});
+  }
+}
+
+// Function untuk menampilkan laporan di dashboard
+function displayReports(data) {
+  try {
+    // Set KPI values dengan default 0 jika undefined
+    const todayTransactions = data.todayTransactions || 0;
+    const todayRevenue = data.todayRevenue || 0;
+    const weekTransactions = data.weekTransactions || 0;
+    const lowStockCount = data.lowStockCount || 0;
+    const topProducts = data.topProducts || [];
+    
+    console.log('📊 Displaying reports:');
+    console.log('   Today Transactions:', todayTransactions);
+    console.log('   Today Revenue:', todayRevenue);
+    console.log('   Week Transactions:', weekTransactions);
+    console.log('   Low Stock:', lowStockCount);
+    console.log('   Top Products:', topProducts.length);
+    
+    // Update KPI cards dengan format yang lebih baik
+    const todayTransEl = document.getElementById('todayTransactions');
+    const todayRevEl = document.getElementById('todayRevenue');
+    const weekTransEl = document.getElementById('weekTransactions');
+    const lowStockEl = document.getElementById('lowStockCount');
+    
+    if (todayTransEl) todayTransEl.textContent = todayTransactions.toLocaleString('id-ID');
+    if (todayRevEl) todayRevEl.textContent = 'Rp ' + formatPrice(todayRevenue);
+    if (weekTransEl) weekTransEl.textContent = weekTransactions.toLocaleString('id-ID');
+    if (lowStockEl) lowStockEl.textContent = lowStockCount.toLocaleString('id-ID');
+    
+    // Update top products table
+    const tbody = document.getElementById('topProductsBody');
+    if (!tbody) {
+      console.warn('⚠️ topProductsBody element not found');
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (topProducts && topProducts.length > 0) {
+      topProducts.forEach((product, index) => {
+        const row = tbody.insertRow();
+        const productSold = parseInt(product.sold) || 0;
+        const productRevenue = parseInt(product.revenue) || 0;
+        
+        row.innerHTML = `
+          <td>
+            <span class="badge bg-primary rounded-pill">${index + 1}</span>
+          </td>
+          <td>
+            <strong>${escapeHtml(product.name)}</strong>
+          </td>
+          <td>
+            <span class="badge bg-info">${productSold} unit</span>
+          </td>
+          <td>
+            <strong class="text-success">Rp ${formatPrice(productRevenue)}</strong>
+          </td>
+        `;
+      });
+      console.log('✓ Top products displayed:', topProducts.length);
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;"><em class="text-muted">Belum ada data penjualan</em></td></tr>';
+    }
+    
+    console.log('✓ Reports displayed');
+  } catch (error) {
+    console.error('❌ Display reports error:', error);
+  }
+}

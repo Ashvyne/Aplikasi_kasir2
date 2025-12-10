@@ -43,23 +43,33 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('❌ Unhandled Promise Rejection:', event.reason);
 });
 
-// Monitor network requests
+// Debug helper untuk logging semua fetch requests
 const originalFetch = window.fetch;
+
 window.fetch = function(...args) {
-  const [resource, config] = args;
-  console.log('📡 Fetch:', args[0]);
+  const [url, options] = args;
+  const method = options?.method || 'GET';
+  
+  console.log(`📡 Fetch: ${method} ${url}`);
   
   return originalFetch.apply(this, args)
     .then(response => {
-      if (!response.ok) {
-        console.warn(`⚠️ Response: ${response.status} ${response.statusText}`);
-      }
+      console.log(`   Response Status: ${response.status}`);
       return response;
     })
     .catch(error => {
-      console.error('❌ Fetch Error:', error.message);
+      console.error(`   ❌ Error: ${error.message}`);
       throw error;
     });
+};
+
+// Override console.error untuk lebih visible
+const originalError = console.error;
+console.error = function(...args) {
+  originalError.apply(console, args);
+  // Log ke window untuk debugging
+  if (!window.errorLog) window.errorLog = [];
+  window.errorLog.push(args.join(' '));
 };
 
 // Test API connection on startup

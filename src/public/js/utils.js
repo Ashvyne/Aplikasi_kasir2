@@ -13,7 +13,7 @@ function parseNum(val) {
   return isNaN(num) ? 0 : num;
 }
 
-// API helper
+// API helperibdauvbi
 async function apiCall(url, method = 'GET', data = null) {
   const options = {
     method,
