@@ -293,6 +293,13 @@ body {
   object-fit: cover;
 }
 
+.product-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .product-card-image-placeholder {
   font-size: 3rem;
   color: var(--text-secondary);
@@ -936,19 +943,40 @@ body {
 
 /* Bootstrap Form Controls */
 [data-theme="dark"] .form-control {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--border-color);
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+  border: 1px solid #505050;
 }
 
 [data-theme="dark"] .form-control:focus {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  background-color: #3a3a3a;
+  color: #ffffff;
   border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
 [data-theme="dark"] .form-control::placeholder {
-  color: var(--text-muted);
+  color: #999999;
+}
+
+/* Form Select Dropdown */
+[data-theme="dark"] .form-select {
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+  border: 1px solid #505050;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e0e0e0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .form-select:focus {
+  background-color: #3a3a3a;
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+[data-theme="dark"] .form-select option {
+  background-color: #3a3a3a;
+  color: #e0e0e0;
 }
 
 /* Buttons */
@@ -1123,17 +1151,26 @@ body {
 
 /* Input Groups and Labels */
 [data-theme="dark"] .input-group-text {
-  background-color: var(--bg-tertiary);
-  border-color: var(--border-color);
-  color: var(--text-primary);
+  background-color: #3a3a3a;
+  border-color: #505050;
+  color: #e0e0e0;
 }
 
 [data-theme="dark"] .form-label {
-  color: var(--text-primary);
+  color: #e0e0e0;
+  font-weight: 500;
 }
 
 [data-theme="dark"] .form-text {
-  color: var(--text-secondary);
+  color: #b0b0b0;
+}
+
+[data-theme="dark"] .text-muted {
+  color: #a0a0a0 !important;
+}
+
+[data-theme="dark"] small {
+  color: #a0a0a0;
 }
 
 /* Specific POS Page Styles */
@@ -1167,27 +1204,31 @@ body {
 }
 
 [data-theme="dark"] .alert-success {
-  background-color: rgba(25, 135, 84, 0.15);
-  color: #82e0aa;
-  border-left-color: #82e0aa;
+  background-color: rgba(25, 135, 84, 0.25);
+  color: #9cff9a;
+  border-left-color: #51cf66;
+  border: 1px solid rgba(81, 207, 102, 0.3);
 }
 
 [data-theme="dark"] .alert-danger {
-  background-color: rgba(220, 53, 69, 0.15);
-  color: #ff7b7b;
+  background-color: rgba(220, 53, 69, 0.25);
+  color: #ff9999;
   border-left-color: #ff7b7b;
+  border: 1px solid rgba(255, 123, 123, 0.3);
 }
 
 [data-theme="dark"] .alert-warning {
-  background-color: rgba(255, 193, 7, 0.15);
-  color: #ffd966;
+  background-color: rgba(255, 193, 7, 0.25);
+  color: #ffde59;
   border-left-color: #ffd966;
+  border: 1px solid rgba(255, 217, 102, 0.3);
 }
 
 [data-theme="dark"] .alert-info {
-  background-color: rgba(13, 202, 240, 0.15);
-  color: #9ccdff;
-  border-left-color: #9ccdff;
+  background-color: rgba(13, 202, 240, 0.25);
+  color: #99e5ff;
+  border-left-color: #4dd9ff;
+  border: 1px solid rgba(77, 217, 255, 0.3);
 }
 
 /* Stat Cards & Info Cards */
@@ -1209,6 +1250,48 @@ body {
 [data-theme="dark"] .data-label,
 [data-theme="dark"] [class*="label"] {
   color: var(--text-secondary);
+}
+
+/* ============== IMAGE UPLOAD STYLES ============== */
+.border-dashed {
+  border-style: dashed !important;
+  border-color: #dee2e6 !important;
+}
+
+[data-theme="dark"] .border-dashed {
+  border-color: var(--border-color) !important;
+}
+
+#imagePreviewContainer {
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  background-color: transparent;
+}
+
+#imagePreviewContainer:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  border-color: #0d6efd;
+}
+
+[data-theme="dark"] #imagePreviewContainer:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+  border-color: #4dd9ff;
+}
+
+#imagePreview i {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#previewImg {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  display: block;
 }
 
 /* Modal Styles */
@@ -1366,6 +1449,48 @@ body {
 
 .fw-500 {
   font-weight: 500;
+}
+
+/* ============== POS CALCULATION STYLING ============== */
+.subtotal-amount {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.total-amount {
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.change-amount-text {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.pos-total-alert {
+  background-color: rgba(13, 202, 240, 0.15);
+  border-left: 4px solid #4dd9ff;
+}
+
+.pos-change-alert {
+  background-color: rgba(25, 135, 84, 0.15);
+  border-left: 4px solid #51cf66;
+}
+
+[data-theme="dark"] .subtotal-amount,
+[data-theme="dark"] .total-amount,
+[data-theme="dark"] .change-amount-text {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .pos-total-alert {
+  background-color: rgba(13, 202, 240, 0.25);
+}
+
+[data-theme="dark"] .pos-change-alert {
+  background-color: rgba(25, 135, 84, 0.25);
 }
 
 /* ============== SWAL CUSTOM ============== */

@@ -158,12 +158,12 @@
                       <!-- Subtotal -->
                       <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Subtotal</span>
-                        <strong id="subtotal" class="text-dark">Rp 0</strong>
+                        <strong id="subtotal" class="subtotal-amount">Rp 0</strong>
                       </div>
                       
                       <!-- Discount Input -->
                       <div class="input-group input-group-sm mb-3">
-                        <span class="input-group-text bg-white">
+                        <span class="input-group-text">
                           <i class="bi bi-percent"></i>
                         </span>
                         <input type="number" id="discount" class="form-control" 
@@ -171,10 +171,10 @@
                       </div>
                       
                       <!-- Total Amount -->
-                      <div class="alert alert-info mb-3 py-2">
+                      <div class="alert alert-info mb-3 py-2 pos-total-alert">
                         <div class="d-flex justify-content-between align-items-center">
                           <span class="fw-bold">Total</span>
-                          <strong id="total" style="font-size: 1.2rem;">Rp 0</strong>
+                          <strong id="total" class="total-amount">Rp 0</strong>
                         </div>
                       </div>
                       
@@ -201,9 +201,9 @@
                       </div>
                       
                       <!-- Change Amount Display -->
-                      <div class="alert alert-success mb-0 py-2">
+                      <div class="alert alert-success mb-0 py-2 pos-change-alert">
                         <small class="text-muted d-block mb-1">Kembalian</small>
-                        <div class="h5 mb-0 text-success" id="changeAmount">Rp 0</div>
+                        <div class="h5 mb-0 change-amount-text" id="changeAmount">Rp 0</div>
                       </div>
                     </div>
                   </div>
@@ -502,6 +502,27 @@
                 <input type="number" class="form-control form-control-lg" id="productStock" 
                        required placeholder="0" min="0" autocomplete="off">
                 <div class="form-text">Jumlah stok awal</div>
+              </div>
+            </div>
+
+            <!-- Image Upload Section -->
+            <div class="mt-4">
+              <label for="productImage" class="form-label fw-500">
+                <i class="bi bi-image"></i> Foto Produk
+              </label>
+              <div class="card border-2 border-dashed p-3" id="imagePreviewContainer" style="text-align: center; cursor: pointer; transition: all 0.3s;">
+                <input type="file" id="productImage" class="form-control d-none" accept="image/*" onchange="previewImage(event)">
+                <div id="imagePreview">
+                  <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #999;"></i>
+                  <p class="text-muted mt-2 mb-0">Klik untuk upload atau drag & drop gambar di sini</p>
+                  <small class="text-muted d-block mt-1">Maksimal 5MB (JPEG, PNG, GIF, WebP)</small>
+                </div>
+              </div>
+              <div id="imagePreviewDisplay" style="margin-top: 10px; display: none;">
+                <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="clearImagePreview()">
+                  <i class="bi bi-trash"></i> Hapus Gambar
+                </button>
               </div>
             </div>
 

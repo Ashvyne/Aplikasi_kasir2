@@ -389,9 +389,10 @@ function displayProducts() {
       // Buat HTML untuk card dengan gambar
       card.innerHTML = `
         <div class="product-card-image">
-          <div class="product-card-image-placeholder">
-            ${category.emoji}
-          </div>
+          ${product.image_url ? 
+            `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" class="product-card-img">` :
+            `<div class="product-card-image-placeholder">${category.emoji}</div>`
+          }
         </div>
         <div class="product-card-header">
           ${product.stock < 5 && product.stock > 0 ? '<span class="product-card-badge">⚠️ Terbatas</span>' : ''}
@@ -500,9 +501,25 @@ function openProductModal(productId = null) {
     // Clear alert
     alertContainer.innerHTML = '';
     
-    // Reset form
+    // Reset form dan image preview
     if (form) {
       form.reset();
+    }
+    
+    // Reset image preview
+    const fileInput = document.getElementById('productImage');
+    if (fileInput) {
+      fileInput.value = '';
+      const imagePreviewDiv = document.getElementById('imagePreview');
+      const previewDisplay = document.getElementById('imagePreviewDisplay');
+      const previewContainer = document.getElementById('imagePreviewContainer');
+      
+      if (imagePreviewDiv && previewDisplay) {
+        imagePreviewDiv.style.display = 'block';
+        previewDisplay.style.display = 'none';
+        previewContainer.classList.remove('border-success');
+        previewContainer.classList.add('border-dashed');
+      }
     }
     
     // Mode Edit atau Tambah
@@ -523,6 +540,22 @@ function openProductModal(productId = null) {
         document.getElementById('productCategory').value = product.category || '1';
         document.getElementById('productPrice').value = product.price || 0;
         document.getElementById('productStock').value = product.stock || 0;
+        
+        // Tampilkan preview gambar jika ada
+        if (product.image_url) {
+          const previewImg = document.getElementById('previewImg');
+          const imagePreviewDiv = document.getElementById('imagePreview');
+          const previewDisplay = document.getElementById('imagePreviewDisplay');
+          const previewContainer = document.getElementById('imagePreviewContainer');
+          
+          if (previewImg && imagePreviewDiv && previewDisplay) {
+            previewImg.src = product.image_url;
+            imagePreviewDiv.style.display = 'none';
+            previewDisplay.style.display = 'block';
+            previewContainer.classList.add('border-success');
+            previewContainer.classList.remove('border-dashed');
+          }
+        }
       }
     } else {
       // Mode Tambah - reset title dan button
@@ -604,6 +637,99 @@ function showAlert(type, title, message) {
   }
 }
 
+// Function untuk preview gambar produk
+function previewImage(event) {
+  const file = event.target.files[0];
+  const previewContainer = document.getElementById('imagePreviewContainer');
+  const previewDisplay = document.getElementById('imagePreviewDisplay');
+  const previewImg = document.getElementById('previewImg');
+  const imagePreviewDiv = document.getElementById('imagePreview');
+  
+  if (file) {
+    // Validasi file size
+    if (file.size > 5 * 1024 * 1024) {
+      showAlert('warning', 'Peringatan', 'Ukuran file terlalu besar, maksimal 5MB');
+      event.target.value = '';
+      return;
+    }
+    
+    // Validasi file type
+    if (!file.type.startsWith('image/')) {
+      showAlert('warning', 'Peringatan', 'File harus berupa gambar');
+      event.target.value = '';
+      return;
+    }
+    
+    // Buat preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      imagePreviewDiv.style.display = 'none';
+      previewDisplay.style.display = 'block';
+      previewContainer.classList.add('border-success');
+      previewContainer.classList.remove('border-dashed');
+      console.log('✓ Image preview loaded');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Function untuk clear image preview
+function clearImagePreview() {
+  const fileInput = document.getElementById('productImage');
+  const previewContainer = document.getElementById('imagePreviewContainer');
+  const previewDisplay = document.getElementById('imagePreviewDisplay');
+  const imagePreviewDiv = document.getElementById('imagePreview');
+  
+  fileInput.value = '';
+  imagePreviewDiv.style.display = 'block';
+  previewDisplay.style.display = 'none';
+  previewContainer.classList.remove('border-success');
+  previewContainer.classList.add('border-dashed');
+  console.log('✓ Image preview cleared');
+}
+
+// Drag & drop handling untuk upload gambar
+document.addEventListener('DOMContentLoaded', () => {
+  const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+  const productImageInput = document.getElementById('productImage');
+  
+  if (imagePreviewContainer && productImageInput) {
+    // Click to upload
+    imagePreviewContainer.addEventListener('click', () => {
+      productImageInput.click();
+    });
+    
+    // Drag over
+    imagePreviewContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      imagePreviewContainer.style.borderColor = '#0d6efd';
+      imagePreviewContainer.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
+    });
+    
+    // Drag leave
+    imagePreviewContainer.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      imagePreviewContainer.style.borderColor = '#dee2e6';
+      imagePreviewContainer.style.backgroundColor = 'transparent';
+    });
+    
+    // Drop
+    imagePreviewContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      imagePreviewContainer.style.borderColor = '#dee2e6';
+      imagePreviewContainer.style.backgroundColor = 'transparent';
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        productImageInput.files = files;
+        const event = new Event('change', { bubbles: true });
+        productImageInput.dispatchEvent(event);
+      }
+    });
+  }
+});
+
 // Function untuk save/edit produk
 async function saveProduct(event) {
   event.preventDefault();
@@ -613,28 +739,27 @@ async function saveProduct(event) {
     
     // Ambil nilai dari form
     const productId = document.getElementById('productId').value;
-    const productData = {
-      name: document.getElementById('productName').value.trim(),
-      sku: document.getElementById('productSku').value.trim(),
-      category: document.getElementById('productCategory').value,
-      price: parseInt(document.getElementById('productPrice').value) || 0,
-      stock: parseInt(document.getElementById('productStock').value) || 0
-    };
+    const productName = document.getElementById('productName').value.trim();
+    const productSku = document.getElementById('productSku').value.trim();
+    const productCategory = document.getElementById('productCategory').value;
+    const productPrice = parseInt(document.getElementById('productPrice').value) || 0;
+    const productStock = parseInt(document.getElementById('productStock').value) || 0;
+    const productImageFile = document.getElementById('productImage').files[0];
     
     // Validasi input
-    if (!productData.name) {
+    if (!productName) {
       showAlert('danger', 'Error', 'Nama produk harus diisi');
       return;
     }
-    if (!productData.sku) {
+    if (!productSku) {
       showAlert('danger', 'Error', 'SKU harus diisi');
       return;
     }
-    if (productData.price <= 0) {
+    if (productPrice <= 0) {
       showAlert('danger', 'Error', 'Harga harus lebih dari 0');
       return;
     }
-    if (productData.stock < 0) {
+    if (productStock < 0) {
       showAlert('danger', 'Error', 'Stok tidak boleh negatif');
       return;
     }
@@ -649,23 +774,36 @@ async function saveProduct(event) {
       return;
     }
     
+    // Gunakan FormData untuk handle file upload
+    const formData = new FormData();
+    formData.append('name', productName);
+    formData.append('sku', productSku);
+    formData.append('category', productCategory);
+    formData.append('price', productPrice);
+    formData.append('stock', productStock);
+    
+    // Append image jika ada file
+    if (productImageFile) {
+      formData.append('image', productImageFile);
+    }
+    
     // Tentukan URL dan method berdasarkan mode
     const url = productId ? `/api/products/${productId}` : '/api/products';
     const method = productId ? 'PUT' : 'POST';
     
     console.log(`📡 ${method} ${url}`);
-    console.log('Data:', productData);
+    console.log('Sending FormData with image...');
     
     // Kirim request ke API
     const response = await fetch(url, {
       method: method,
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
+        // Jangan set Content-Type, browser akan set secara otomatis dengan boundary
       },
-      body: JSON.stringify(productData)
+      body: formData
     });
-    
+
     console.log('📊 Response status:', response.status);
     
     // Jika response OK
