@@ -146,20 +146,21 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`
-╔════════════════════════════════════════════════════════════╗
-║                                                            ║
-║          🚀 Aplikasi Kasir Modern Runnin                    ║
-║                                                            ║
-║  Server: http://localhost:${PORT}                          ║
-║  Login:  http://localhost:${PORT}/login                    ║
-║  Dashboard: http://localhost:${PORT}/                      ║
-║                                                            ║
-║  Demo Credentials:                                         ║
-║  • Username: admin                                         ║
-║  • Password: 123456                                        ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║                 🚀 Aplikasi Kasir Modern Berjalan!                   ║
+║                                                                      ║
+║   Server     : http://localhost:${PORT}                              ║
+║   Login      : http://localhost:${PORT}/login                        ║
+║   Dashboard  : http://localhost:${PORT}/                             ║
+║                                                                      ║
+║   Demo Credentials:                                                  ║
+║     • Username : admin                                               ║
+║     • Password : 123456                                              ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
   `);
+
   console.log('📍 API Endpoints:');
   console.log('   GET    /api/health');
   console.log('   POST   /api/auth/login');
