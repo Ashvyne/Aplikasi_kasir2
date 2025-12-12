@@ -19,14 +19,14 @@ exports.getDailySalesReport = (req, res) => {
   );
 };
 
-// Top selling products
+// Top selling products (sorted by revenue)
 exports.getTopProducts = (req, res) => {
   db.all(
-    `SELECT p.id, p.name, p.sku, SUM(ti.quantity) as total_sold, SUM(ti.subtotal) as revenue
+    `SELECT p.id, p.name, p.sku, p.price, SUM(ti.quantity) as total_sold, SUM(ti.subtotal) as revenue
     FROM transaction_items ti
     JOIN products p ON ti.product_id = p.id
     GROUP BY p.id
-    ORDER BY total_sold DESC
+    ORDER BY revenue DESC
     LIMIT 10`,
     (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });

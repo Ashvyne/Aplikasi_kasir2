@@ -37,6 +37,53 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETE transaction
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`🗑️  DELETE /api/transactions/${id}`);
+
+    // Get transaction items first to reverse stock
+    const transaction = await Transaction.findByPk(id);
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan' });
+    }
+
+    // Parse items dan reverse stock untuk setiap item
+    let items = transaction.items || [];
+    if (typeof items === 'string') {
+      items = JSON.parse(items);
+    }
+
+    // Reverse stock untuk setiap produk
+    for (const item of items) {
+      const Product = require('../models/Product');
+      const product = await Product.findByPk(item.product_id);
+      if (product) {
+        product.stock = (product.stock || 0) + (item.quantity || 0);
+        await product.save();
+        console.log(`✓ Reversed stock for product ${item.product_id}: +${item.quantity}`);
+      }
+    }
+
+    // Delete transaction
+    await transaction.destroy();
+    console.log(`✓ Transaction ${id} deleted successfully`);
+
+    res.json({ 
+      success: true, 
+      message: 'Transaksi berhasil dihapus',
+      id: id
+    });
+  } catch (error) {
+    console.error('❌ Error deleting transaction:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Gagal menghapus transaksi: ' + error.message 
+    });
+  }
+});
+
 // POST create transaction
 router.post('/', authenticateToken, async (req, res) => {
   try {

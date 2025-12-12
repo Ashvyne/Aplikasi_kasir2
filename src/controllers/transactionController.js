@@ -196,14 +196,14 @@ exports.getDailySalesReport = (req, res) => {
   );
 };
 
-// Get top products
+// Get top products (sorted by revenue)
 exports.getTopProducts = (req, res) => {
   db.all(
-    `SELECT p.id, p.name, SUM(ti.quantity) as total_qty, SUM(ti.subtotal) as total_revenue
+    `SELECT p.id, p.name, p.price, SUM(ti.quantity) as total_qty, SUM(ti.subtotal) as total_revenue
      FROM transaction_items ti
      JOIN products p ON ti.product_id = p.id
      GROUP BY p.id
-     ORDER BY total_qty DESC
+     ORDER BY total_revenue DESC
      LIMIT 10`,
     (err, rows) => {
       if (err) {

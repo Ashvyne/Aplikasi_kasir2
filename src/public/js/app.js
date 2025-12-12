@@ -395,9 +395,13 @@ function displayProducts() {
           }
         </div>
         <div class="product-card-header">
-          ${product.stock < 5 && product.stock > 0 ? '<span class="product-card-badge">⚠️ Terbatas</span>' : ''}
-          ${product.stock === 0 ? '<span class="product-card-badge" style="background: #ef4444;">Habis</span>' : ''}
-          <h4 class="product-card-name">${escapeHtml(product.name)}</h4>
+          <div class="product-card-header-content">
+            <h4 class="product-card-name">${escapeHtml(product.name)}</h4>
+            <div>
+              ${product.stock < 5 && product.stock > 0 ? '<span class="product-card-badge">⚠️ Terbatas</span>' : ''}
+              ${product.stock === 0 ? '<span class="product-card-badge" style="background: #ef4444;">Habis</span>' : ''}
+            </div>
+          </div>
         </div>
         <div class="product-card-content">
           <div>
@@ -1328,6 +1332,7 @@ function displayTransactions() {
         <td><span class="badge bg-success">${escapeHtml(paymentMethod)}</span></td>
         <td>
           <button class="btn btn-sm btn-primary" onclick="viewTransaction(${trans.id})">👁️ Lihat</button>
+          <button class="btn btn-sm btn-danger ms-2" onclick="deleteTransaction(${trans.id})">🗑️ Hapus</button>
         </td>
       `;
     });
@@ -1478,6 +1483,133 @@ function viewTransaction(transactionId) {
       text: 'Terjadi kesalahan: ' + error.message,
       icon: 'error',
       confirmButtonColor: '#0d6efd'
+    });
+  }
+}
+
+// Function untuk delete transaksi
+async function deleteTransaction(transactionId) {
+  try {
+    console.log(`🗑️  Deleting transaction ${transactionId}...`);
+    
+    // Cari transaksi untuk konfirmasi
+    const trans = transactions.find(t => t.id === transactionId);
+    if (!trans) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Transaksi tidak ditemukan',
+        icon: 'error',
+        confirmButtonColor: '#dc3545'
+      });
+      return;
+    }
+
+    // Konfirmasi delete dengan SweetAlert2
+    const result = await Swal.fire({
+      title: 'Hapus Transaksi?',
+      html: `
+        <div style="text-align: left;">
+          <p class="swal-dark-text">Apakah Anda yakin ingin menghapus transaksi berikut?</p>
+          <div class="swal-dark-info-box" style="background: rgba(255, 193, 7, 0.15); border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin: 15px 0;">
+            <strong style="display: block; margin-bottom: 6px;">No. Invoice:</strong>
+            <code style="background: rgba(255, 255, 255, 0.1); padding: 4px 8px; border-radius: 4px; word-break: break-all;">${escapeHtml(trans.invoiceNumber || trans.invoice_number || 'N/A')}</code>
+            <br><br>
+            <strong style="display: block; margin-bottom: 6px;">Total:</strong>
+            <span style="font-size: 1.1em; font-weight: bold;">Rp ${formatPrice(trans.total || 0)}</span>
+          </div>
+          <p class="swal-dark-warning" style="color: #ffc107; font-weight: bold; margin-bottom: 0;">⚠️ Stok produk akan dikembalikan otomatis!</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '🗑️ Hapus Transaksi',
+      cancelButtonText: 'Batal',
+      customClass: {
+        popup: 'swal-dark-popup',
+        title: 'swal-dark-title',
+        htmlContainer: 'swal-dark-html',
+        confirmButton: 'swal-confirm-delete',
+        cancelButton: 'swal-cancel-btn'
+      }
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    // Show loading
+    Swal.fire({
+      title: 'Menghapus...',
+      html: '<p class="swal-dark-text">Sedang menghapus transaksi...</p>',
+      icon: 'info',
+      allowOutsideClick: false,
+      customClass: {
+        popup: 'swal-dark-popup',
+        title: 'swal-dark-title',
+        htmlContainer: 'swal-dark-html'
+      },
+      didOpen: async () => {
+        try {
+          const response = await fetch(`/api/transactions/${transactionId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✓ Transaction deleted:', data);
+
+            // Reload transactions
+            await loadTransactions();
+
+            Swal.fire({
+              title: 'Berhasil!',
+              text: 'Transaksi berhasil dihapus. Stok produk telah dikembalikan.',
+              icon: 'success',
+              confirmButtonColor: '#0d6efd',
+              customClass: {
+                popup: 'swal-dark-popup',
+                title: 'swal-dark-title',
+                htmlContainer: 'swal-dark-html'
+              }
+            });
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Gagal menghapus transaksi');
+          }
+        } catch (error) {
+          console.error('❌ Delete error:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Gagal menghapus transaksi',
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            customClass: {
+              popup: 'swal-dark-popup',
+              title: 'swal-dark-title',
+              htmlContainer: 'swal-dark-html'
+            }
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Delete transaction error:', error);
+    Swal.fire({
+      title: 'Error!',
+      text: 'Terjadi kesalahan: ' + error.message,
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      customClass: {
+        popup: 'swal-dark-popup',
+        title: 'swal-dark-title',
+        htmlContainer: 'swal-dark-html'
+      }
     });
   }
 }
@@ -1773,15 +1905,17 @@ function displayReports(data) {
     if (topProducts && topProducts.length > 0) {
       topProducts.forEach((product, index) => {
         const row = tbody.insertRow();
-        const productSold = parseInt(product.sold) || 0;
-        const productRevenue = parseInt(product.revenue) || 0;
+        const productSold = parseInt(product.total_qty || product.sold) || 0;
+        const productRevenue = parseInt(product.total_revenue || product.revenue) || 0;
+        const productId = product.id;
+        const productName = product.name;
         
         row.innerHTML = `
           <td>
             <span class="badge bg-primary rounded-pill">${index + 1}</span>
           </td>
           <td>
-            <strong>${escapeHtml(product.name)}</strong>
+            <strong>${escapeHtml(productName)}</strong>
           </td>
           <td>
             <span class="badge bg-info">${productSold} unit</span>
@@ -1789,15 +1923,129 @@ function displayReports(data) {
           <td>
             <strong class="text-success">Rp ${formatPrice(productRevenue)}</strong>
           </td>
+          <td>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct(${productId}, '${escapeHtml(productName).replace(/'/g, "\\'")}')">🗑️ Hapus</button>
+          </td>
         `;
       });
       console.log('✓ Top products displayed:', topProducts.length);
     } else {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;"><em class="text-muted">Belum ada data penjualan</em></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;"><em class="text-muted">Belum ada data penjualan</em></td></tr>';
     }
     
     console.log('✓ Reports displayed');
   } catch (error) {
     console.error('❌ Display reports error:', error);
+  }
+}
+// Function untuk delete produk dari laporan
+async function deleteProduct(productId, productName) {
+  try {
+    console.log(`🗑️ Deleting product ${productId}...`);
+
+    // Konfirmasi delete dengan SweetAlert2
+    const result = await Swal.fire({
+      title: 'Hapus Produk?',
+      html: `
+        <div style="text-align: left;">
+          <p class="swal-dark-text">Apakah Anda yakin ingin menghapus produk berikut?</p>
+          <div class="swal-dark-info-box" style="background: rgba(220, 53, 69, 0.15); border: 1px solid #dc3545; border-radius: 6px; padding: 12px; margin: 15px 0;">
+            <strong style="display: block; margin-bottom: 6px;">Nama Produk:</strong>
+            <span style="font-size: 1.05em;">${escapeHtml(productName)}</span>
+          </div>
+          <p class="swal-dark-warning" style="color: #ffc107; font-weight: bold; margin-bottom: 0;">⚠️ Tindakan ini tidak dapat dibatalkan!</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '🗑️ Hapus Produk',
+      cancelButtonText: 'Batal',
+      customClass: {
+        popup: 'swal-dark-popup',
+        title: 'swal-dark-title',
+        htmlContainer: 'swal-dark-html',
+        confirmButton: 'swal-confirm-delete',
+        cancelButton: 'swal-cancel-btn'
+      }
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    // Show loading
+    Swal.fire({
+      title: 'Menghapus...',
+      html: '<p class="swal-dark-text">Sedang menghapus produk...</p>',
+      icon: 'info',
+      allowOutsideClick: false,
+      customClass: {
+        popup: 'swal-dark-popup',
+        title: 'swal-dark-title',
+        htmlContainer: 'swal-dark-html'
+      },
+      didOpen: async () => {
+        try {
+          const response = await fetch(`/api/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✓ Product deleted:', data);
+
+            // Reload reports
+            await loadReports();
+
+            Swal.fire({
+              title: 'Berhasil!',
+              text: `Produk "${productName}" berhasil dihapus.`,
+              icon: 'success',
+              confirmButtonColor: '#0d6efd',
+              customClass: {
+                popup: 'swal-dark-popup',
+                title: 'swal-dark-title',
+                htmlContainer: 'swal-dark-html'
+              }
+            });
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Gagal menghapus produk');
+          }
+        } catch (error) {
+          console.error('❌ Delete error:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Gagal menghapus produk',
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            customClass: {
+              popup: 'swal-dark-popup',
+              title: 'swal-dark-title',
+              htmlContainer: 'swal-dark-html'
+            }
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Delete product error:', error);
+    Swal.fire({
+      title: 'Error!',
+      text: 'Terjadi kesalahan: ' + error.message,
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      customClass: {
+        popup: 'swal-dark-popup',
+        title: 'swal-dark-title',
+        htmlContainer: 'swal-dark-html'
+      }
+    });
   }
 }
