@@ -1,3 +1,19 @@
+/**
+ * APLIKASI KASIR MODERN - SERVER UTAMA
+ * 
+ * Entry point untuk Express.js server
+ * 
+ * Features:
+ * ✅ REST API untuk backend operations
+ * ✅ Static file serving (HTML, CSS, JS, images)
+ * ✅ Multer untuk image upload
+ * ✅ JWT authentication middleware
+ * ✅ CORS untuk cross-origin requests
+ * ✅ Database initialization & synchronization
+ * 
+ * PORT: 3000 (default) | configurable via .env
+ */
+
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -9,17 +25,20 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Create uploads directory if it doesn't exist
+// ============ UPLOAD CONFIGURATION ============
+// Setup directory untuk user uploads
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Multer Configuration for Image Upload
+// Multer - Konfigurasi untuk upload gambar produk
 const storage = multer.diskStorage({
+  // Tujuan simpan file
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
   },
+  // Format nama file: name-timestamp-random.ext
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     const name = path.basename(file.originalname, ext);
@@ -29,6 +48,7 @@ const storage = multer.diskStorage({
   }
 });
 
+// Filter file type - hanya image yang diizinkan
 const fileFilter = (req, file, cb) => {
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (allowedMimes.includes(file.mimetype)) {
@@ -38,16 +58,23 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Inisialisasi multer dengan config
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 } // Limit 5MB
 });
 
 // Make upload middleware available globally
 app.locals.upload = upload;
 
-// Initialize Database
+// ============ DATABASE INITIALIZATION ============
+/**
+ * Initialize database connection
+ * - Support MySQL dan SQLite (selectable via .env)
+ * - Auto-create tables jika belum ada
+ * - Sync models dengan database
+ */
 let sequelize = null;
 let dbInitialized = false;
 
@@ -56,38 +83,61 @@ let dbInitialized = false;
     const { sequelize: db, initDatabase } = require('./config/database');
     sequelize = db;
     
+    // Connect ke database
     await initDatabase();
     console.log('✓ Database connected');
     
-    // Sync models
+    // Sync models ke database (alter: true = update existing tables, don't drop data)
     await sequelize.sync({ alter: true });
     console.log('✓ Database tables synced');
     
     dbInitialized = true;
   } catch (error) {
     console.error('⚠️ Database initialization error:', error.message);
+    if (error.errors) {
+      console.error('Validation errors:', error.errors);
+    }
     console.log('⚠️ Running without database - using demo data');
     dbInitialized = false;
   }
 })();
 
-// Middleware
+// ============ MIDDLEWARE SETUP ============
+// Enable CORS untuk frontend dapat akses API
 app.use(cors());
+
+// Parse JSON dan form data (max 50MB untuk large file transfers)
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve static files dari public folder
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve uploads folder
 app.use('/uploads', express.static(uploadsDir));
 
-// ============ ROUTES ============
+// ============ API ROUTES ============
+// Semua route menggunakan JWT authentication middleware
 
-// Routes untuk API
+// Authentication routes
 app.use('/api/auth', require('./routes/auth'));
+
+// Product management routes
 app.use('/api/products', require('./routes/products'));
+
+// Transaction/Sales routes
 app.use('/api/transactions', require('./routes/transactions'));
+
+// Reporting & Analytics routes
 app.use('/api/reports', require('./routes/reports'));
+
+// Export routes (Excel, PDF)
 app.use('/api/export', require('./routes/exports'));
 
-// Serve pages
+// ============ PAGE ROUTES ============
+// Serve HTML pages
+
+// Login page
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -96,6 +146,7 @@ app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// Main dashboard
 app.get('/index.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -148,7 +199,7 @@ app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║                 🚀 Aplikasi Kasir Modern Berjalan!                   ║
+║                 🚀Aplikasi Kasir Modern Berjalan!                   ║
 ║                                                                      ║
 ║   Server     : http://localhost:${PORT}                              ║
 ║   Login      : http://localhost:${PORT}/login                        ║

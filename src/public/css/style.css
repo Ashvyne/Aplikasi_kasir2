@@ -246,7 +246,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
-  auto-rows: max-content;
+  grid-auto-rows: max-content;
 }
 
 .product-card {
@@ -1329,11 +1329,125 @@ body {
 }
 
 [data-theme="dark"] .swal2-title {
-  color: var(--text-primary);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 [data-theme="dark"] .swal2-html-container {
   color: var(--text-primary);
+  text-align: left;
+}
+
+[data-theme="dark"] .swal2-html-container strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .swal2-html-container div {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .swal2-html-container code {
+  background-color: rgba(77, 217, 255, 0.15) !important;
+  color: #4dd9ff !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(77, 217, 255, 0.4) !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+}
+
+/* Light Mode - Code/Invoice Styling */
+.swal2-html-container code {
+  background-color: #e9ecef;
+  color: #0d6efd;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  font-weight: 600;
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+}
+
+[data-theme="dark"] .swal2-html-container .badge {
+  background-color: #198754 !important;
+  color: #ffffff !important;
+  padding: 4px 12px;
+}
+
+[data-theme="dark"] .swal2-html-container hr {
+  border-color: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+/* Transaction Detail Styling - Dark Mode */
+[data-theme="dark"] .swal2-html-container .transaction-detail {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-info {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-info strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-info code {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #4dd9ff;
+  border: 1px solid rgba(77, 217, 255, 0.2);
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-info span {
+  color: var(--text-primary);
+}
+
+/* Items Section */
+[data-theme="dark"] .swal2-html-container .items-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-item {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-item strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .swal2-html-container .transaction-item small {
+  color: #b0b0b0 !important;
+}
+
+/* Calculation Section */
+[data-theme="dark"] .swal2-html-container .transaction-calculation {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .swal2-html-container .calc-row {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .swal2-html-container .calc-row.discount span {
+  color: #ff7b7b !important;
+}
+
+[data-theme="dark"] .swal2-html-container .calc-row.total {
+  background-color: rgba(13, 110, 253, 0.2) !important;
+  border: 1px solid rgba(77, 217, 255, 0.2) !important;
+  color: #4dd9ff !important;
+}
+
+[data-theme="dark"] .swal2-html-container .calc-row.total span {
+  color: #4dd9ff !important;
+  font-weight: 700;
 }
 
 [data-theme="dark"] .swal2-input,

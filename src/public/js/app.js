@@ -1248,11 +1248,42 @@ async function loadTransactions() {
     // Jika berhasil
     if (response.ok) {
       const data = await response.json();
-      transactions = Array.isArray(data.transactions) ? data.transactions : (data.data || []);
+      
+      // Extract transactions array from various response formats
+      let txList = [];
+      if (Array.isArray(data)) {
+        txList = data;
+      } else if (Array.isArray(data.transactions)) {
+        txList = data.transactions;
+      } else if (Array.isArray(data.data)) {
+        txList = data.data;
+      } else {
+        txList = [];
+      }
+      
+      // Ensure each transaction has items as array
+      transactions = txList.map(tx => ({
+        ...tx,
+        items: Array.isArray(tx.items) ? tx.items : (typeof tx.items === 'string' ? tryParseJSON(tx.items, []) : [])
+      }));
+      
+      console.log(`✓ Loaded ${transactions.length} transactions`);
       displayTransactions();
+    } else {
+      console.error('❌ Failed to load transactions:', response.statusText);
     }
   } catch (error) {
     console.error('⚠️ Error loading transactions:', error);
+  }
+}
+
+// Helper function to safely parse JSON
+function tryParseJSON(jsonString, defaultValue = null) {
+  try {
+    return JSON.parse(jsonString);
+  } catch (e) {
+    console.warn('⚠️ Failed to parse JSON:', e);
+    return defaultValue;
   }
 }
 
@@ -1271,8 +1302,10 @@ function displayTransactions() {
     // Loop setiap transaksi
     transactions.forEach(trans => {
       const row = tbody.insertRow();
-      // Format tanggal
-      const date = new Date(trans.createdAt).toLocaleDateString('id-ID', {
+      
+      // Support both createdAt dan created_at
+      const dateStr = trans.createdAt || trans.created_at || new Date().toISOString();
+      const date = new Date(dateStr).toLocaleDateString('id-ID', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -1280,13 +1313,19 @@ function displayTransactions() {
         minute: '2-digit'
       });
       
+      // Support both camelCase dan snake_case field names
+      const invoiceNumber = trans.invoiceNumber || trans.invoice_number || 'N/A';
+      const paymentMethod = trans.paymentMethod || trans.payment_method || 'Tunai';
+      const total = trans.total || 0;
+      const itemsCount = Array.isArray(trans.items) ? trans.items.length : 0;
+      
       // Buat HTML row
       row.innerHTML = `
-        <td><strong>${escapeHtml(trans.invoiceNumber || 'N/A')}</strong></td>
+        <td><strong>${escapeHtml(invoiceNumber)}</strong></td>
         <td>${date}</td>
-        <td>${trans.items?.length || 0} item</td>
-        <td>Rp ${formatPrice(trans.total)}</td>
-        <td><span class="badge bg-success">${escapeHtml(trans.paymentMethod)}</span></td>
+        <td><span class="badge bg-info">${itemsCount} item</span></td>
+        <td><strong>Rp ${formatPrice(total)}</strong></td>
+        <td><span class="badge bg-success">${escapeHtml(paymentMethod)}</span></td>
         <td>
           <button class="btn btn-sm btn-primary" onclick="viewTransaction(${trans.id})">👁️ Lihat</button>
         </td>
@@ -1305,7 +1344,8 @@ function viewTransaction(transactionId) {
     
     if (trans) {
       // Format tanggal transaksi
-      const date = new Date(trans.createdAt).toLocaleDateString('id-ID', {
+      const dateObj = new Date(trans.createdAt || trans.created_at);
+      const date = dateObj.toLocaleDateString('id-ID', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -1314,8 +1354,10 @@ function viewTransaction(transactionId) {
         minute: '2-digit'
       });
       
-      // Parse items jika berupa JSON string (dari database)
-      let items = trans.items;
+      // Parse items dari trans.items
+      let items = trans.items || [];
+      
+      // Jika items berupa string JSON, parse terlebih dahulu
       if (typeof items === 'string') {
         try {
           items = JSON.parse(items);
@@ -1334,19 +1376,25 @@ function viewTransaction(transactionId) {
       let itemsList = '<div style="text-align: left; margin-top: 15px;">';
       if (items && items.length > 0) {
         items.forEach((item, index) => {
-          const itemPrice = parseInt(item.price) || 0;
-          const itemQty = parseInt(item.quantity) || 1;
+          // Support both price/harga field names
+          const itemPrice = parseInt(item.price || item.harga) || 0;
+          const itemQty = parseInt(item.quantity || item.qty) || 1;
           const itemTotal = itemPrice * itemQty;
           
           itemsList += `
-            <div style="padding: 8px 0; border-bottom: 1px solid #eee;">
-              <strong>${index + 1}. ${escapeHtml(item.name || 'Unknown')}</strong><br>
-              <small>Qty: ${itemQty} × Rp ${formatPrice(itemPrice)} = Rp ${formatPrice(itemTotal)}</small>
+            <div class="transaction-item" style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="flex: 1;">
+                <strong style="display: block; margin-bottom: 4px;">${index + 1}. ${escapeHtml(item.name || 'Unknown')}</strong>
+                <small style="color: #666; display: block;">Qty: ${itemQty} × Rp ${formatPrice(itemPrice)}</small>
+              </div>
+              <div style="text-align: right; margin-left: 10px; white-space: nowrap;">
+                <strong>Rp ${formatPrice(itemTotal)}</strong>
+              </div>
             </div>
           `;
         });
       } else {
-        itemsList += '<div style="padding: 8px 0;"><em class="text-muted">Tidak ada item</em></div>';
+        itemsList += '<div style="padding: 10px 0;"><em style="color: #999;">Tidak ada item</em></div>';
       }
       itemsList += '</div>';
       
@@ -1354,47 +1402,57 @@ function viewTransaction(transactionId) {
       let subtotal = 0;
       if (items && items.length > 0) {
         items.forEach(item => {
-          const price = parseInt(item.price) || 0;
-          const qty = parseInt(item.quantity) || 1;
+          const price = parseInt(item.price || item.harga) || 0;
+          const qty = parseInt(item.quantity || item.qty) || 1;
           subtotal += price * qty;
         });
       }
       
-      // Ambil data transaksi
+      // Ambil data transaksi - support both camelCase dan snake_case
       const total = parseInt(trans.total) || 0;
-      const discount = parseInt(trans.discount) || 0;
+      const discount = parseInt(trans.discount || trans.diskon || 0) || 0;
+      const invoiceNumber = trans.invoiceNumber || trans.invoice_number || 'N/A';
+      const paymentMethod = trans.paymentMethod || trans.payment_method || 'Tunai';
       
       // Tampilkan SweetAlert2 dengan detail transaksi
       Swal.fire({
         title: '📋 Detail Transaksi',
         html: `
-          <div style="text-align: left;">
-            <div style="margin-bottom: 15px;">
-              <strong>No. Invoice:</strong> ${escapeHtml(trans.invoiceNumber || 'N/A')}<br>
-              <strong>Tanggal:</strong> ${date}<br>
-              <strong>Metode Pembayaran:</strong> <span class="badge bg-success">${escapeHtml(trans.paymentMethod || 'Tunai')}</span>
+          <div class="transaction-detail" style="text-align: left;">
+            <div class="transaction-info" style="margin-bottom: 15px; padding: 12px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef;">
+              <div style="margin-bottom: 8px;">
+                <strong>No. Invoice:</strong> <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">${escapeHtml(invoiceNumber)}</code>
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong>Tanggal:</strong> <span style="color: inherit;">${date}</span>
+              </div>
+              <div>
+                <strong>Metode Pembayaran:</strong> <span class="badge bg-success" style="background-color: #198754 !important; color: white;">${escapeHtml(paymentMethod)}</span>
+              </div>
             </div>
             
-            <hr style="margin: 15px 0;">
+            <hr style="margin: 15px 0; border-color: #e9ecef;">
             
-            <strong>Item (${items.length} item):</strong>
+            <strong class="items-title" style="display: block; margin-bottom: 10px;">Item (${items.length} item):</strong>
             ${itemsList}
             
-            <hr style="margin: 15px 0;">
+            <hr style="margin: 15px 0; border-color: #e9ecef;">
             
-            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
-              <span>Subtotal:</span>
-              <span>Rp ${formatPrice(subtotal)}</span>
-            </div>
-            ${discount > 0 ? `
-            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #28a745;">
-              <span>Diskon:</span>
-              <span>-Rp ${formatPrice(discount)}</span>
-            </div>
-            ` : ''}
-            <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
-              <span>Total Bayar:</span>
-              <span>Rp ${formatPrice(total)}</span>
+            <div class="transaction-calculation">
+              <div class="calc-row" style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+                <span>Subtotal:</span>
+                <span>Rp ${formatPrice(subtotal)}</span>
+              </div>
+              ${discount > 0 ? `
+              <div class="calc-row discount" style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+                <span>Diskon:</span>
+                <span style="color: #dc3545;">-Rp ${formatPrice(discount)}</span>
+              </div>
+              ` : ''}
+              <div class="calc-row total" style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; padding: 12px; background-color: #f0f8ff; border-radius: 6px; border: 1px solid #cfe2ff; color: #0066cc;">
+                <span style="color: inherit;">Total Bayar:</span>
+                <span style="color: inherit;">Rp ${formatPrice(total)}</span>
+              </div>
             </div>
           </div>
         `,
@@ -1404,13 +1462,23 @@ function viewTransaction(transactionId) {
         width: '500px'
       });
       
-      console.log('✓ Transaction detail shown:', trans.invoiceNumber);
+      console.log('✓ Transaction detail shown:', invoiceNumber);
     } else {
-      showAlertModal('Gagal!', 'Transaksi tidak ditemukan', 'danger');
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Transaksi tidak ditemukan',
+        icon: 'error',
+        confirmButtonColor: '#0d6efd'
+      });
     }
   } catch (error) {
     console.error('❌ View transaction error:', error);
-    showAlertModal('Error!', 'Terjadi kesalahan: ' + error.message, 'danger');
+    Swal.fire({
+      title: 'Error!',
+      text: 'Terjadi kesalahan: ' + error.message,
+      icon: 'error',
+      confirmButtonColor: '#0d6efd'
+    });
   }
 }
 

@@ -96,7 +96,7 @@ exports.exportSalesExcel = async (req, res) => {
     console.log('📊 Exporting sales to Excel...');
 
     const transactions = await Transaction.findAll({
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     console.log('📦 Found', transactions.length, 'transactions');

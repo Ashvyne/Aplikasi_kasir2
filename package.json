@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "seed:images": "node scripts/seed-product-images.js"
+    "seed:images": "node scripts/seed-product-images.js",
+    "seed:data": "node scripts/seed-initial-data.js"
   },
   "keywords": [
     "kasir",

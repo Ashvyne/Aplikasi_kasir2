@@ -10,7 +10,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('✓ GET /api/transactions');
     const transactions = await Transaction.findAll({ 
-      order: [['createdAt', 'DESC']] 
+      order: [['created_at', 'DESC']] 
     });
     res.json({ 
       success: true,
@@ -81,7 +81,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Create transaction dengan data yang valid
     const transaction = await Transaction.create({
       invoiceNumber: invoiceNumber,
-      items: JSON.stringify(validItems), // Convert to string untuk JSON field
+      items: validItems, // Sequelize akan auto JSON.stringify untuk JSON field
       total: parseInt(total) || 0,
       discount: parseInt(discount) || 0,
       paymentMethod: paymentMethod || 'Tunai',
