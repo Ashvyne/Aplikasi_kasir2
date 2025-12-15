@@ -23,14 +23,8 @@ function initializeDarkMode() {
   const darkModeToggle = document.getElementById('darkModeToggle');
   const savedTheme = localStorage.getItem('theme');
   
-  // Tentukan theme berdasarkan preferensi tersimpan atau sistem
-  let theme = savedTheme;
-  if (!theme) {
-    // Cek preferensi sistem
-    theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-      ? 'dark' 
-      : 'light';
-  }
+  // Tentukan theme berdasarkan preferensi tersimpan atau default ke dark
+  let theme = savedTheme || 'dark'; // Default to dark mode
   
   // Terapkan theme
   applyTheme(theme);
@@ -464,6 +458,7 @@ function loadProductsTable() {
         <td>
           <div class="table-actions">
             <button class="table-btn table-btn-primary" onclick="editProduct(${product.id})">✏️ Edit</button>
+            <button class="table-btn table-btn-success" onclick="duplicateProduct(${product.id}, '${escapeHtml(product.name).replace(/'/g, "\\'")}')">📋 Duplikat</button>
             <button class="table-btn table-btn-danger" onclick="deleteProduct(${product.id})">🗑️ Hapus</button>
           </div>
         </td>
@@ -843,6 +838,32 @@ async function saveProduct(event) {
 // Function untuk edit produk
 async function editProduct(productId) {
   openProductModal(productId);
+}
+
+// Function untuk duplicate produk
+async function duplicateProduct(productId, productName) {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/api/products/${productId}/duplicate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      showAlertModal('Berhasil!', `Produk "${productName}" berhasil diduplikat`, 'success');
+      loadProducts();
+    } else {
+      const error = await response.json();
+      showAlertModal('Gagal!', error.message || 'Gagal menduplikat produk', 'danger');
+    }
+  } catch (error) {
+    console.error('❌ Duplicate product error:', error);
+    showAlertModal('Error!', 'Terjadi kesalahan saat menduplikat produk', 'danger');
+  }
 }
 
 // Function untuk delete produk
@@ -1924,7 +1945,7 @@ function displayReports(data) {
             <strong class="text-success">Rp ${formatPrice(productRevenue)}</strong>
           </td>
           <td>
-            <button class="btn btn-sm btn-danger" onclick="deleteProduct(${productId}, '${escapeHtml(productName).replace(/'/g, "\\'")}')">🗑️ Hapus</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProductFromReport(${productId}, '${escapeHtml(productName).replace(/'/g, "\\'")}')">🗑️ Hapus</button>
           </td>
         `;
       });
@@ -1939,7 +1960,7 @@ function displayReports(data) {
   }
 }
 // Function untuk delete produk dari laporan
-async function deleteProduct(productId, productName) {
+async function deleteProductFromReport(productId, productName) {
   try {
     console.log(`🗑️ Deleting product ${productId}...`);
 

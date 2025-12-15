@@ -130,7 +130,8 @@ router.get('/', authenticateToken, async (req, res) => {
         // Loop setiap item dalam transaksi
         items.forEach(item => {
           try {
-            const productId = item.id;
+            // Support both 'id' dan 'product_id' field names
+            const productId = item.id || item.product_id;
             const quantity = parseInt(item.quantity) || 0;
             const price = parseInt(item.price) || 0;
             const itemTotal = quantity * price;

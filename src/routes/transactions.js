@@ -58,11 +58,13 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     // Reverse stock untuk setiap produk
     for (const item of items) {
       const Product = require('../models/Product');
-      const product = await Product.findByPk(item.product_id);
+      // Support both 'id' dan 'product_id' field names
+      const productId = item.id || item.product_id;
+      const product = await Product.findByPk(productId);
       if (product) {
         product.stock = (product.stock || 0) + (item.quantity || 0);
         await product.save();
-        console.log(`✓ Reversed stock for product ${item.product_id}: +${item.quantity}`);
+        console.log(`✓ Reversed stock for product ${productId}: +${item.quantity}`);
       }
     }
 
@@ -124,6 +126,15 @@ router.post('/', authenticateToken, async (req, res) => {
     if (typeof items === 'string') {
       validItems = JSON.parse(items);
     }
+
+    // Normalize items: standardize ke product_id (dari id jika perlu)
+    validItems = validItems.map(item => ({
+      product_id: item.product_id || item.id, // Support both id dan product_id
+      id: item.product_id || item.id,         // Keep id field too for compatibility
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity
+    }));
 
     // Create transaction dengan data yang valid
     const transaction = await Transaction.create({

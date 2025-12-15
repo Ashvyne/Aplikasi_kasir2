@@ -278,6 +278,41 @@ router.put('/:id/reduce-stock', authenticateToken, async (req, res) => {
   }
 });
 
+// POST duplicate product
+router.post('/:id/duplicate', authenticateToken, async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Produk tidak ditemukan' });
+    }
+
+    // Create duplicate with new SKU and (Copy) suffix
+    const timestamp = Date.now();
+    const newSku = `${product.sku}-DUP-${timestamp}`;
+    const newName = `${product.name} (Copy)`;
+
+    const duplicatedProduct = await Product.create({
+      name: newName,
+      sku: newSku,
+      category: product.category,
+      price: product.price,
+      stock: product.stock,
+      image_url: product.image_url,
+      description: product.description
+    });
+
+    console.log('✓ POST /api/products/:id/duplicate - Created:', newName);
+    res.json({ 
+      success: true,
+      message: 'Produk berhasil diduplikat',
+      product: duplicatedProduct
+    });
+  } catch (error) {
+    console.error('❌ Error duplicating product:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan saat menduplikat produk' });
+  }
+});
+
 // DELETE product
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
