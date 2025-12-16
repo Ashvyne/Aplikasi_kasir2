@@ -2082,6 +2082,14 @@ async function deleteProductFromReport(productId, productName) {
 function initializeCharts(data) {
   try {
     console.log('📈 Initializing ApexCharts...');
+    console.log('📊 Data received:', data);
+    
+    // Check if ApexCharts is loaded
+    if (typeof ApexCharts === 'undefined') {
+      console.warn('⚠️ ApexCharts not loaded yet, retrying in 500ms...');
+      setTimeout(() => initializeCharts(data), 500);
+      return;
+    }
     
     // Get theme
     const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -2095,6 +2103,9 @@ function initializeCharts(data) {
     const topProducts = data.topProducts || [];
     const dailyData = data.dailyData || [];
     
+    console.log('📈 Daily data:', dailyData);
+    console.log('🏆 Top products:', topProducts);
+    
     // Initialize Daily Revenue Chart
     initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData);
     
@@ -2103,6 +2114,8 @@ function initializeCharts(data) {
       initializeTopProductsPieChart(isDarkMode, textColor, colors, topProducts);
       initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topProducts);
       initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topProducts);
+    } else {
+      console.warn('⚠️ No top products data available');
     }
     
     console.log('✓ Charts initialized');
@@ -2116,27 +2129,34 @@ function initializeCharts(data) {
  */
 function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData) {
   const chartElement = document.getElementById('dailyRevenueChart');
-  if (!chartElement) return;
+  if (!chartElement) {
+    console.warn('⚠️ dailyRevenueChart element not found');
+    return;
+  }
   
-  // Generate last 7 days data if not provided
+  console.log('📊 Rendering daily revenue chart with data:', dailyData);
+  
+  // Generate last 7 days data if not provided or empty
   let data = [];
   if (!dailyData || dailyData.length === 0) {
+    console.warn('⚠️ No daily data provided, generating placeholder data');
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       data.push({
         date: date.toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric' }),
-        revenue: Math.floor(Math.random() * 5000000) + 1000000
+        revenue: 0
       });
     }
   } else {
-    data = dailyData;
+    data = Array.isArray(dailyData) ? dailyData : [];
+    console.log('✓ Using actual daily data:', data);
   }
   
   const options = {
     series: [{
       name: 'Pendapatan',
-      data: data.map(d => d.revenue)
+      data: data.map(d => d.revenue || 0)
     }],
     chart: {
       type: 'area',
@@ -2206,8 +2226,13 @@ function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData
     }
   };
   
-  const chart = new ApexCharts(chartElement, options);
-  chart.render();
+  try {
+    const chart = new ApexCharts(chartElement, options);
+    chart.render();
+    console.log('✓ Daily revenue chart rendered');
+  } catch (err) {
+    console.error('❌ Error rendering daily revenue chart:', err);
+  }
 }
 
 /**
@@ -2220,8 +2245,14 @@ function initializeTopProductsPieChart(isDarkMode, textColor, colors, topProduct
   // Get top 5 products
   const topFive = topProducts.slice(0, 5);
   
+  // Handle empty data
+  if (topFive.length === 0) {
+    chartElement.innerHTML = '<div style="padding: 20px; text-align: center; color: ' + textColor + ';">Tidak ada data penjualan</div>';
+    return;
+  }
+  
   const options = {
-    series: topFive.map(p => parseInt(p.total_qty || p.sold) || 0),
+    series: topFive.map(p => parseInt(p.sold) || 0),
     chart: {
       type: 'pie',
       height: 350,
@@ -2262,10 +2293,16 @@ function initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topPr
   // Get top 8 products
   const topEight = topProducts.slice(0, 8);
   
+  // Handle empty data
+  if (topEight.length === 0) {
+    chartElement.innerHTML = '<div style="padding: 20px; text-align: center; color: ' + textColor + ';">Tidak ada data penjualan</div>';
+    return;
+  }
+  
   const options = {
     series: [{
       name: 'Terjual (Unit)',
-      data: topEight.map(p => parseInt(p.total_qty || p.sold) || 0)
+      data: topEight.map(p => parseInt(p.sold) || 0)
     }],
     chart: {
       type: 'bar',
@@ -2346,10 +2383,16 @@ function initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topPro
   // Get top 8 products
   const topEight = topProducts.slice(0, 8);
   
+  // Handle empty data
+  if (topEight.length === 0) {
+    chartElement.innerHTML = '<div style="padding: 20px; text-align: center; color: ' + textColor + ';">Tidak ada data penjualan</div>';
+    return;
+  }
+  
   const options = {
     series: [{
       name: 'Pendapatan',
-      data: topEight.map(p => parseInt(p.total_revenue || p.revenue) || 0)
+      data: topEight.map(p => parseInt(p.revenue) || 0)
     }],
     chart: {
       type: 'bar',

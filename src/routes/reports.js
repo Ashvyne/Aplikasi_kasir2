@@ -173,6 +173,75 @@ router.get('/', authenticateToken, async (req, res) => {
       topProducts = [];
     }
     
+    // 6. Daily Revenue Data (Last 7 days for chart)
+    let dailyData = [];
+    try {
+      console.log('🔍 Fetching daily revenue for last 7 days');
+      
+      // Get all transactions without specific attributes to avoid column errors
+      const allTransactions = await Transaction.findAll({
+        order: [['id', 'ASC']],
+        raw: true
+      });
+      
+      console.log('📦 All transactions found:', allTransactions.length);
+      if (allTransactions.length > 0) {
+        console.log('📋 Sample transaction:', JSON.stringify(allTransactions[0]));
+      }
+      
+      // Create object to track daily revenue
+      const dailyRevenue = {};
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Process each transaction - use createdAt or any timestamp field
+      allTransactions.forEach(trans => {
+        // Try different timestamp fields
+        const timestamp = trans.createdAt || trans.created_at || trans.createdAt;
+        if (!timestamp) {
+          console.warn('⚠️ No timestamp found in transaction', trans.id);
+          return;
+        }
+        
+        const transDate = new Date(timestamp);
+        transDate.setHours(0, 0, 0, 0);
+        
+        const dateKey = transDate.toISOString().split('T')[0];
+        
+        if (!dailyRevenue[dateKey]) {
+          dailyRevenue[dateKey] = 0;
+        }
+        
+        dailyRevenue[dateKey] += trans.total || 0;
+      });
+      
+      // Generate last 7 days
+      const last7Days = {};
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toISOString().split('T')[0];
+        const formattedDate = date.toLocaleDateString('id-ID', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        last7Days[dateKey] = {
+          date: formattedDate,
+          revenue: dailyRevenue[dateKey] || 0
+        };
+      }
+      
+      // Convert to array
+      dailyData = Object.values(last7Days);
+      
+      console.log('📈 Daily revenue data formatted:', dailyData);
+    } catch (e) {
+      console.warn('⚠️ Error fetching daily revenue:', e.message);
+      dailyData = [];
+    }
+
     // Return report data
     const reports = {
       success: true,
@@ -180,7 +249,8 @@ router.get('/', authenticateToken, async (req, res) => {
       todayRevenue: parseInt(todayRevenue) || 0,
       weekTransactions: weekTransactions || 0,
       lowStockCount: lowStockCount || 0,
-      topProducts: topProducts
+      topProducts: topProducts,
+      dailyData: dailyData
     };
 
     console.log('📊 Final report:', {
@@ -188,7 +258,8 @@ router.get('/', authenticateToken, async (req, res) => {
       todayRevenue: reports.todayRevenue,
       weekTransactions: reports.weekTransactions,
       lowStockCount: reports.lowStockCount,
-      topProducts: reports.topProducts.length
+      topProducts: reports.topProducts.length,
+      dailyDataPoints: reports.dailyData.length
     });
 
     res.json(reports);

@@ -57,8 +57,8 @@ html, body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 18px;
+  line-height: 1.7;
 }
 
 body {
@@ -107,7 +107,7 @@ body {
 
 .sidebar-header h4 {
   font-weight: 700;
-  font-size: 1.7rem;
+  font-size: 1.85rem;
   letter-spacing: 0.5px;
 }
 
@@ -120,12 +120,12 @@ body {
   text-decoration: none;
   border-radius: var(--border-radius);
   margin-bottom: 12px;
-  padding: 16px 18px !important;
+  padding: 18px 20px !important;
   transition: var(--transition);
   font-weight: 500;
   display: flex;
   align-items: center;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .nav-item:hover {
@@ -141,8 +141,8 @@ body {
 }
 
 .nav-item i {
-  font-size: 1.4rem;
-  margin-right: 14px;
+  font-size: 1.6rem;
+  margin-right: 16px;
 }
 
 /* ============== HEADER ============== */
@@ -155,7 +155,7 @@ body {
 }
 
 .navbar-brand {
-  font-size: 1.3rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: var(--text-primary) !important;
   letter-spacing: -0.5px;
@@ -167,13 +167,13 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
-  font-size: 1.8rem;
+  font-size: 2.1rem;
 }
 
 #userDisplay {
   margin-left: 8px;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
 }
 
 /* ============== MAIN CONTENT ============== */
@@ -228,16 +228,16 @@ body {
   color: white;
   border: none !important;
   font-weight: 600;
-  padding: 1.8rem !important;
-  font-size: 1.15rem;
+  padding: 2rem !important;
+  font-size: 1.3rem;
 }
 
 .card-body {
-  padding: 2rem !important;
+  padding: 2.2rem !important;
   background: var(--bg-secondary);
   color: var(--text-primary);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .card-footer {
@@ -371,7 +371,7 @@ body {
 }
 
 .product-card-name {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -381,11 +381,11 @@ body {
 
 .product-card-badge {
   position: relative;
-  padding: 6px 10px;
+  padding: 8px 12px;
   background: rgba(220, 53, 69, 0.9);
   color: white;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
@@ -400,7 +400,7 @@ body {
 }
 
 .product-card-price {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--primary);
   margin-bottom: 0.6rem;
@@ -409,7 +409,7 @@ body {
 .product-card-stock {
   display: flex;
   align-items: center;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
 }
 
@@ -468,9 +468,9 @@ body {
   border: 1px solid #e9ecef;
   border-radius: 8px;
   transition: var(--transition);
-  font-size: 1.05rem;
-  padding: 0.65rem 0.85rem !important;
-  line-height: 1.6;
+  font-size: 1.15rem;
+  padding: 0.8rem 1rem !important;
+  line-height: 1.7;
 }
 
 .form-control:focus, .form-select:focus {
@@ -482,19 +482,19 @@ body {
   color: var(--dark);
   font-weight: 600;
   margin-bottom: 0.75rem;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .form-text {
   color: #6c757d;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 /* ============== BUTTONS ============== */
 .btn {
   border-radius: 8px;
   font-weight: 600;
-  padding: 14px 22px;
+  padding: 16px 26px;
   transition: all 0.2s ease-in-out;
   text-decoration: none;
   display: inline-flex;
@@ -502,7 +502,7 @@ body {
   gap: 10px;
   border: none;
   cursor: pointer;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .btn-primary {
@@ -704,9 +704,9 @@ body {
   border: 1px solid var(--border-color);
   font-weight: 600;
   color: var(--text-primary);
-  padding: 1.2rem;
+  padding: 1.4rem;
   text-transform: uppercase;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   letter-spacing: 0.5px;
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
@@ -749,20 +749,20 @@ body {
 }
 
 .table tbody td {
-  padding: 1.2rem;
+  padding: 1.4rem;
   vertical-align: middle;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .badge {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
@@ -1830,4 +1830,88 @@ body {
 
 .swal-cancel-btn:hover {
   background-color: #5c636a !important;
+}
+
+/* ============== HEADINGS & TEXT SIZES FOR ACCESSIBILITY ============== */
+h1, .h1 {
+  font-size: 2.4rem !important;
+  line-height: 1.4;
+  margin-bottom: 1.2rem;
+}
+
+h2, .h2 {
+  font-size: 2rem !important;
+  line-height: 1.4;
+  margin-bottom: 1.1rem;
+}
+
+h3, .h3 {
+  font-size: 1.7rem !important;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+h4, .h4 {
+  font-size: 1.45rem !important;
+  line-height: 1.5;
+  margin-bottom: 0.9rem;
+}
+
+h5, .h5 {
+  font-size: 1.2rem !important;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+}
+
+h6, .h6 {
+  font-size: 1.1rem !important;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+}
+
+p, span, li {
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+/* Alert boxes */
+.alert {
+  font-size: 1.1rem !important;
+  padding: 1.1rem 1.4rem !important;
+  line-height: 1.7;
+}
+
+/* Input group sizing */
+.input-group-text {
+  font-size: 1.1rem !important;
+  padding: 0.8rem 0.95rem !important;
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+  font-size: 1.15rem !important;
+}
+
+.dropdown-item {
+  padding: 0.75rem 1.4rem !important;
+  font-size: 1.05rem !important;
+}
+
+/* Small text */
+small, .small {
+  font-size: 1rem !important;
+}
+
+/* Modal titles and headers */
+.modal-title {
+  font-size: 1.45rem !important;
+  font-weight: 600;
+}
+
+.swal-dark-title {
+  font-size: 1.5rem !important;
+}
+
+.swal-dark-text {
+  font-size: 1.15rem !important;
 }
