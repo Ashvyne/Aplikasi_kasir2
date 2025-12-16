@@ -17,6 +17,9 @@
   
   <!-- SweetAlert2 CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  
+  <!-- ApexCharts CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.css">
 </head>
 <body>
   <!-- Main Layout Container -->
@@ -374,7 +377,61 @@
               </div>
             </div>
             
-            <!-- Top Products Section -->
+            <!-- Charts Row -->
+            <div class="row g-4 mb-4">
+              <!-- Daily Revenue Chart -->
+              <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-header bg-white border-bottom p-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2"></i>Pendapatan Harian (7 Hari Terakhir)</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <div id="dailyRevenueChart" style="height: 350px;"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Top Products Pie Chart -->
+              <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-header bg-white border-bottom p-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>Distribusi Penjualan</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <div id="topProductsPieChart" style="height: 350px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Products Sales & Revenue -->
+            <div class="row g-4 mb-4">
+              <!-- Sales by Product -->
+              <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-header bg-white border-bottom p-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-bar-chart me-2"></i>Produk Paling Banyak Terjual</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <div id="topSalesChart" style="height: 300px;"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Revenue by Product -->
+              <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-header bg-white border-bottom p-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-cash-coin me-2"></i>Pendapatan Per Produk</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <div id="revenueChart" style="height: 300px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Top Products Table -->
             <h5 class="mb-3">🏆 Produk Terlaris</h5>
             <div class="card border-0 shadow-sm">
               <div class="table-responsive">
@@ -551,6 +608,9 @@
   
   <!-- SweetAlert2 Library untuk notifikasi yang lebih cantik -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  
+  <!-- ApexCharts Library -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.umd.js"></script>
   
   <!-- Debug Script -->
   <script src="js/debug.js"></script>

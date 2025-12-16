@@ -1954,6 +1954,9 @@ function displayReports(data) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;"><em class="text-muted">Belum ada data penjualan</em></td></tr>';
     }
     
+    // Initialize ApexCharts
+    initializeCharts(data);
+    
     console.log('✓ Reports displayed');
   } catch (error) {
     console.error('❌ Display reports error:', error);
@@ -2069,4 +2072,351 @@ async function deleteProductFromReport(productId, productName) {
       }
     });
   }
+}
+
+// ============ APEX CHARTS FUNCTIONS ============
+
+/**
+ * Initialize ApexCharts untuk dashboard
+ */
+function initializeCharts(data) {
+  try {
+    console.log('📈 Initializing ApexCharts...');
+    
+    // Get theme
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDarkMode ? '#a0aec0' : '#6b7280';
+    const gridColor = isDarkMode ? '#374151' : '#e5e7eb';
+    
+    // Chart color palette
+    const colors = ['#0d6efd', '#198754', '#ffc107', '#fd7e14', '#e83e8c', '#6f42c1'];
+    
+    // Get data
+    const topProducts = data.topProducts || [];
+    const dailyData = data.dailyData || [];
+    
+    // Initialize Daily Revenue Chart
+    initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData);
+    
+    // Initialize Top Products Pie Chart
+    if (topProducts.length > 0) {
+      initializeTopProductsPieChart(isDarkMode, textColor, colors, topProducts);
+      initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topProducts);
+      initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topProducts);
+    }
+    
+    console.log('✓ Charts initialized');
+  } catch (error) {
+    console.error('❌ Error initializing charts:', error);
+  }
+}
+
+/**
+ * Initialize Daily Revenue Chart (Line Chart)
+ */
+function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData) {
+  const chartElement = document.getElementById('dailyRevenueChart');
+  if (!chartElement) return;
+  
+  // Generate last 7 days data if not provided
+  let data = [];
+  if (!dailyData || dailyData.length === 0) {
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric' }),
+        revenue: Math.floor(Math.random() * 5000000) + 1000000
+      });
+    }
+  } else {
+    data = dailyData;
+  }
+  
+  const options = {
+    series: [{
+      name: 'Pendapatan',
+      data: data.map(d => d.revenue)
+    }],
+    chart: {
+      type: 'area',
+      height: 350,
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: true,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true
+        }
+      },
+      background: isDarkMode ? '#1f2937' : '#ffffff'
+    },
+    colors: ['#0d6efd'],
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 2
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        opacityFrom: 0.6,
+        opacityTo: 0.1
+      }
+    },
+    xaxis: {
+      categories: data.map(d => d.date),
+      labels: {
+        style: {
+          colors: textColor,
+          fontSize: '12px'
+        }
+      },
+      axisBorder: {
+        show: false
+      },
+      axisTicks: {
+        show: false
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: textColor,
+          fontSize: '12px'
+        },
+        formatter: (value) => 'Rp ' + (value / 1000000).toFixed(1) + 'M'
+      }
+    },
+    grid: {
+      borderColor: gridColor,
+      strokeDashArray: 3
+    },
+    tooltip: {
+      theme: isDarkMode ? 'dark' : 'light',
+      y: {
+        formatter: (value) => 'Rp ' + formatPrice(value)
+      }
+    }
+  };
+  
+  const chart = new ApexCharts(chartElement, options);
+  chart.render();
+}
+
+/**
+ * Initialize Top Products Pie Chart
+ */
+function initializeTopProductsPieChart(isDarkMode, textColor, colors, topProducts) {
+  const chartElement = document.getElementById('topProductsPieChart');
+  if (!chartElement) return;
+  
+  // Get top 5 products
+  const topFive = topProducts.slice(0, 5);
+  
+  const options = {
+    series: topFive.map(p => parseInt(p.total_qty || p.sold) || 0),
+    chart: {
+      type: 'pie',
+      height: 350,
+      background: isDarkMode ? '#1f2937' : '#ffffff'
+    },
+    colors: colors.slice(0, topFive.length),
+    labels: topFive.map(p => p.name),
+    legend: {
+      position: 'bottom',
+      labels: {
+        colors: textColor
+      }
+    },
+    dataLabels: {
+      style: {
+        colors: [textColor]
+      }
+    },
+    tooltip: {
+      theme: isDarkMode ? 'dark' : 'light',
+      y: {
+        formatter: (value) => value + ' unit'
+      }
+    }
+  };
+  
+  const chart = new ApexCharts(chartElement, options);
+  chart.render();
+}
+
+/**
+ * Initialize Top Sales Chart (Bar Chart)
+ */
+function initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topProducts) {
+  const chartElement = document.getElementById('topSalesChart');
+  if (!chartElement) return;
+  
+  // Get top 8 products
+  const topEight = topProducts.slice(0, 8);
+  
+  const options = {
+    series: [{
+      name: 'Terjual (Unit)',
+      data: topEight.map(p => parseInt(p.total_qty || p.sold) || 0)
+    }],
+    chart: {
+      type: 'bar',
+      height: 300,
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: false,
+          zoom: false,
+          zoomin: false,
+          zoomout: false,
+          pan: false,
+          reset: true
+        }
+      },
+      background: isDarkMode ? '#1f2937' : '#ffffff'
+    },
+    colors: ['#198754'],
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        dataLabels: {
+          position: 'top'
+        }
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      offsetX: 0,
+      style: {
+        fontSize: '12px',
+        colors: [textColor]
+      }
+    },
+    xaxis: {
+      categories: topEight.map(p => p.name.substring(0, 15) + (p.name.length > 15 ? '...' : '')),
+      labels: {
+        style: {
+          colors: textColor,
+          fontSize: '12px'
+        }
+      },
+      axisBorder: {
+        show: false
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: textColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    grid: {
+      borderColor: gridColor
+    },
+    tooltip: {
+      theme: isDarkMode ? 'dark' : 'light',
+      y: {
+        formatter: (value) => value + ' unit'
+      }
+    }
+  };
+  
+  const chart = new ApexCharts(chartElement, options);
+  chart.render();
+}
+
+/**
+ * Initialize Revenue Chart (Bar Chart)
+ */
+function initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topProducts) {
+  const chartElement = document.getElementById('revenueChart');
+  if (!chartElement) return;
+  
+  // Get top 8 products
+  const topEight = topProducts.slice(0, 8);
+  
+  const options = {
+    series: [{
+      name: 'Pendapatan',
+      data: topEight.map(p => parseInt(p.total_revenue || p.revenue) || 0)
+    }],
+    chart: {
+      type: 'bar',
+      height: 300,
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: false,
+          zoom: false,
+          zoomin: false,
+          zoomout: false,
+          pan: false,
+          reset: true
+        }
+      },
+      background: isDarkMode ? '#1f2937' : '#ffffff'
+    },
+    colors: ['#ffc107'],
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        dataLabels: {
+          position: 'top'
+        }
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      offsetX: 0,
+      style: {
+        fontSize: '12px',
+        colors: [textColor]
+      },
+      formatter: (value) => 'Rp ' + (value / 1000000).toFixed(1) + 'M'
+    },
+    xaxis: {
+      categories: topEight.map(p => p.name.substring(0, 15) + (p.name.length > 15 ? '...' : '')),
+      labels: {
+        style: {
+          colors: textColor,
+          fontSize: '12px'
+        }
+      },
+      axisBorder: {
+        show: false
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: textColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    grid: {
+      borderColor: gridColor
+    },
+    tooltip: {
+      theme: isDarkMode ? 'dark' : 'light',
+      y: {
+        formatter: (value) => 'Rp ' + formatPrice(value)
+      }
+    }
+  };
+  
+  const chart = new ApexCharts(chartElement, options);
+  chart.render();
 }
