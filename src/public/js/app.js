@@ -14,6 +14,26 @@ let isLoading = false;
 // Menyimpan referensi instance modal
 let currentModalInstance = null;
 
+// Menyimpan referensi chart instances untuk dark mode updates
+let chartInstances = {
+  dailyRevenue: null,
+  topProductsPie: null,
+  topSales: null,
+  revenue: null
+};
+
+// Menyimpan data charts untuk re-rendering
+let chartsData = {
+  isDarkMode: false,
+  textColor: '#6b7280',
+  gridColor: '#e5e7eb',
+  dailyData: [],
+  topProducts: []
+};
+
+// Menyimpan selected products untuk bulk operations
+let selectedProducts = new Set();
+
 // ============ DARK MODE MANAGEMENT ============
 
 /**
@@ -86,8 +106,9 @@ function toggleDarkMode() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   applyTheme(newTheme);
   
-  // Reset toggle flag after animation completes
+  // Update charts if they exist
   setTimeout(() => {
+    updateChartsForDarkMode();
     isTogglingTheme = false;
   }, 100);
 }
@@ -289,6 +310,9 @@ async function loadProducts() {
     console.log('📦 Loading products...');
     isLoading = true;
     
+    // Clear selection saat reload
+    clearProductSelection();
+    
     // Ambil token dari localStorage
     const token = localStorage.getItem('token');
     if (!token) {
@@ -437,7 +461,7 @@ function loadProductsTable() {
     
     // Jika tidak ada produk, tampilkan pesan
     if (products.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Tidak ada produk</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Tidak ada produk</td></tr>';
       return;
     }
     
@@ -446,9 +470,16 @@ function loadProductsTable() {
       const row = tbody.insertRow();
       // Tentukan status badge stok
       const stockStatus = product.stock === 0 ? 'danger' : product.stock < 10 ? 'warning' : 'success';
+      const isSelected = selectedProducts.has(product.id);
       
-      // Buat HTML untuk row table
+      // Buat HTML untuk row table dengan checkbox
       row.innerHTML = `
+        <td>
+          <input type="checkbox" class="form-check-input product-checkbox" 
+                 data-product-id="${product.id}" 
+                 ${isSelected ? 'checked' : ''}
+                 onchange="toggleProductSelection(${product.id}, this)">
+        </td>
         <td>${index + 1}</td>
         <td><strong>${escapeHtml(product.name)}</strong></td>
         <td><span class="badge badge-info">${escapeHtml(product.sku)}</span></td>
@@ -463,6 +494,11 @@ function loadProductsTable() {
           </div>
         </td>
       `;
+      
+      // Add highlight effect untuk selected rows
+      if (isSelected) {
+        row.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+      }
     });
     console.log('✓ Products table loaded');
   } catch (error) {
@@ -903,6 +939,251 @@ async function deleteProduct(productId) {
       } catch (error) {
         console.error('❌ Delete error:', error);
         showAlertModal('Error!', 'Terjadi kesalahan', 'danger');
+      }
+    }
+  });
+}
+
+// ============ PRODUCT SELECTION SYSTEM ============
+
+/**
+ * Toggle selection untuk satu produk
+ */
+function toggleProductSelection(productId, checkbox) {
+  if (checkbox.checked) {
+    selectedProducts.add(productId);
+    console.log(`✓ Product ${productId} selected`);
+  } else {
+    selectedProducts.delete(productId);
+    console.log(`✗ Product ${productId} deselected`);
+  }
+  
+  updateSelectionToolbar();
+  updateSelectAllCheckbox();
+}
+
+/**
+ * Toggle select all checkbox
+ */
+function toggleSelectAllProducts(checkbox) {
+  const checkboxes = document.querySelectorAll('.product-checkbox');
+  
+  if (checkbox.checked) {
+    // Select semua
+    checkboxes.forEach(cb => {
+      const productId = parseInt(cb.dataset.productId);
+      selectedProducts.add(productId);
+      cb.checked = true;
+    });
+    console.log('✓ All products selected');
+  } else {
+    // Deselect semua
+    checkboxes.forEach(cb => {
+      const productId = parseInt(cb.dataset.productId);
+      selectedProducts.delete(productId);
+      cb.checked = false;
+    });
+    console.log('✗ All products deselected');
+    selectedProducts.clear();
+  }
+  
+  updateSelectionToolbar();
+}
+
+/**
+ * Update select all checkbox state
+ */
+function updateSelectAllCheckbox() {
+  const selectAllCheckbox = document.getElementById('selectAllProducts');
+  const checkboxes = document.querySelectorAll('.product-checkbox');
+  const totalChecked = Array.from(checkboxes).filter(cb => cb.checked).length;
+  
+  if (totalChecked === 0) {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+  } else if (totalChecked === checkboxes.length) {
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+  } else {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = true;
+  }
+}
+
+/**
+ * Update tampilan toolbar berdasarkan selection
+ */
+function updateSelectionToolbar() {
+  const toolbar = document.getElementById('productSelectionToolbar');
+  const selectedCount = document.getElementById('selectedCount');
+  
+  if (selectedProducts.size > 0) {
+    toolbar.style.display = 'block';
+    selectedCount.textContent = selectedProducts.size;
+    
+    // Update row highlights
+    document.querySelectorAll('#productsTableBody tr').forEach(row => {
+      const checkbox = row.querySelector('.product-checkbox');
+      if (checkbox && checkbox.checked) {
+        row.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+      } else {
+        row.style.backgroundColor = '';
+      }
+    });
+  } else {
+    toolbar.style.display = 'none';
+    selectedCount.textContent = '0';
+    document.querySelectorAll('#productsTableBody tr').forEach(row => {
+      row.style.backgroundColor = '';
+    });
+  }
+}
+
+/**
+ * Clear semua selection
+ */
+function clearProductSelection() {
+  selectedProducts.clear();
+  document.querySelectorAll('.product-checkbox').forEach(cb => {
+    cb.checked = false;
+  });
+  document.getElementById('selectAllProducts').checked = false;
+  updateSelectionToolbar();
+  console.log('🗑️ Selection cleared');
+}
+
+/**
+ * Bulk duplicate selected products
+ */
+async function bulkDuplicateProducts() {
+  const count = selectedProducts.size;
+  
+  if (count === 0) {
+    showAlertModal('Peringatan!', 'Pilih minimal 1 produk untuk diduplikat', 'warning');
+    return;
+  }
+  
+  // Konfirmasi
+  Swal.fire({
+    title: 'Duplikat Produk?',
+    text: `${count} produk akan diduplikat`,
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#198754',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, Duplikat',
+    cancelButtonText: 'Batal'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('token');
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Duplicate setiap produk
+        for (const productId of selectedProducts) {
+          try {
+            const response = await fetch(`/api/products/${productId}/duplicate`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } catch (error) {
+            failCount++;
+            console.error('Error duplicating product:', error);
+          }
+        }
+        
+        // Reload data
+        await loadProducts();
+        clearProductSelection();
+        
+        // Tampilkan hasil
+        if (failCount === 0) {
+          showAlertModal('Berhasil!', `${successCount} produk berhasil diduplikat`, 'success');
+        } else {
+          showAlertModal('Sebagian Berhasil', `${successCount} berhasil, ${failCount} gagal`, 'warning');
+        }
+      } catch (error) {
+        console.error('❌ Bulk duplicate error:', error);
+        showAlertModal('Error!', 'Terjadi kesalahan saat menduplikat', 'danger');
+      }
+    }
+  });
+}
+
+/**
+ * Bulk delete selected products
+ */
+async function bulkDeleteProducts() {
+  const count = selectedProducts.size;
+  
+  if (count === 0) {
+    showAlertModal('Peringatan!', 'Pilih minimal 1 produk untuk dihapus', 'warning');
+    return;
+  }
+  
+  // Konfirmasi dengan warning
+  Swal.fire({
+    title: 'Hapus Produk?',
+    text: `${count} produk akan dihapus dan tidak dapat dikembalikan`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, Hapus',
+    cancelButtonText: 'Batal'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('token');
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Delete setiap produk
+        for (const productId of selectedProducts) {
+          try {
+            const response = await fetch(`/api/products/${productId}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (response.ok) {
+              successCount++;
+              // Remove dari array
+              products = products.filter(p => p.id !== productId);
+            } else {
+              failCount++;
+            }
+          } catch (error) {
+            failCount++;
+            console.error('Error deleting product:', error);
+          }
+        }
+        
+        // Reload data
+        await loadProducts();
+        clearProductSelection();
+        
+        // Tampilkan hasil
+        if (failCount === 0) {
+          showAlertModal('Berhasil!', `${successCount} produk berhasil dihapus`, 'success');
+        } else {
+          showAlertModal('Sebagian Berhasil', `${successCount} berhasil, ${failCount} gagal`, 'warning');
+        }
+      } catch (error) {
+        console.error('❌ Bulk delete error:', error);
+        showAlertModal('Error!', 'Terjadi kesalahan saat menghapus', 'danger');
       }
     }
   });
@@ -2103,6 +2384,16 @@ function initializeCharts(data) {
     const topProducts = data.topProducts || [];
     const dailyData = data.dailyData || [];
     
+    // Store chart data for later updates
+    chartsData = {
+      isDarkMode,
+      textColor,
+      gridColor,
+      colors,
+      dailyData,
+      topProducts
+    };
+    
     console.log('📈 Daily data:', dailyData);
     console.log('🏆 Top products:', topProducts);
     
@@ -2132,6 +2423,11 @@ function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData
   if (!chartElement) {
     console.warn('⚠️ dailyRevenueChart element not found');
     return;
+  }
+  
+  // Destroy existing chart instance
+  if (chartInstances.dailyRevenue) {
+    chartInstances.dailyRevenue.destroy();
   }
   
   console.log('📊 Rendering daily revenue chart with data:', dailyData);
@@ -2173,7 +2469,8 @@ function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData
           reset: true
         }
       },
-      background: isDarkMode ? '#1f2937' : '#ffffff'
+      background: isDarkMode ? '#1f2937' : '#ffffff',
+      foreColor: textColor
     },
     colors: ['#0d6efd'],
     dataLabels: {
@@ -2229,6 +2526,7 @@ function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData
   try {
     const chart = new ApexCharts(chartElement, options);
     chart.render();
+    chartInstances.dailyRevenue = chart;
     console.log('✓ Daily revenue chart rendered');
   } catch (err) {
     console.error('❌ Error rendering daily revenue chart:', err);
@@ -2241,6 +2539,11 @@ function initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData
 function initializeTopProductsPieChart(isDarkMode, textColor, colors, topProducts) {
   const chartElement = document.getElementById('topProductsPieChart');
   if (!chartElement) return;
+  
+  // Destroy existing chart instance
+  if (chartInstances.topProductsPie) {
+    chartInstances.topProductsPie.destroy();
+  }
   
   // Get top 5 products
   const topFive = topProducts.slice(0, 5);
@@ -2256,7 +2559,8 @@ function initializeTopProductsPieChart(isDarkMode, textColor, colors, topProduct
     chart: {
       type: 'pie',
       height: 350,
-      background: isDarkMode ? '#1f2937' : '#ffffff'
+      background: isDarkMode ? '#1f2937' : '#ffffff',
+      foreColor: textColor
     },
     colors: colors.slice(0, topFive.length),
     labels: topFive.map(p => p.name),
@@ -2279,8 +2583,13 @@ function initializeTopProductsPieChart(isDarkMode, textColor, colors, topProduct
     }
   };
   
-  const chart = new ApexCharts(chartElement, options);
-  chart.render();
+  try {
+    const chart = new ApexCharts(chartElement, options);
+    chart.render();
+    chartInstances.topProductsPie = chart;
+  } catch (err) {
+    console.error('❌ Error rendering pie chart:', err);
+  }
 }
 
 /**
@@ -2289,6 +2598,11 @@ function initializeTopProductsPieChart(isDarkMode, textColor, colors, topProduct
 function initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topProducts) {
   const chartElement = document.getElementById('topSalesChart');
   if (!chartElement) return;
+  
+  // Destroy existing chart instance
+  if (chartInstances.topSales) {
+    chartInstances.topSales.destroy();
+  }
   
   // Get top 8 products
   const topEight = topProducts.slice(0, 8);
@@ -2319,7 +2633,8 @@ function initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topPr
           reset: true
         }
       },
-      background: isDarkMode ? '#1f2937' : '#ffffff'
+      background: isDarkMode ? '#1f2937' : '#ffffff',
+      foreColor: textColor
     },
     colors: ['#198754'],
     plotOptions: {
@@ -2369,8 +2684,13 @@ function initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topPr
     }
   };
   
-  const chart = new ApexCharts(chartElement, options);
-  chart.render();
+  try {
+    const chart = new ApexCharts(chartElement, options);
+    chart.render();
+    chartInstances.topSales = chart;
+  } catch (err) {
+    console.error('❌ Error rendering top sales chart:', err);
+  }
 }
 
 /**
@@ -2379,6 +2699,11 @@ function initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topPr
 function initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topProducts) {
   const chartElement = document.getElementById('revenueChart');
   if (!chartElement) return;
+  
+  // Destroy existing chart instance
+  if (chartInstances.revenue) {
+    chartInstances.revenue.destroy();
+  }
   
   // Get top 8 products
   const topEight = topProducts.slice(0, 8);
@@ -2409,7 +2734,8 @@ function initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topPro
           reset: true
         }
       },
-      background: isDarkMode ? '#1f2937' : '#ffffff'
+      background: isDarkMode ? '#1f2937' : '#ffffff',
+      foreColor: textColor
     },
     colors: ['#ffc107'],
     plotOptions: {
@@ -2460,6 +2786,46 @@ function initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topPro
     }
   };
   
-  const chart = new ApexCharts(chartElement, options);
-  chart.render();
+  try {
+    const chart = new ApexCharts(chartElement, options);
+    chart.render();
+    chartInstances.revenue = chart;
+  } catch (err) {
+    console.error('❌ Error rendering revenue chart:', err);
+  }
+}
+
+/**
+ * Update all charts when dark mode is toggled
+ */
+function updateChartsForDarkMode() {
+  console.log('🌙 Updating charts for dark mode...');
+  
+  // Check if chart data is available
+  if (!chartsData || !chartsData.dailyData) {
+    console.warn('⚠️ Chart data not available for update');
+    return;
+  }
+  
+  // Get new theme colors
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDarkMode ? '#a0aec0' : '#6b7280';
+  const gridColor = isDarkMode ? '#374151' : '#e5e7eb';
+  
+  console.log('🎨 Theme colors updated:', { isDarkMode, textColor, gridColor });
+  
+  try {
+    // Re-initialize all charts with new colors
+    initializeDailyRevenueChart(isDarkMode, textColor, gridColor, chartsData.dailyData);
+    
+    if (chartsData.topProducts && chartsData.topProducts.length > 0) {
+      initializeTopProductsPieChart(isDarkMode, textColor, chartsData.colors, chartsData.topProducts);
+      initializeTopSalesChart(isDarkMode, textColor, gridColor, chartsData.colors, chartsData.topProducts);
+      initializeRevenueChart(isDarkMode, textColor, gridColor, chartsData.colors, chartsData.topProducts);
+    }
+    
+    console.log('✓ Charts updated successfully');
+  } catch (error) {
+    console.error('❌ Error updating charts:', error);
+  }
 }

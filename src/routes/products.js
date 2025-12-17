@@ -286,10 +286,28 @@ router.post('/:id/duplicate', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Produk tidak ditemukan' });
     }
 
-    // Create duplicate with new SKU and (Copy) suffix
+    // Extract original SKU (remove -DUP- suffix if exists from previous duplications)
+    let originalSku = product.sku;
+    if (product.sku.includes('-DUP-')) {
+      originalSku = product.sku.split('-DUP-')[0];
+    }
+
+    // Generate clean new SKU with just one timestamp
     const timestamp = Date.now();
-    const newSku = `${product.sku}-DUP-${timestamp}`;
-    const newName = `${product.name} (Copy)`;
+    const randomStr = Math.random().toString(36).substring(7);
+    const newSku = `${originalSku}-DUP-${randomStr}`;
+
+    // Generate clean product name
+    let newName = product.name;
+    
+    // If product already has (Copy) suffix, replace it with (Copy X)
+    if (product.name.includes('(Copy')) {
+      // Extract base name without (Copy) suffix
+      const baseName = product.name.replace(/\s*\(Copy.*\)$/i, '');
+      newName = `${baseName} (Copy)`;
+    } else {
+      newName = `${product.name} (Copy)`;
+    }
 
     const duplicatedProduct = await Product.create({
       name: newName,

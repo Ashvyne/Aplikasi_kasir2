@@ -471,11 +471,15 @@ body {
   font-size: 1.15rem;
   padding: 0.8rem 1rem !important;
   line-height: 1.7;
+  background-color: #ffffff;
+  color: #212529;
 }
 
 .form-control:focus, .form-select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  background-color: #ffffff;
+  color: #212529;
 }
 
 .form-label {
@@ -1354,60 +1358,71 @@ body {
 
 /* Modal Styles */
 .modal {
-  --bs-backdrop-bg: rgba(0, 0, 0, 0.5);
+  --bs-backdrop-bg: rgba(0, 0, 0, 0.4);
 }
 
 .modal-dialog {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   z-index: 1050;
-  width: 90vw;
-  max-width: 500px;
-  height: auto;
-  max-height: 90vh;
-  margin: 0;
+  max-width: 550px;
 }
 
 .modal-content {
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .modal-body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
-  flex: 1;
-  max-height: calc(90vh - 180px);
+  padding: 2rem;
 }
 
 .modal-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  padding: 1.5rem 2rem;
   flex-shrink: 0;
+}
+
+.modal-header .modal-title {
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.5px;
+}
+
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
 }
 
 .modal-footer {
+  background-color: var(--bg-tertiary);
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem 2rem;
   flex-shrink: 0;
+  gap: 0.5rem;
 }
 
 .modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1040;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  z-index: 1040 !important;
+}
+
+.modal.show .modal-backdrop {
+  opacity: 1;
+}
+
+/* Dark mode - lighter backdrop for better visibility */
+[data-theme="dark"] .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.35) !important;
 }
 
 [data-theme="dark"] .modal-content {
   background-color: var(--bg-secondary);
-  border-color: var(--border-color);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .modal-header {
-  background-color: var(--bg-tertiary);
   border-color: var(--border-color);
   color: var(--text-primary);
 }
@@ -1417,14 +1432,45 @@ body {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .modal-footer {
+[data-theme="dark"] .modal-body .form-label {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-body .form-text {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .modal-body .form-control,
+[data-theme="dark"] .modal-body .form-select {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-body .form-control::placeholder {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .modal-body .form-control:focus,
+[data-theme="dark"] .modal-body .form-select:focus {
+  background-color: var(--bg-tertiary);
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-body .card {
   background-color: var(--bg-tertiary);
   border-color: var(--border-color);
 }
 
-/* Close Button */
-[data-theme="dark"] .btn-close {
-  filter: invert(1);
+/* Ensure background is visible behind modal in dark mode */
+[data-theme="dark"] body.modal-open {
+  background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  opacity: 1;
 }
 
 /* SweetAlert2 Dark Mode */
@@ -1914,4 +1960,204 @@ small, .small {
 
 .swal-dark-text {
   font-size: 1.15rem !important;
+}
+
+/* ============== PRODUCT SELECTION SYSTEM ============== */
+
+/* Selection toolbar styling */
+#productSelectionToolbar {
+  animation: slideDown 0.3s ease-in-out;
+  box-shadow: var(--shadow);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Product checkbox styling */
+.product-checkbox {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+.product-checkbox:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.product-checkbox:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Selected row highlight */
+#productsTableBody tr {
+  transition: background-color 0.2s ease-in-out;
+}
+
+#productsTableBody tr[data-selected="true"] {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Selection toolbar buttons */
+#productSelectionToolbar .btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#productSelectionToolbar .btn {
+  transition: all 0.2s ease-in-out;
+  font-weight: 500;
+}
+
+#productSelectionToolbar .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Dark mode adjustments for selection */
+[data-theme="dark"] #productSelectionToolbar {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  border-left-color: #0d6efd !important;
+}
+
+[data-theme="dark"] #productsTableBody tr:has(.product-checkbox:checked) {
+  background-color: rgba(13, 110, 253, 0.15) !important;
+}
+
+/* Select all checkbox */
+#selectAllProducts {
+  width: 18px;
+  height: 18px;
+}
+
+#selectAllProducts:indeterminate {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* ============== APEXCHARTS DARK MODE ============== */
+
+/* Chart containers */
+#dailyRevenueChart,
+#topProductsPieChart,
+#topSalesChart,
+#revenueChart {
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* ApexCharts tooltip styling for dark mode */
+[data-theme="dark"] .apexcharts-tooltip {
+  background-color: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .apexcharts-tooltip.light {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .apexcharts-tooltip-text {
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .apexcharts-tooltip-title {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+  border-bottom: 1px solid #404040 !important;
+}
+
+/* ApexCharts legend text color */
+[data-theme="dark"] .apexcharts-legend-text {
+  color: #a0aec0 !important;
+}
+
+/* ApexCharts axis labels */
+[data-theme="dark"] .apexcharts-xaxis-label,
+[data-theme="dark"] .apexcharts-yaxis-label {
+  color: #a0aec0 !important;
+}
+
+/* ApexCharts grid lines */
+[data-theme="dark"] .apexcharts-grid-line {
+  stroke: #374151 !important;
+}
+
+/* ApexCharts data labels */
+[data-theme="dark"] .apexcharts-data-labels text {
+  fill: #a0aec0 !important;
+  color: #a0aec0 !important;
+}
+
+/* ApexCharts toolbar */
+[data-theme="dark"] .apexcharts-menu {
+  background-color: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+}
+
+[data-theme="dark"] .apexcharts-menu-item {
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .apexcharts-menu-item:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* Chart background transitions */
+.apexcharts-canvas {
+  transition: background-color 0.3s ease-in-out !important;
+}
+
+/* Ensure pie chart labels are visible */
+[data-theme="dark"] .apexcharts-pie-label {
+  fill: #e0e0e0 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Bar chart styling */
+[data-theme="dark"] .apexcharts-bar-series rect {
+  transition: fill 0.2s ease !important;
+}
+
+/* ============== IMAGE PREVIEW ============== */
+
+#imagePreviewContainer {
+  border: 2px dashed var(--border-color);
+  background-color: var(--bg-tertiary);
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+#imagePreviewContainer:hover {
+  border-color: var(--primary);
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+#imagePreviewContainer i {
+  color: var(--text-secondary);
+}
+
+#imagePreviewContainer p,
+#imagePreviewContainer small {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] #imagePreviewContainer {
+  border-color: var(--border-color);
+  background-color: var(--bg-tertiary);
+}
+
+[data-theme="dark"] #imagePreviewContainer:hover {
+  border-color: var(--primary);
+  background-color: rgba(13, 110, 253, 0.1);
 }

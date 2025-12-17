@@ -114,7 +114,10 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve uploads folder
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static(uploadsDir, {
+  dotfiles: 'deny',
+  index: false
+}));
 
 // ============ API ROUTES ============
 // Semua route menggunakan JWT authentication middleware
@@ -160,7 +163,9 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK',
     message: '✓ Server running',
-    database: dbInitialized ? '✓ Connected' : '⚠️ Demo mode'
+    database: dbInitialized ? '✓ Connected' : '⚠️ Demo mode',
+    uploadsDir: uploadsDir,
+    uploadsExists: fs.existsSync(uploadsDir)
   });
 });
 
@@ -172,12 +177,22 @@ app.get('/favicon.ico', (req, res) => {
 // ============ 404 HANDLER ============
 
 app.use((req, res) => {
+  // Don't log 404 for static files (images, css, js, etc) - they should be handled by express.static
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
+  const isStaticFile = staticExtensions.some(ext => req.url.toLowerCase().includes(ext));
+  const isUploadRequest = req.url.toLowerCase().startsWith('/uploads/');
+  
   if (req.url.startsWith('/api/')) {
     console.warn('❌ 404 API Not Found:', req.method, req.url);
     return res.status(404).json({ message: 'API Route not found', path: req.url });
   }
   
-  console.warn('⚠️ Route not found:', req.method, req.url);
+  // Only log non-static file 404s
+  if (!isStaticFile && !isUploadRequest) {
+    console.warn('⚠️ Route not found:', req.method, req.url);
+  }
+  
+  // Serve index.html for SPA routing
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
