@@ -33,8 +33,6 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Copy application code
-COPY .env .env
-
 COPY . .
 
 # Create uploads directory
