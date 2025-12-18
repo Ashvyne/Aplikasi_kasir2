@@ -1,4 +1,16 @@
 node_modules/
 .env
-kasir.
+.env.local
+.env.*.local
+kasir.db
+kasir.sqlite
 uploads/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Backups
+backups/
+*.sql
+*.tar.gz
