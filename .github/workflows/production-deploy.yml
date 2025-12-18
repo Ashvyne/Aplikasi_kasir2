@@ -1,0 +1,187 @@
+name: Production Build and Deploy
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+env:
+    IMAGE_NAME: kasir-prod
+
+jobs:
+    build-and-deploy:
+        runs-on: self-hosted
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Create deployment directory
+              run: |
+                  sudo mkdir -p /opt/Aplikasi_kasir2
+                  sudo mkdir -p /data/prod_kasir/uploads
+                  sudo chown -R $USER:$USER /opt/Aplikasi_kasir2
+
+            - name: Get next version tag
+              id: get_tag
+              run: |
+                  LATEST_TAG=$(docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | grep -E '^[0-9]+$' | sort -n | tail -1)
+                  if [ -z "$LATEST_TAG" ]; then
+                    NEXT_TAG=1
+                  else
+                    NEXT_TAG=$((LATEST_TAG + 1))
+                  fi
+                  echo "tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+                  echo "Next production tag: $NEXT_TAG"
+
+            - name: Build Docker image
+              run: |
+                  docker build \
+                    --target production \
+                    -t ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }} \
+                    -t ${{ env.IMAGE_NAME }}:latest \
+                    -f ./Dockerfile \
+                    .
+
+            - name: Copy environment file
+              run: |
+                  if [ -f .env ]; then
+                    sudo cp .env /opt/Aplikasi_kasir2/.env
+                  else
+                    echo "Warning: .env file not found"
+                  fi
+
+            - name: Stop and remove old container
+              run: |
+                  docker stop kasir-prod || true
+                  docker rm kasir-prod || true
+
+            - name: Deploy production container
+              run: |
+                  docker run -d \
+                    --name kasir-prod \
+                    --restart unless-stopped \
+                    -p 3000:3000 \
+                    -v /data/prod_kasir/uploads:/app/src/public/uploads \
+                    --env-file /opt/Aplikasi_kasir2/.env \
+                    ${{ env.IMAGE_NAME }}:latest
+
+            - name: Wait for container to be healthy
+              run: |
+                  echo "Waiting for container to start..."
+                  sleep 10
+                  docker ps | grep kasir-prod
+
+            - name: Check container logs
+              if: always()
+              run: |
+                  echo "Container logs:"
+                  docker logs kasir-prod --tail 50
+
+            - name: Clean up old images
+              run: |
+                  echo "Cleaning up old production images..."
+                  docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | \
+                    grep -E '^[0-9]+$' | \
+                    sort -rn | \
+                    tail -n +4 | \
+                    xargs -I {} docker rmi ${{ env.IMAGE_NAME }}:{} 2>/dev/null || true
+                  echo "Cleanup completed"
+
+            - name: Deployment summary
+              run: |
+                  echo "================================"
+                  echo "Production Deployment Summary"
+                  echo "================================"
+                  echo "Branch: main"
+                  echo "Image: ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}"
+                  echo "Container: kasir-prod"
+                  echo "Port: 3000"
+                  echo "Directory: /opt/Aplikasi_kasir2"
+                  echo "Uploads: /data/prod_kasir/uploads"
+                  echo "================================"
+
+            - name: Notify deployment success via Telegram
+              if: success()
+              run: |
+                  # Load credentials dari .env (no echo untuk security)
+                  if [ -f /opt/Aplikasi_kasir2/.env ]; then
+                    set -a
+                    source /opt/Aplikasi_kasir2/.env
+                    set +a
+                  fi
+
+                  # Validate credentials tersedia
+                  if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+                    exit 0
+                  fi
+
+                  # Get git information
+                  GIT_INFO=$(git log -1 --pretty=format:"%s|%h|%an|%ar")
+                  LAST_COMMIT_MSG=$(echo "$GIT_INFO" | cut -d'|' -f1 | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g')
+                  LAST_COMMIT_HASH=$(echo "$GIT_INFO" | cut -d'|' -f2)
+                  LAST_COMMIT_AUTHOR=$(echo "$GIT_INFO" | cut -d'|' -f3 | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g')
+                  LAST_COMMIT_TIME=$(echo "$GIT_INFO" | cut -d'|' -f4)
+
+                  # Prepare message
+                  TELEGRAM_API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+                  MSG="🚀 <b>Aplikasi Kasir Deploy Sukses (Production)!</b> 🚀%0A%0A"
+                  MSG="${MSG}📦 <b>Branch:</b> <code>main</code>%0A"
+                  MSG="${MSG}🏷️ <b>Tag:</b> <code>${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}</code>%0A"
+                  MSG="${MSG}🔗 <b>Commit:</b> <code>$LAST_COMMIT_HASH</code>%0A"
+                  MSG="${MSG}👤 <b>Author:</b> $LAST_COMMIT_AUTHOR%0A"
+                  MSG="${MSG}⏰ <b>Time:</b> $LAST_COMMIT_TIME%0A%0A"
+                  MSG="${MSG}📝 <b>Changelog:</b>%0A$LAST_COMMIT_MSG%0A%0A"
+                  MSG="${MSG}🐳 <b>Container:</b> kasir-prod%0A"
+                  MSG="${MSG}🌐 <b>Port:</b> 3000%0A"
+                  MSG="${MSG}📂 <b>Directory:</b> /opt/Aplikasi_kasir2"
+
+                  # Send ke admin (hide all output)
+                  set +x
+                  IFS=',' read -ra CHAT_IDS <<< "$TELEGRAM_CHAT_ID"
+                  for CHAT_ID in "${CHAT_IDS[@]}"; do
+                    curl -s -X POST "$TELEGRAM_API" \
+                      -d chat_id="$CHAT_ID" \
+                      -d text="$MSG" \
+                      -d parse_mode="HTML" > /dev/null 2>&1
+                  done
+                  set -x
+
+            - name: Notify deployment failure via Telegram
+              if: failure()
+              run: |
+                  # Load credentials dari .env (no echo)
+                  if [ -f /opt/Aplikasi_kasir2/.env ]; then
+                    set -a
+                    source /opt/Aplikasi_kasir2/.env
+                    set +a
+                  fi
+
+                  # Validate credentials
+                  if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+                    exit 0
+                  fi
+
+                  # Get basic info
+                  COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+                  LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s" | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g')
+
+                  # Prepare failure message
+                  TELEGRAM_API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+                  MSG="❌ <b>Aplikasi Kasir Deploy GAGAL (Production)!</b> ❌%0A%0A"
+                  MSG="${MSG}📦 <b>Branch:</b> <code>main</code>%0A"
+                  MSG="${MSG}🔗 <b>Commit:</b> <code>$COMMIT_HASH</code>%0A"
+                  MSG="${MSG}📝 <b>Changelog:</b> $LAST_COMMIT_MSG%0A%0A"
+                  MSG="${MSG}🔍 Cek GitHub Actions logs untuk detail error."
+
+                  # Send ke admin (hide all output)
+                  set +x
+                  IFS=',' read -ra CHAT_IDS <<< "$TELEGRAM_CHAT_ID"
+                  for CHAT_ID in "${CHAT_IDS[@]}"; do
+                    curl -s -X POST "$TELEGRAM_API" \
+                      -d chat_id="$CHAT_ID" \
+                      -d text="$MSG" \
+                      -d parse_mode="HTML" > /dev/null 2>&1
+                  done
+                  set -x
