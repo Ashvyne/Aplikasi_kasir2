@@ -26,7 +26,7 @@ jobs:
             - name: Get next version tag
               id: get_tag
               run: |
-                  LATEST_TAG=$(docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | grep -E '^[0-9]+$' | sort -n | tail -1)
+                  LATEST_TAG=$(sudo docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | grep -E '^[0-9]+$' | sort -n | tail -1)
                   if [ -z "$LATEST_TAG" ]; then
                     NEXT_TAG=1
                   else
@@ -37,7 +37,7 @@ jobs:
 
             - name: Build Docker image
               run: |
-                  docker build \
+                  sudo docker build \
                     --target production \
                     -t ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }} \
                     -t ${{ env.IMAGE_NAME }}:latest \
@@ -54,12 +54,12 @@ jobs:
 
             - name: Stop and remove old container
               run: |
-                  docker stop kasir-dev || true
-                  docker rm kasir-dev || true
+                  sudo docker stop kasir-dev || true
+                  sudo docker rm kasir-dev || true
 
             - name: Deploy development container
               run: |
-                  docker run -d \
+                  sudo docker run -d \
                     --name kasir-dev \
                     --restart unless-stopped \
                     -p 3001:3000 \
@@ -71,22 +71,22 @@ jobs:
               run: |
                   echo "Waiting for container to start..."
                   sleep 10
-                  docker ps | grep kasir-dev
+                  sudo docker ps | grep kasir-dev
 
             - name: Check container logs
               if: always()
               run: |
                   echo "Container logs:"
-                  docker logs kasir-dev --tail 50
+                  sudo docker logs kasir-dev --tail 50
 
             - name: Clean up old images
               run: |
                   echo "Cleaning up old development images..."
-                  docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | \
+                  sudo docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | \
                     grep -E '^[0-9]+$' | \
                     sort -rn | \
                     tail -n +4 | \
-                    xargs -I {} docker rmi ${{ env.IMAGE_NAME }}:{} 2>/dev/null || true
+                    xargs -I {} sudo docker rmi ${{ env.IMAGE_NAME }}:{} 2>/dev/null || true
                   echo "Cleanup completed"
 
             - name: Deployment summary
