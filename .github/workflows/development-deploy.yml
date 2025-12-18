@@ -40,7 +40,6 @@ jobs:
                   sudo docker build \
                     --target production \
                     -t ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }} \
-                    -t ${{ env.IMAGE_NAME }}:latest \
                     -f ./Dockerfile \
                     .
 
@@ -65,7 +64,7 @@ jobs:
                     -p 3001:3000 \
                     -v /data/dev_kasir/uploads:/app/src/public/uploads \
                     --env-file /opt/dev-Aplikasi_kasir2/.env \
-                    ${{ env.IMAGE_NAME }}:latest
+                    ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}
 
             - name: Wait for container to be healthy
               run: |
