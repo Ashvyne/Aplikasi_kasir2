@@ -21,27 +21,45 @@ Proyek ini cocok digunakan untuk:
 
 ## 🚀 Fitur Utama
 
-### ✅ POS / Transaksi Penjualan  
-- Tambah produk  
-- Keranjang belanja  
-- Hitung subtotal, diskon, total  
-- Hitung kembalian  
-- Simpan transaksi  
+## 🧾 POS / Transaksi Penjualan
 
-### ✅ Manajemen Produk  
-- Tambah produk  
-- Edit produk  
-- Hapus produk  
+Tambah produk ke keranjang
 
-### ✅ Riwayat Transaksi  
-- Detail transaksi  
-- Export data  
+Hitung subtotal, diskon, total
 
-### ✅ Dashboard  
-- Total transaksi hari ini  
-- Pendapatan  
-- Produk terlaris  
-- Stok hampir habis  
+Hitung kembalian
+
+Simpan transaksi ke riwayat
+
+GitHub
+
+## 📦 Manajemen Produk
+
+Tambah produk baru
+
+Edit produk
+
+Hapus produk
+
+GitHub
+
+## 📊 Riwayat Transaksi
+
+Lihat detail transaksi
+
+Export data (kalau ditambah nanti)
+
+GitHub
+
+## 📈 Dashboard
+
+Total transaksi hari ini
+
+Total pendapatan
+
+Produk paling laku
+
+Produk dengan stok hampir habis
 
 ---
 
@@ -52,17 +70,15 @@ Aplikasi_kasir2/
 │
 ├── css/
 │   └── style.css
-│
 ├── js/
 │   ├── app.js
 │   └── debug.js
-│
 ├── products/
-│   └── (data produk jika ada)
-│
+│   └── (data produk kalau ada)
 ├── index.html
 ├── README.md
 └── .gitignore
+``` :contentReference[oaicite:7]{index=7}
 ```
 ## 🛠 Teknologi yang Digunakan
 | Teknologi        | Fungsi                        |
@@ -113,16 +129,13 @@ Tambah database MySQL
 
 Integrasi printer POS
 
-## 🤝 Kontribusi
+## 🤝 Kolaborasi
 
-Kontribusi sangat welcome!
-Silakan fork → buat branch → pull request.
+-Ashvyne
+-Afdaan
 
-## 🧑‍💻 Penulis
-
-Dapin
+## 🧑‍💻 Penulis  
+Ash
 
 GitHub: https://github.com/Ashvyne
-
-Email: andaresthadavvin@gmail.com
 
