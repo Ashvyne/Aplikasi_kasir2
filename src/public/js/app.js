@@ -176,6 +176,7 @@ function initializeApp() {
     // Load semua data dengan error handling
     console.log('📦 Loading initial data...');
     Promise.all([
+      loadDashboard().catch(e => console.warn('⚠️ Dashboard load failed:', e)),
       loadProducts().catch(e => console.warn('⚠️ Products load failed:', e)),
       loadTransactions().catch(e => console.warn('⚠️ Transactions load failed:', e)),
       loadReports().catch(e => console.warn('⚠️ Reports load failed:', e))
@@ -251,10 +252,13 @@ function navigateTo(pageName) {
     
     // Update title halaman di header
     const titles = {
-      pos: 'Penjualan',
-      products: 'Daftar Produk',
-      transactions: 'Riwayat Penjualan',
-      reports: 'Laporan & Analitik'
+      dashboard: 'Dashboard',
+      products: 'Data Produk',
+      stockin: 'Barang Masuk',
+      stock: 'Stok Barang',
+      pos: 'Kasir',
+      transactions: 'Riwayat Transaksi',
+      reports: 'Laporan'
     };
     const pageTitle = document.getElementById('pageTitle');
     if (pageTitle) {
@@ -262,9 +266,28 @@ function navigateTo(pageName) {
     }
     
     // Reload data jika diperlukan
+    if (pageName === 'dashboard') {
+      console.log('🔄 Reloading dashboard...');
+      loadDashboard();
+    } else {
+      // Clear dashboard refresh interval when leaving dashboard
+      if (typeof dashboardRefreshInterval !== 'undefined' && dashboardRefreshInterval) {
+        clearInterval(dashboardRefreshInterval);
+        dashboardRefreshInterval = null;
+      }
+    }
     if (pageName === 'products') {
       console.log('🔄 Reloading products...');
       loadProducts();
+    }
+    if (pageName === 'stockin') {
+      console.log('🔄 Reloading stock in...');
+      loadStockInForm();
+      loadStockInHistory();
+    }
+    if (pageName === 'stock') {
+      console.log('🔄 Reloading stock display...');
+      loadStockDisplay();
     }
     if (pageName === 'transactions') {
       console.log('🔄 Reloading transactions...');
@@ -423,7 +446,7 @@ function displayProducts() {
         </div>
         <div class="product-card-content">
           <div>
-            <div class="product-card-price">Rp ${formatPrice(product.price)}</div>
+            <div class="product-card-price">Rp ${formatPrice(product.sell_price || product.price || 0)}</div>
             <div class="product-card-stock ${stockStatus}">
               <span class="product-card-stock-indicator"></span>
               <span>${product.stock} stok</span>
@@ -484,7 +507,7 @@ function loadProductsTable() {
         <td><strong>${escapeHtml(product.name)}</strong></td>
         <td><span class="badge badge-info">${escapeHtml(product.sku)}</span></td>
         <td>${getCategoryName(product.category)}</td>
-        <td>Rp ${formatPrice(product.price)}</td>
+        <td>Rp ${formatPrice(product.sell_price || product.price || 0)}</td>
         <td><span class="badge badge-${stockStatus}">${product.stock} unit</span></td>
         <td>
           <div class="table-actions">
@@ -573,7 +596,7 @@ function openProductModal(productId = null) {
         document.getElementById('productName').value = product.name || '';
         document.getElementById('productSku').value = product.sku || '';
         document.getElementById('productCategory').value = product.category || '1';
-        document.getElementById('productPrice').value = product.price || 0;
+        document.getElementById('productPrice').value = product.sell_price || product.price || 0;
         document.getElementById('productStock').value = product.stock || 0;
         
         // Tampilkan preview gambar jika ada
@@ -1219,7 +1242,7 @@ function addToCart(productId) {
       cart.push({
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: product.sell_price || product.price || 0,
         quantity: 1
       });
     }
