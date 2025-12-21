@@ -10,7 +10,7 @@ const authenticateToken = (req, res, next) => {
       return res.status(401).json({ message: 'Token tidak ditemukan' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
         console.warn('⚠️ Token verification failed:', err.message);
         return res.status(403).json({ message: 'Token tidak valid' });
