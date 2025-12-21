@@ -960,6 +960,19 @@
   <!-- ApexCharts Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.50.0/apexcharts.min.js"></script>
   
+  <!-- Authentication Check - Run this FIRST before other scripts -->
+  <script>
+    // Check if user is authenticated before loading the dashboard
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.warn('❌ No authentication token found, redirecting to login...');
+      window.location.href = '/login';
+    } else {
+      console.log('✓ Authentication token found, loading dashboard...');
+    }
+  </script>
+  
   <!-- Debug Script -->
   <script src="js/debug.js"></script>
   

@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
-
 exports.verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
@@ -11,7 +9,7 @@ exports.verifyToken = (req, res, next) => {
       return res.status(401).json({ message: 'Token tidak ditemukan' });
     }
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
         return res.status(403).json({ message: 'Token tidak valid' });
       }
