@@ -38,6 +38,7 @@ jobs:
             - name: Build Docker image
               run: |
                   sudo docker build \
+                    --no-cache \
                     --target production \
                     -t ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }} \
                     -f ./Dockerfile \
