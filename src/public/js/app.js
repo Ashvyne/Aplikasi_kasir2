@@ -470,7 +470,7 @@ function displayProducts() {
 }
 
 // Function untuk menampilkan produk di table (halaman Products)
-function loadProductsTable() {
+function loadProductsTable(productsToShow = null) {
   try {
     const tbody = document.getElementById('productsTableBody');
     if (!tbody) {
@@ -478,18 +478,24 @@ function loadProductsTable() {
       return;
     }
     
+    const displayProducts = productsToShow || products;
+    
+    // Update counter
+    document.getElementById('productFilterCount').textContent = displayProducts.length;
+    document.getElementById('productTotalCount').textContent = products.length;
+    
     // Clear table terlebih dahulu
     tbody.innerHTML = '';
-    console.log('📋 Loading products table with', products.length, 'items');
+    console.log('📋 Loading products table with', displayProducts.length, 'items');
     
     // Jika tidak ada produk, tampilkan pesan
-    if (products.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Tidak ada produk</td></tr>';
+    if (displayProducts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;"><i class="bi bi-inbox"></i> Tidak ada produk yang sesuai</td></tr>';
       return;
     }
     
     // Loop setiap produk dan buat row table
-    products.forEach((product, index) => {
+    displayProducts.forEach((product, index) => {
       const row = tbody.insertRow();
       // Tentukan status badge stok
       const stockStatus = product.stock === 0 ? 'danger' : product.stock < 10 ? 'warning' : 'success';
@@ -2069,7 +2075,7 @@ async function exportProductsExcel() {
 
 // ============ HELPERS ============
 
-// Function untuk search/filter produk
+// Function untuk search/filter produk di POS (product cards)
 function searchProducts() {
   try {
     const keyword = document.getElementById('searchProduct').value.toLowerCase();
@@ -2081,6 +2087,57 @@ function searchProducts() {
     });
   } catch (error) {
     console.error('❌ Search error:', error);
+  }
+}
+
+// Function untuk filter produk di Data Produk page
+function filterProductsAdvanced() {
+  try {
+    const searchKeyword = document.getElementById('productSearchInput').value.toLowerCase();
+    const selectedCategory = document.getElementById('productCategoryFilter').value;
+    const selectedStockStatus = document.getElementById('productStockFilter').value;
+    
+    const filtered = products.filter(product => {
+      // Search filter (nama, SKU, kategori)
+      const name = product.name.toLowerCase();
+      const sku = product.sku.toLowerCase();
+      const category = getCategoryName(product.category).toLowerCase();
+      const matchesSearch = name.includes(searchKeyword) || sku.includes(searchKeyword) || category.includes(searchKeyword);
+      
+      // Category filter
+      const productCategory = getCategoryName(product.category);
+      const matchesCategory = !selectedCategory || productCategory === selectedCategory;
+      
+      // Stock status filter
+      let matchesStock = true;
+      if (selectedStockStatus === 'normal') {
+        matchesStock = product.stock >= 10;
+      } else if (selectedStockStatus === 'low') {
+        matchesStock = product.stock > 0 && product.stock < 10;
+      } else if (selectedStockStatus === 'empty') {
+        matchesStock = product.stock === 0;
+      }
+      
+      return matchesSearch && matchesCategory && matchesStock;
+    });
+    
+    console.log(`🔍 Filtered to ${filtered.length} products`);
+    loadProductsTable(filtered);
+  } catch (error) {
+    console.error('❌ Filter error:', error);
+  }
+}
+
+// Function untuk reset semua filter
+function resetProductFilters() {
+  try {
+    document.getElementById('productSearchInput').value = '';
+    document.getElementById('productCategoryFilter').value = '';
+    document.getElementById('productStockFilter').value = '';
+    filterProductsAdvanced();
+    console.log('✓ Filters reset');
+  } catch (error) {
+    console.error('❌ Reset error:', error);
   }
 }
 

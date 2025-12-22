@@ -12,7 +12,8 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
-        console.warn('⚠️ Token verification failed:', err.message);
+        // Gunakan console.error untuk error handling, bukan warn
+        console.error('❌ Token verification failed:', err.message);
         return res.status(403).json({ message: 'Token tidak valid' });
       }
 

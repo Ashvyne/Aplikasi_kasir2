@@ -14,6 +14,7 @@
   
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/search-filter.css">
   
   <!-- SweetAlert2 CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -255,6 +256,58 @@
             
             <!-- Alert Container untuk Products Page -->
             <div id="productsAlertContainer" class="mb-4"></div>
+            
+            <!-- Search and Filter Section -->
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-body p-3">
+                <div class="row g-3 align-items-end">
+                  <!-- Search Input -->
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold small mb-2"><i class="bi bi-search me-2"></i>Cari Produk</label>
+                    <input type="text" class="form-control" id="productSearchInput" 
+                           placeholder="Nama, SKU, atau kategori..." onkeyup="filterProductsAdvanced()">
+                  </div>
+                  
+                  <!-- Category Filter -->
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold small mb-2"><i class="bi bi-tag me-2"></i>Kategori</label>
+                    <select class="form-select" id="productCategoryFilter" onchange="filterProductsAdvanced()">
+                      <option value="">-- Semua Kategori --</option>
+                      <option value="Makanan">Makanan</option>
+                      <option value="Minuman">Minuman</option>
+                      <option value="Snack">Snack</option>
+                      <option value="Elektronik">Elektronik</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Stock Status Filter -->
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold small mb-2"><i class="bi bi-box-seam me-2"></i>Status Stok</label>
+                    <select class="form-select" id="productStockFilter" onchange="filterProductsAdvanced()">
+                      <option value="">-- Semua Status --</option>
+                      <option value="normal">Stok Normal (≥10)</option>
+                      <option value="low">Stok Kurang (1-9)</option>
+                      <option value="empty">Stok Habis (0)</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Reset Button -->
+                  <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetProductFilters()">
+                      <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Results Info -->
+                <div class="row mt-3">
+                  <div class="col-12">
+                    <small class="text-muted">Menampilkan <strong id="productFilterCount">0</strong> dari <strong id="productTotalCount">0</strong> produk</small>
+                  </div>
+                </div>
+              </div>
+            </div>
             
             <!-- Selection Toolbar (Hidden by default) -->
             <div id="productSelectionToolbar" class="card border-left-4 border-primary bg-light mb-3" style="display: none; border-left: 4px solid #0d6efd;">
@@ -719,10 +772,10 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h2>📊 Stok Barang</h2>
               <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="filterStockStatus('all')">Semua</button>
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="filterStockStatus('empty')">Habis</button>
-                <button type="button" class="btn btn-outline-warning btn-sm" onclick="filterStockStatus('low')">Kurang</button>
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="filterStockStatus('normal')">Normal</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm stock-filter-btn active" data-filter="all" onclick="filterStockStatus('all')">Semua</button>
+                <button type="button" class="btn btn-outline-danger btn-sm stock-filter-btn" data-filter="empty" onclick="filterStockStatus('empty')">Habis</button>
+                <button type="button" class="btn btn-outline-warning btn-sm stock-filter-btn" data-filter="low" onclick="filterStockStatus('low')">Kurang</button>
+                <button type="button" class="btn btn-outline-success btn-sm stock-filter-btn" data-filter="normal" onclick="filterStockStatus('normal')">Normal</button>
               </div>
             </div>
             

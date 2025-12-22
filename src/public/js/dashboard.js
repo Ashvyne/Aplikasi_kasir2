@@ -12,6 +12,15 @@ async function loadDashboard() {
       }
     });
 
+    // Check if token expired (403 status)
+    if (response.status === 403) {
+      // Clear token dan redirect ke login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+      return;
+    }
+
     if (!response.ok) throw new Error('Failed to load dashboard data');
     
     const data = await response.json();
@@ -286,6 +295,17 @@ function renderStockTable(products) {
 
 function filterStockStatus(status) {
   stockCurrentFilter = status;
+  
+  // Update button active state
+  const buttons = document.querySelectorAll('.stock-filter-btn');
+  buttons.forEach(btn => {
+    if (btn.dataset.filter === status) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  
   const filtered = window.allStockData.filter(p => {
     if (status === 'all') return true;
     if (status === 'empty') return p.stock === 0;
