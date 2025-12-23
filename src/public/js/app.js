@@ -282,8 +282,7 @@ function navigateTo(pageName) {
     }
     if (pageName === 'stockin') {
       console.log('🔄 Reloading stock in...');
-      loadStockInForm();
-      loadStockInHistory();
+      initStockInPage();
     }
     if (pageName === 'stock') {
       console.log('🔄 Reloading stock display...');
@@ -466,6 +465,27 @@ function displayProducts() {
     console.log('✓ Products displayed');
   } catch (error) {
     console.error('❌ Display products error:', error);
+  }
+}
+
+// ============ STOCK IN WRAPPER FUNCTIONS ============
+
+/**
+ * Wrapper function untuk load stock in form
+ */
+function loadStockInForm() {
+  if (typeof initStockInPage === 'function') {
+    initStockInPage();
+  }
+}
+
+/**
+ * Wrapper function untuk load stock in history
+ * This function is defined in stockin.js - just call it if available
+ */
+function loadStockInHistoryWrapper() {
+  if (typeof loadStockInHistory === 'function') {
+    window.loadStockInHistory();
   }
 }
 
@@ -1244,12 +1264,16 @@ function addToCart(productId) {
         return;
       }
     } else {
-      // Jika belum ada, tambahkan item baru
+      // Jika belum ada, tambahkan item baru dengan dukungan diskon per item
       cart.push({
         id: product.id,
+        product_id: product.id,
         name: product.name,
         price: product.sell_price || product.price || 0,
-        quantity: 1
+        buy_price: product.buy_price || 0,
+        quantity: 1,
+        discount: 0,  // Diskon per item dalam rupiah
+        discount_percent: 0  // Diskon per item dalam persen
       });
     }
     
@@ -1309,19 +1333,29 @@ function displayCart() {
     
     // Loop setiap item di keranjang
     cart.forEach(item => {
+      const itemSubtotal = item.price * item.quantity;
+      const itemDiscount = item.discount || 0;
+      const itemAfterDiscount = itemSubtotal - itemDiscount;
+      
       const cartItem = document.createElement('div');
       cartItem.className = 'cart-item';
       cartItem.innerHTML = `
         <div class="cart-item-info">
           <div class="cart-item-name">${escapeHtml(item.name)}</div>
           <div class="cart-item-detail">Rp ${formatPrice(item.price)} x ${item.quantity}</div>
+          ${itemDiscount > 0 ? `<div class="cart-item-detail" style="color: #dc3545; font-size: 12px;">Diskon: -Rp ${formatPrice(itemDiscount)}</div>` : ''}
         </div>
         <div class="cart-item-qty">
           <button onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">−</button>
           <span>${item.quantity}</span>
           <button onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
         </div>
-        <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn btn-sm btn-outline-secondary" onclick="editItemDiscount(${item.id})" title="Edit diskon item">
+            <i class="bi bi-percent"></i>
+          </button>
+          <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
+        </div>
       `;
       cartDiv.appendChild(cartItem);
     });
@@ -1333,17 +1367,21 @@ function displayCart() {
 // Function untuk update total belanja
 function updateTotal() {
   try {
-    // Ambil nilai diskon
-    const discount = parseInt(document.getElementById('discount').value) || 0;
+    // Ambil nilai diskon transaksi keseluruhan
+    const transactionDiscount = parseInt(document.getElementById('discount').value) || 0;
     let subtotal = 0;
+    let totalItemDiscounts = 0;
     
-    // Hitung subtotal
+    // Hitung subtotal dan diskon per item
     cart.forEach(item => {
-      subtotal += item.price * item.quantity;
+      const itemSubtotal = item.price * item.quantity;
+      subtotal += itemSubtotal;
+      totalItemDiscounts += (item.discount || 0);
     });
     
-    // Hitung total (subtotal - diskon)
-    const total = Math.max(0, subtotal - discount);
+    // Hitung total: subtotal - (diskon item + diskon transaksi)
+    const totalDiscount = totalItemDiscounts + transactionDiscount;
+    const total = Math.max(0, subtotal - totalDiscount);
     
     // Update elemen DOM
     document.getElementById('subtotal').textContent = 'Rp ' + formatPrice(subtotal);
@@ -1371,14 +1409,17 @@ function calculateChange() {
 
 // Function untuk ambil total amount
 function getTotalAmount() {
-  const discount = parseInt(document.getElementById('discount').value) || 0;
+  const transactionDiscount = parseInt(document.getElementById('discount').value) || 0;
   let subtotal = 0;
+  let totalItemDiscounts = 0;
   
   cart.forEach(item => {
     subtotal += item.price * item.quantity;
+    totalItemDiscounts += (item.discount || 0);
   });
   
-  return Math.max(0, subtotal - discount);
+  const totalDiscount = totalItemDiscounts + transactionDiscount;
+  return Math.max(0, subtotal - totalDiscount);
 }
 
 // Function untuk clear/batal transaksi
@@ -1404,6 +1445,81 @@ function clearCart() {
       console.log('✓ Cart cleared');
     }
   });
+}
+
+// Function untuk edit diskon per item
+function editItemDiscount(productId) {
+  try {
+    const item = cart.find(i => i.id === productId);
+    if (!item) return;
+    
+    const itemTotal = item.price * item.quantity;
+    
+    Swal.fire({
+      title: `Edit Diskon - ${item.name}`,
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Subtotal Item:</strong> Rp ${formatPrice(itemTotal)}</p>
+          <div style="margin-bottom: 10px;">
+            <label for="discountAmount" style="display: block; margin-bottom: 5px; font-weight: 500;">Diskon (Rp):</label>
+            <input type="number" id="discountAmount" class="form-control" value="${item.discount || 0}" min="0" max="${itemTotal}" step="100" />
+          </div>
+          <div>
+            <label for="discountPercent" style="display: block; margin-bottom: 5px; font-weight: 500;">Atau Diskon (%):</label>
+            <input type="number" id="discountPercent" class="form-control" value="${item.discount_percent || 0}" min="0" max="100" step="1" />
+          </div>
+          <small style="color: #6b7280;">Masukkan diskon dalam Rp atau %. Yang terakhir diisi akan digunakan.</small>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Simpan',
+      cancelButtonText: 'Batal',
+      didOpen: () => {
+        const amountInput = document.getElementById('discountAmount');
+        const percentInput = document.getElementById('discountPercent');
+        
+        // Ketika user input persentase, konversi ke rupiah
+        percentInput.addEventListener('change', () => {
+          const percent = parseInt(percentInput.value) || 0;
+          if (percent > 0) {
+            const amount = Math.round((itemTotal * percent) / 100);
+            amountInput.value = amount;
+          }
+        });
+        
+        // Ketika user input rupiah, konversi ke persentase
+        amountInput.addEventListener('change', () => {
+          const amount = parseInt(amountInput.value) || 0;
+          if (amount > 0) {
+            const percent = Math.round((amount / itemTotal) * 100);
+            percentInput.value = percent;
+          } else {
+            percentInput.value = 0;
+          }
+        });
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const finalAmount = parseInt(document.getElementById('discountAmount').value) || 0;
+        const finalPercent = parseInt(document.getElementById('discountPercent').value) || 0;
+        
+        // Validasi diskon tidak boleh lebih dari total item
+        if (finalAmount > itemTotal) {
+          showAlertModal('Error!', 'Diskon tidak boleh lebih dari total item', 'danger');
+          return;
+        }
+        
+        item.discount = finalAmount;
+        item.discount_percent = finalPercent;
+        
+        displayCart();
+        updateTotal();
+        showAlertModal('Berhasil!', `Diskon disimpan untuk ${item.name}`, 'success');
+      }
+    });
+  } catch (error) {
+    console.error('❌ Edit item discount error:', error);
+  }
 }
 
 // Function untuk checkout/selesaikan transaksi
@@ -1795,7 +1911,21 @@ function viewTransaction(transactionId) {
         icon: 'info',
         confirmButtonColor: '#0d6efd',
         confirmButtonText: '✓ Tutup',
-        width: '500px'
+        width: '500px',
+        didOpen: (modal) => {
+          // Tambahkan tombol print setelah modal terbuka
+          const confirmButton = modal.querySelector('.swal2-confirm');
+          const printButton = document.createElement('button');
+          printButton.className = 'btn btn-success me-2';
+          printButton.style.cssText = 'padding: 6px 12px; margin-right: 8px; font-size: 14px; cursor: pointer;';
+          printButton.innerHTML = '<i class="bi bi-printer me-1"></i> Cetak Resi';
+          printButton.onclick = () => printReceipt(trans, items, subtotal, discount, total, invoiceNumber);
+          
+          // Insert button sebelum confirm button
+          if (confirmButton && confirmButton.parentNode) {
+            confirmButton.parentNode.insertBefore(printButton, confirmButton);
+          }
+        }
       });
       
       console.log('✓ Transaction detail shown:', invoiceNumber);
@@ -2909,3 +3039,312 @@ function updateChartsForDarkMode() {
     console.error('❌ Error updating charts:', error);
   }
 }
+
+// ============ PRINT RECEIPT ============
+
+/**
+ * Print receipt untuk transaksi
+ * @param {Object} transaction - Data transaksi
+ * @param {Array} items - Array item transaksi
+ * @param {Number} subtotal - Total subtotal
+ * @param {Number} discount - Total diskon
+ * @param {Number} total - Total pembayaran
+ * @param {String} invoiceNumber - Nomor invoice
+ */
+function printReceipt(transaction, items, subtotal, discount, total, invoiceNumber) {
+  try {
+    console.log('🖨️  Printing receipt:', invoiceNumber);
+    
+    // Format tanggal
+    const dateObj = new Date(transaction.createdAt || transaction.created_at);
+    const date = dateObj.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const time = dateObj.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    // Buat HTML untuk resi
+    const receiptHTML = `
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Resi - ${invoiceNumber}</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: 'Courier New', monospace;
+          line-height: 1.4;
+          background: #fff;
+          padding: 0;
+          color: #000;
+        }
+        
+        .receipt {
+          max-width: 80mm;
+          margin: 0 auto;
+          padding: 10mm;
+          background: white;
+          color: black;
+          page-break-after: always;
+        }
+        
+        .header {
+          text-align: center;
+          margin-bottom: 10mm;
+          border-bottom: 2px dashed #000;
+          padding-bottom: 5mm;
+        }
+        
+        .header h1 {
+          font-size: 18px;
+          margin-bottom: 3mm;
+          font-weight: bold;
+        }
+        
+        .header p {
+          font-size: 11px;
+          margin: 1mm 0;
+        }
+        
+        .invoice-info {
+          margin-bottom: 8mm;
+          font-size: 11px;
+          border-bottom: 1px dashed #000;
+          padding-bottom: 5mm;
+        }
+        
+        .invoice-info div {
+          display: flex;
+          justify-content: space-between;
+          margin: 2mm 0;
+        }
+        
+        .invoice-info .label {
+          flex: 1;
+        }
+        
+        .invoice-info .value {
+          flex: 1;
+          text-align: right;
+          font-weight: bold;
+        }
+        
+        .items-section {
+          margin-bottom: 5mm;
+          border-bottom: 1px dashed #000;
+          padding-bottom: 5mm;
+        }
+        
+        .items-title {
+          text-align: center;
+          font-size: 12px;
+          font-weight: bold;
+          margin-bottom: 3mm;
+        }
+        
+        .item {
+          font-size: 10px;
+          margin: 3mm 0;
+          border-bottom: 1px dotted #ccc;
+          padding-bottom: 2mm;
+        }
+        
+        .item-name {
+          font-weight: bold;
+          word-break: break-word;
+        }
+        
+        .item-detail {
+          font-size: 9px;
+          display: flex;
+          justify-content: space-between;
+          margin-top: 1mm;
+        }
+        
+        .summary {
+          margin-bottom: 5mm;
+          font-size: 11px;
+          border-bottom: 1px dashed #000;
+          padding-bottom: 5mm;
+        }
+        
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          margin: 2mm 0;
+        }
+        
+        .summary-row.subtotal {
+          font-weight: normal;
+        }
+        
+        .summary-row.discount {
+          color: #dc3545;
+          font-weight: bold;
+        }
+        
+        .summary-row.total {
+          font-size: 13px;
+          font-weight: bold;
+          padding: 3mm;
+          background: #f5f5f5;
+          border: 1px solid #000;
+        }
+        
+        .payment-method {
+          font-size: 11px;
+          margin: 5mm 0;
+          text-align: center;
+          padding: 3mm;
+          background: #f9f9f9;
+        }
+        
+        .footer {
+          text-align: center;
+          font-size: 10px;
+          margin-top: 5mm;
+          padding-top: 3mm;
+          border-top: 1px dashed #000;
+        }
+        
+        .thank-you {
+          text-align: center;
+          font-size: 12px;
+          font-weight: bold;
+          margin: 5mm 0;
+        }
+        
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+          }
+          .receipt {
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="receipt">
+        <!-- Header -->
+        <div class="header">
+          <h1>🛒 KASIR</h1>
+          <p>Toko Retail Modern</p>
+        </div>
+        
+        <!-- Invoice Info -->
+        <div class="invoice-info">
+          <div>
+            <span class="label">Invoice:</span>
+            <span class="value">${invoiceNumber}</span>
+          </div>
+          <div>
+            <span class="label">Tanggal:</span>
+            <span class="value">${date}</span>
+          </div>
+          <div>
+            <span class="label">Waktu:</span>
+            <span class="value">${time}</span>
+          </div>
+        </div>
+        
+        <!-- Items Section -->
+        <div class="items-section">
+          <div class="items-title">DETAIL PEMBELIAN</div>
+          ${items.map((item, idx) => {
+            const itemPrice = parseInt(item.price || item.harga) || 0;
+            const itemQty = parseInt(item.quantity || item.qty) || 1;
+            const itemTotal = itemPrice * itemQty;
+            const itemDiscount = item.discount || 0;
+            const itemAfterDiscount = itemTotal - itemDiscount;
+            
+            return `
+            <div class="item">
+              <div class="item-name">${idx + 1}. ${item.name}</div>
+              <div class="item-detail">
+                <span>${itemQty}x @ Rp ${formatPrice(itemPrice)}</span>
+                <span>Rp ${formatPrice(itemAfterDiscount)}</span>
+              </div>
+              ${itemDiscount > 0 ? `<div style="font-size: 9px; color: #dc3545;">Diskon: -Rp ${formatPrice(itemDiscount)}</div>` : ''}
+            </div>
+            `;
+          }).join('')}
+        </div>
+        
+        <!-- Summary -->
+        <div class="summary">
+          <div class="summary-row subtotal">
+            <span>Subtotal:</span>
+            <span>Rp ${formatPrice(subtotal)}</span>
+          </div>
+          ${discount > 0 ? `
+          <div class="summary-row discount">
+            <span>Diskon:</span>
+            <span>-Rp ${formatPrice(discount)}</span>
+          </div>
+          ` : ''}
+          <div class="summary-row total">
+            <span>TOTAL BAYAR:</span>
+            <span>Rp ${formatPrice(total)}</span>
+          </div>
+        </div>
+        
+        <!-- Payment Method -->
+        <div class="payment-method">
+          <strong>Metode Pembayaran:</strong><br>
+          ${transaction.paymentMethod || transaction.payment_method || 'Tunai'}
+        </div>
+        
+        <!-- Thank You -->
+        <div class="thank-you">Terima Kasih!</div>
+        
+        <!-- Footer -->
+        <div class="footer">
+          <p>Semoga menjadi pelanggan setia kami</p>
+        </div>
+      </div>
+      
+      <script>
+        // Auto print setelah halaman dimuat
+        window.addEventListener('load', function() {
+          setTimeout(() => {
+            window.print();
+          }, 500);
+        });
+      </script>
+    </body>
+    </html>
+    `;
+    
+    // Buka window print
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+    
+    console.log('✓ Receipt printed');
+  } catch (error) {
+    console.error('❌ Error printing receipt:', error);
+    showAlertModal('Error!', 'Gagal mencetak resi: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * Export function untuk global access
+ */
+window.printReceipt = printReceipt;
