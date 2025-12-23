@@ -320,10 +320,12 @@ router.post('/:id/duplicate', authenticateToken, async (req, res) => {
       name: newName,
       sku: newSku,
       category: product.category,
-      price: product.price,
+      buy_price: product.buy_price,
+      sell_price: product.sell_price,
+      discount: product.discount,
       stock: product.stock,
       image_url: product.image_url,
-      description: product.description
+      expiry_date: product.expiry_date
     });
 
     console.log('✓ POST /api/products/:id/duplicate - Created:', newName);
