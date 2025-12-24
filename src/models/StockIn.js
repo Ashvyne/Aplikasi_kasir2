@@ -13,7 +13,8 @@ const StockIn = sequelize.define('StockIn', {
     allowNull: false,
     references: {
       model: 'products',
-      key: 'id'
+      key: 'id',
+      onDelete: 'CASCADE'
     }
   },
   quantity: {
@@ -35,11 +36,12 @@ const StockIn = sequelize.define('StockIn', {
   timestamps: true
 });
 
-// Association
+// Association dengan cascade delete
 StockIn.belongsTo(Product, {
   foreignKey: 'product_id',
   targetKey: 'id',
-  as: 'product'
+  as: 'product',
+  onDelete: 'CASCADE'
 });
 
 module.exports = StockIn;

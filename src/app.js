@@ -95,17 +95,20 @@ let dbInitialized = false;
       await sequelize.sync({ force: true });
       console.log('✓ Database schema rebuilt');
     } else {
-      await sequelize.sync({ alter: true });
+      // Use sync with no alter to avoid MySQL "too many keys" error
+      await sequelize.sync({ alter: false });
       console.log('✓ Database tables synced');
     }
     
     dbInitialized = true;
+    console.log('✅ Database initialization completed successfully');
   } catch (error) {
     console.error('⚠️ Database initialization error:', error.message);
-    if (error.errors) {
-      console.error('Validation errors:', error.errors);
+    if (error.errors && Array.isArray(error.errors)) {
+      error.errors.forEach(err => console.error(`  - ${err.message}`));
     }
     console.log('⚠️ Running without database - using demo data');
+    console.log('💡 Tip: If you see "Too many keys specified", use: FORCE_SYNC=true npm start');
     dbInitialized = false;
   }
 })();
@@ -224,7 +227,7 @@ app.use((err, req, res, next) => {
 
 // ============ START SERVER ============
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
@@ -254,4 +257,33 @@ app.listen(PORT, () => {
   console.log('   GET    /api/reports');
   console.log('   GET    /api/export/sales-excel');
   console.log('   GET    /api/export/products-excel');
+});
+
+// Graceful shutdown handler
+process.on('SIGINT', () => {
+  console.log('\n\n🛑 Shutting down server gracefully...');
+  server.close(() => {
+    if (sequelize) {
+      sequelize.close();
+    }
+    process.exit(0);
+  });
+  
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('❌ Forced shutdown');
+    process.exit(1);
+  }, 10000);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });

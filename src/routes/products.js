@@ -345,30 +345,70 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const path = require('path');
     const fs = require('fs');
+    const { sequelize } = require('../config/database');
     
     const product = await Product.findByPk(req.params.id);
     if (!product) {
-      return res.status(404).json({ message: 'Produk tidak ditemukan' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Produk tidak ditemukan' 
+      });
     }
 
     // Delete image file if exists
     if (product.image_url) {
       const imagePath = path.join(__dirname, '..', 'public', product.image_url);
-      fs.unlink(imagePath, (e) => {});
+      fs.unlink(imagePath, (e) => {
+        if (e) console.log('Note: Image file not found:', imagePath);
+      });
     }
 
     const deletedProduct = product;
-    await product.destroy();
-
-    console.log('✓ DELETE /api/products/:id - Deleted:', deletedProduct.name);
-    res.json({ 
-      success: true,
-      message: 'Produk berhasil dihapus', 
-      product: deletedProduct
-    });
+    
+    // Delete with cascade (will delete related stock_in records)
+    try {
+      await product.destroy({ force: true });
+      console.log('✓ DELETE /api/products/:id - Deleted:', deletedProduct.name);
+      res.json({ 
+        success: true,
+        message: 'Produk berhasil dihapus', 
+        product: deletedProduct
+      });
+    } catch (destroyError) {
+      // If destroy fails due to foreign key constraint, try force deleting related records
+      console.warn('⚠️  First delete attempt failed, trying cascade approach...');
+      console.error('Destroy error:', destroyError.message);
+      
+      // Try to find and delete related stock_in records
+      try {
+        const StockIn = require('../models/StockIn');
+        await StockIn.destroy({
+          where: { product_id: product.id }
+        });
+        console.log('✓ Deleted related stock_in records for product:', product.id);
+        
+        // Try delete again
+        await product.destroy({ force: true });
+        console.log('✓ DELETE /api/products/:id - Deleted:', deletedProduct.name);
+        res.json({ 
+          success: true,
+          message: 'Produk berhasil dihapus', 
+          product: deletedProduct
+        });
+      } catch (cascadeError) {
+        console.error('❌ Cascade delete failed:', cascadeError.message);
+        res.status(500).json({ 
+          success: false,
+          message: 'Gagal menghapus produk. Produk mungkin masih terkait dengan data lain: ' + cascadeError.message 
+        });
+      }
+    }
   } catch (error) {
     console.error('❌ Error deleting product:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Terjadi kesalahan: ' + (error.message || 'Unknown error') 
+    });
   }
 });
 

@@ -116,7 +116,10 @@ if (dbDialect === 'mysql') {
 
     dialectOptions: {
       busyTimeout: 5000
-    }
+    },
+
+    // Enable foreign key constraints in SQLite
+    foreign_keys: true
   });
 
 } else {
