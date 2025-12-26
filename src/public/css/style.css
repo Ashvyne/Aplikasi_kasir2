@@ -11,8 +11,8 @@
   --dark: #212529;
   --white: #ffffff;
   
-  --sidebar-width: 280px;
-  --header-height: 70px;
+  --sidebar-width: 240px;
+  --header-height: 60px;
   
   --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -57,8 +57,8 @@ html, body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  font-size: 18px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 body {
@@ -102,30 +102,30 @@ body {
   border-bottom: none !important;
   border-radius: 0 0 var(--border-radius) 0;
   box-shadow: var(--shadow-lg);
-  padding: 20px !important;
+  padding: 15px !important;
 }
 
 .sidebar-header h4 {
   font-weight: 700;
-  font-size: 1.85rem;
+  font-size: 1.4rem;
   letter-spacing: 0.5px;
 }
 
 .nav {
-  padding: 25px 12px !important;
+  padding: 15px 10px !important;
 }
 
 .nav-item {
   color: var(--text-primary);
   text-decoration: none;
   border-radius: var(--border-radius);
-  margin-bottom: 12px;
-  padding: 18px 20px !important;
+  margin-bottom: 8px;
+  padding: 12px 15px !important;
   transition: var(--transition);
   font-weight: 500;
   display: flex;
   align-items: center;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
 }
 
 .nav-item:hover {
@@ -141,8 +141,8 @@ body {
 }
 
 .nav-item i {
-  font-size: 1.6rem;
-  margin-right: 16px;
+  font-size: 1.2rem;
+  margin-right: 12px;
 }
 
 /* ============== HEADER ============== */
@@ -155,7 +155,7 @@ body {
 }
 
 .navbar-brand {
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary) !important;
   letter-spacing: -0.5px;
@@ -167,13 +167,13 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
-  font-size: 2.1rem;
+  font-size: 1.5rem;
 }
 
 #userDisplay {
   margin-left: 8px;
   font-weight: 600;
-  font-size: 1.25rem;
+  font-size: 0.95rem;
 }
 
 /* ============== MAIN CONTENT ============== */
@@ -185,7 +185,7 @@ body {
 }
 
 .pages-container {
-  padding: 30px;
+  padding: 20px;
 }
 
 .page {
@@ -228,23 +228,23 @@ body {
   color: white;
   border: none !important;
   font-weight: 600;
-  padding: 2rem !important;
-  font-size: 1.3rem;
+  padding: 1.2rem !important;
+  font-size: 1.05rem;
 }
 
 .card-body {
-  padding: 2.2rem !important;
+  padding: 1.5rem !important;
   background: var(--bg-secondary);
   color: var(--text-primary);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
 }
 
 .card-footer {
   background-color: var(--bg-tertiary);
   border-top: 1px solid var(--border-color);
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-  padding: 1.5rem !important;
+  padding: 1rem !important;
 }
 
 /* ============== PRODUCT CARD ============== */
@@ -468,16 +468,16 @@ body {
   border: 1px solid #e9ecef;
   border-radius: 8px;
   transition: var(--transition);
-  font-size: 1.15rem;
-  padding: 0.8rem 1rem !important;
-  line-height: 1.7;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.95rem !important;
+  line-height: 1.5;
   background-color: #ffffff;
   color: #212529;
 }
 
 .form-control:focus, .form-select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.2);
   background-color: #ffffff;
   color: #212529;
 }
@@ -485,13 +485,13 @@ body {
 .form-label {
   color: var(--dark);
   font-weight: 600;
-  margin-bottom: 0.75rem;
-  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .form-text {
   color: #6c757d;
-  font-size: 1.1rem;
+  font-size: 0.85rem;
 }
 
 /* ============== BUTTONS ============== */
@@ -771,12 +771,12 @@ body {
 .table thead th {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
-  padding: 1.4rem;
+  padding: 1rem 1.2rem;
   text-transform: uppercase;
-  font-size: 1.05rem;
-  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  letter-spacing: 0.8px;
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
@@ -788,8 +788,9 @@ body {
 
 :not([data-theme="dark"]) .table thead th {
   background-color: #f0f2f5;
-  color: #212529;
-  border-color: #e9ecef;
+  color: #1a1a1a;
+  border-color: #dde0e6;
+  font-weight: 700;
 }
 
 /* Light Mode Table Body Styling */
@@ -818,13 +819,13 @@ body {
 }
 
 .table tbody td {
-  padding: 1.4rem;
+  padding: 1rem 1.2rem;
   vertical-align: middle;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
 }
 
 .badge {
@@ -2037,8 +2038,12 @@ small, .small {
 
 /* Selection toolbar styling */
 #productSelectionToolbar {
-  animation: slideDown 0.3s ease-in-out;
-  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#productSelectionToolbar.visible {
+  opacity: 1;
 }
 
 @keyframes slideDown {
@@ -2082,22 +2087,38 @@ small, .small {
 #productSelectionToolbar .btn-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  margin-left: 0.75rem;
 }
 
-#productSelectionToolbar .btn {
+#productSelectionToolbar .btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
   transition: all 0.2s ease-in-out;
-  font-weight: 500;
 }
 
 #productSelectionToolbar .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+#productSelectionToolbar .badge {
+  font-weight: 700;
+  padding: 0.35rem 0.6rem !important;
+  font-size: 0.8rem;
+  box-shadow: 0 1px 4px rgba(13, 110, 253, 0.3);
+}
+
+#productSelectionToolbar .text-muted {
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Dark mode adjustments for selection */
 [data-theme="dark"] #productSelectionToolbar {
-  background-color: rgba(13, 110, 253, 0.1) !important;
+  background-color: rgba(13, 110, 253, 0.15) !important;
   border-left-color: #0d6efd !important;
 }
 
