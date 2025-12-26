@@ -14,6 +14,7 @@
   
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/search-filter.css">
   
   <!-- SweetAlert2 CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -36,22 +37,37 @@
       
       <!-- Navigation Menu Items -->
       <div class="nav flex-column p-3" id="navMenu">
-        <!-- POS Page Link -->
-        <a href="#pos" class="nav-link nav-item active" data-page="pos">
-          <i class="bi bi-bag-check me-2"></i> POS
+        <!-- Dashboard Page Link -->
+        <a href="#dashboard" class="nav-link nav-item active" data-page="dashboard">
+          <i class="bi bi-speedometer2 me-2"></i> Dashboard
         </a>
         
-        <!-- Products Page Link -->
+        <!-- Data Produk Page Link -->
         <a href="#products" class="nav-link nav-item" data-page="products">
-          <i class="bi bi-box me-2"></i> Produk
+          <i class="bi bi-box me-2"></i> Data Produk
         </a>
         
-        <!-- Transactions Page Link -->
+        <!-- Barang Masuk Page Link -->
+        <a href="#stockin" class="nav-link nav-item" data-page="stockin">
+          <i class="bi bi-box-seam me-2"></i> Barang Masuk
+        </a>
+        
+        <!-- Stok Barang Page Link -->
+        <a href="#stock" class="nav-link nav-item" data-page="stock">
+          <i class="bi bi-bag-check me-2"></i> Stok Barang
+        </a>
+        
+        <!-- Kasir Page Link -->
+        <a href="#pos" class="nav-link nav-item" data-page="pos">
+          <i class="bi bi-cash-coin me-2"></i> Kasir
+        </a>
+        
+        <!-- Riwayat Transaksi Page Link -->
         <a href="#transactions" class="nav-link nav-item" data-page="transactions">
-          <i class="bi bi-receipt me-2"></i> Transaksi
+          <i class="bi bi-receipt me-2"></i> Riwayat Transaksi
         </a>
         
-        <!-- Reports Page Link -->
+        <!-- Laporan Page Link -->
         <a href="#reports" class="nav-link nav-item" data-page="reports">
           <i class="bi bi-bar-chart me-2"></i> Laporan
         </a>
@@ -94,7 +110,7 @@
       <div class="pages-container flex-grow-1 overflow-auto">
         
         <!-- ============== POS PAGE ============== -->
-        <div id="pos-page" class="page active">
+        <div id="pos-page" class="page">
           <div class="container-fluid p-2" style="height: calc(100vh - 70px); display: flex; flex-direction: column;">
             <!-- Page Header -->
             <div class="mb-2">
@@ -196,8 +212,11 @@
                         <label for="cashReceived" class="form-label small fw-bold mb-1">
                           <i class="bi bi-wallet2 me-1"></i> Uang Diterima
                         </label>
-                        <input type="number" id="cashReceived" class="form-control form-control-sm" 
-                               placeholder="0" onchange="calculateChange()" min="0">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text" style="font-size: 0.875rem;">Rp</span>
+                          <input type="text" id="cashReceived" class="form-control form-control-sm" 
+                                 placeholder="0" onchange="calculateChange()" autocomplete="off">
+                        </div>
                       </div>
                       
                       <!-- Change Amount Display -->
@@ -241,26 +260,53 @@
             <!-- Alert Container untuk Products Page -->
             <div id="productsAlertContainer" class="mb-4"></div>
             
-            <!-- Selection Toolbar (Hidden by default) -->
-            <div id="productSelectionToolbar" class="card border-left-4 border-primary bg-light mb-3" style="display: none; border-left: 4px solid #0d6efd;">
+            <!-- Search and Filter Section -->
+            <div class="card border-0 shadow-sm mb-4">
               <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <span id="selectedCount" class="fw-bold">0</span> produk dipilih
+                <div class="row g-3 align-items-end">
+                  <!-- Search Input -->
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold small mb-2"><i class="bi bi-search me-2"></i>Cari Produk</label>
+                    <input type="text" class="form-control" id="productSearchInput" 
+                           placeholder="Nama, SKU, atau kategori..." onkeyup="filterProductsAdvanced()">
                   </div>
-                  <div class="btn-group gap-2">
-                    <!-- Clear Selection Button -->
-                    <button class="btn btn-sm btn-outline-secondary" onclick="clearProductSelection()">
-                      <i class="bi bi-x-circle"></i> Batal
+                  
+                  <!-- Category Filter -->
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold small mb-2"><i class="bi bi-tag me-2"></i>Kategori</label>
+                    <select class="form-select" id="productCategoryFilter" onchange="filterProductsAdvanced()">
+                      <option value="">-- Semua Kategori --</option>
+                      <option value="Makanan">Makanan</option>
+                      <option value="Minuman">Minuman</option>
+                      <option value="Snack">Snack</option>
+                      <option value="Elektronik">Elektronik</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Stock Status Filter -->
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold small mb-2"><i class="bi bi-box-seam me-2"></i>Status Stok</label>
+                    <select class="form-select" id="productStockFilter" onchange="filterProductsAdvanced()">
+                      <option value="">-- Semua Status --</option>
+                      <option value="normal">Stok Normal (≥10)</option>
+                      <option value="low">Stok Kurang (1-9)</option>
+                      <option value="empty">Stok Habis (0)</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Reset Button -->
+                  <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetProductFilters()">
+                      <i class="bi bi-arrow-clockwise me-2"></i>Reset
                     </button>
-                    <!-- Bulk Duplicate Button -->
-                    <button class="btn btn-sm btn-outline-success" onclick="bulkDuplicateProducts()">
-                      <i class="bi bi-files"></i> Duplikat Dipilih
-                    </button>
-                    <!-- Bulk Delete Button -->
-                    <button class="btn btn-sm btn-outline-danger" onclick="bulkDeleteProducts()">
-                      <i class="bi bi-trash"></i> Hapus Dipilih
-                    </button>
+                  </div>
+                </div>
+                
+                <!-- Results Info -->
+                <div class="row mt-3">
+                  <div class="col-12">
+                    <small class="text-muted">Menampilkan <strong id="productFilterCount">0</strong> dari <strong id="productTotalCount">0</strong> produk</small>
                   </div>
                 </div>
               </div>
@@ -271,21 +317,40 @@
               <div class="table-responsive">
                 <table class="table table-hover mb-0">
                   <thead class="table-light">
-                    <tr>
-                      <th style="width: 40px;">
+                    <tr style="position: relative; align-items: center;">
+                      <th style="width: 40px; vertical-align: middle;">
                         <input type="checkbox" id="selectAllProducts" class="form-check-input" 
-                               onchange="toggleSelectAllProducts(this)">
+                               onchange="toggleSelectAllProducts(this)" title="Pilih semua produk">
                       </th>
-                      <th>No</th>
+                      <th id="headerNoSkuProduk">No</th>
                       <th>Nama Produk</th>
                       <th>SKU</th>
                       <th>Kategori</th>
                       <th>Harga</th>
                       <th>Stok</th>
-                      <th>Aksi</th>
+                      <th style="position: relative;">
+                        <!-- Selection Toolbar (Right side - Compact) -->
+                        <div id="productSelectionToolbar" style="opacity: 0; display: none; position: absolute; right: 0; top: 50%; transform: translateY(-50%); background-color: #f8f9fa; border-left: 3px solid #0d6efd; padding: 0.6rem 1rem; border-radius: 0.375rem; white-space: nowrap;">
+                          <div class="d-flex align-items-center gap-2" style="font-size: 0.9rem;">
+                            <span id="selectedCount" class="badge bg-primary rounded-pill" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; font-weight: 700;">0</span>
+                            <div class="btn-group" role="group" style="gap: 0.35rem;">
+                              <button class="btn btn-sm btn-outline-secondary" onclick="clearProductSelection()" title="Batalkan pemilihan" style="padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                                <i class="bi bi-x-circle"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-success" onclick="bulkDuplicateProducts()" title="Duplikat" style="padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                                <i class="bi bi-files"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-danger" onclick="bulkDeleteProducts()" title="Hapus" style="padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        Aksi
                     </tr>
                   </thead>
-                  <tbody id="productsTableBody"></tbody>
+                  <tbody id="productsTableBody">
+                  </tbody>
                 </table>
               </div>
             </div>
@@ -481,6 +546,311 @@
           </div>
         </div>
 
+        <!-- ============== DASHBOARD PAGE ============== -->
+        <div id="dashboard-page" class="page active">
+          <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="mb-4">
+              <h2>📊 Dashboard</h2>
+              <p class="text-muted">Ringkasan data bisnis Anda</p>
+            </div>
+            
+            <!-- Alert Container -->
+            <div id="dashboardAlertContainer" class="mb-4"></div>
+            
+            <!-- Dashboard Cards (KPI) -->
+            <div class="row g-4 mb-4">
+              <!-- Transaksi Hari Ini -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Transaksi Hari Ini</p>
+                        <h4 class="mb-0" id="dashboardTransactionsToday">0</h4>
+                      </div>
+                      <i class="bi bi-receipt text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Keuntungan Hari Ini -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Keuntungan Hari Ini</p>
+                        <h4 class="mb-0 text-success" id="dashboardProfitToday">Rp 0</h4>
+                      </div>
+                      <i class="bi bi-graph-up text-success" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Total Produk -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Total Produk</p>
+                        <h4 class="mb-0" id="dashboardTotalProducts">0</h4>
+                      </div>
+                      <i class="bi bi-box text-info" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Stok Kosong -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Stok Kosong</p>
+                        <h4 class="mb-0 text-danger" id="dashboardEmptyStock">0</h4>
+                      </div>
+                      <i class="bi bi-exclamation-circle text-danger" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Info Row -->
+            <div class="row g-4">
+              <!-- Stok Kurang -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Stok Kurang</p>
+                        <h4 class="mb-0" id="dashboardLowStock">0</h4>
+                      </div>
+                      <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Produk Kadaluarsa -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Produk Kadaluarsa</p>
+                        <h4 class="mb-0 text-danger" id="dashboardExpiredItems">0</h4>
+                      </div>
+                      <i class="bi bi-calendar-x text-danger" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Akan Kadaluarsa -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Akan Kadaluarsa (7 hari)</p>
+                        <h4 class="mb-0 text-warning" id="dashboardExpiringItems">0</h4>
+                      </div>
+                      <i class="bi bi-calendar-check text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Total Stok -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <p class="text-muted mb-1">Total Stok</p>
+                        <h4 class="mb-0" id="dashboardTotalStock">0</h4>
+                      </div>
+                      <i class="bi bi-bag-check text-secondary" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============== BARANG MASUK PAGE ============== -->
+        <div id="stockin-page" class="page">
+          <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2>📦 Barang Masuk</h2>
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#stockinModal">
+                <i class="bi bi-plus-circle"></i> Tambah Barang Masuk
+              </button>
+            </div>
+            
+            <!-- Alert Container -->
+            <div id="stockinAlertContainer" class="mb-4"></div>
+            
+            <!-- Stock In Modal -->
+            <div class="modal fade" id="stockinModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+              <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Form Input Barang Masuk</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="stockinForm" onsubmit="submitStockIn(event)" class="row g-3">
+                      <!-- Pilih Produk -->
+                      <div class="col-md-6">
+                        <label for="stockinProductSelect" class="form-label fw-bold">Pilih Produk <span class="text-danger">*</span></label>
+                        <select id="stockinProductSelect" class="form-select" required onchange="updateStockInProductInfo()">
+                          <option value="">-- Pilih Produk --</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Jumlah Masuk -->
+                      <div class="col-md-6">
+                        <label for="stockinQuantity" class="form-label fw-bold">Jumlah <span class="text-danger">*</span></label>
+                        <input type="number" id="stockinQuantity" class="form-control" min="1" required placeholder="Masukkan jumlah">
+                      </div>
+                      
+                      <!-- Catatan -->
+                      <div class="col-12">
+                        <label for="stockinNotes" class="form-label fw-bold">Catatan</label>
+                        <textarea id="stockinNotes" class="form-control" rows="3" placeholder="Catatan barang masuk (opsional)"></textarea>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="document.getElementById('stockinForm').dispatchEvent(new Event('submit'))">
+                      <i class="bi bi-check-circle me-1"></i> Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Stock In History Table -->
+            <h5 class="mb-3 fw-bold"><i class="bi bi-list me-2"></i>Riwayat Barang Masuk</h5>
+            <div class="card border-0 shadow-sm">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Tanggal</th>
+                      <th>Kode Produk</th>
+                      <th>Nama Produk</th>
+                      <th>Jumlah</th>
+                      <th>Catatan</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockinTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============== STOK BARANG PAGE ============== -->
+        <div id="stock-page" class="page">
+          <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2>📊 Stok Barang</h2>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm stock-filter-btn active" data-filter="all" onclick="filterStockStatus('all')">Semua</button>
+                <button type="button" class="btn btn-outline-danger btn-sm stock-filter-btn" data-filter="empty" onclick="filterStockStatus('empty')">Habis</button>
+                <button type="button" class="btn btn-outline-warning btn-sm stock-filter-btn" data-filter="low" onclick="filterStockStatus('low')">Kurang</button>
+                <button type="button" class="btn btn-outline-success btn-sm stock-filter-btn" data-filter="normal" onclick="filterStockStatus('normal')">Normal</button>
+              </div>
+            </div>
+            
+            <!-- Alert Container -->
+            <div id="stockAlertContainer" class="mb-4"></div>
+            
+            <!-- Stock Summary Cards -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-3">
+                <div class="card border-start-3 border-start-success">
+                  <div class="card-body">
+                    <p class="text-muted small mb-1">Stok Normal</p>
+                    <h5 class="mb-0" id="stockNormalCount">0</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card border-start-3 border-start-warning">
+                  <div class="card-body">
+                    <p class="text-muted small mb-1">Stok Kurang</p>
+                    <h5 class="mb-0" id="stockLowCount">0</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card border-start-3 border-start-danger">
+                  <div class="card-body">
+                    <p class="text-muted small mb-1">Stok Habis</p>
+                    <h5 class="mb-0" id="stockEmptyCount">0</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card border-start-3 border-start-info">
+                  <div class="card-body">
+                    <p class="text-muted small mb-1">Total Stok</p>
+                    <h5 class="mb-0" id="stockTotalCount">0</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Stock Table -->
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-light border-bottom p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0 fw-bold"><i class="bi bi-list me-2"></i>Daftar Stok Barang</h5>
+                  <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text bg-white border-end-0">
+                      <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" id="stockSearchInput" 
+                           placeholder="Cari produk..." onkeyup="searchStock()">
+                  </div>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kode Produk</th>
+                      <th>Nama Produk</th>
+                      <th>Stok</th>
+                      <th>Status</th>
+                      <th>Harga Beli</th>
+                      <th>Harga Jual</th>
+                      <th>Nilai Stok</th>
+                      <th>Tgl Kadaluarsa</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -573,8 +943,11 @@
                 <label for="productPrice" class="form-label fw-500">
                   <i class="bi bi-cash-coin"></i> Harga Jual (Rp)
                 </label>
-                <input type="number" class="form-control form-control-lg" id="productPrice" 
-                       required placeholder="0" min="0" autocomplete="off">
+                <div class="input-group">
+                  <span class="input-group-text">Rp</span>
+                  <input type="text" class="form-control form-control-lg" id="productPrice" 
+                         required placeholder="0" autocomplete="off">
+                </div>
                 <div class="form-text">Harga penjualan produk</div>
               </div>
               
@@ -641,8 +1014,27 @@
   <!-- ApexCharts Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.50.0/apexcharts.min.js"></script>
   
+  <!-- Authentication Check - Run this FIRST before other scripts -->
+  <script>
+    // Check if user is authenticated before loading the dashboard
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.warn('❌ No authentication token found, redirecting to login...');
+      window.location.href = '/login';
+    } else {
+      console.log('✓ Authentication token found, loading dashboard...');
+    }
+  </script>
+  
   <!-- Debug Script -->
   <script src="js/debug.js"></script>
+  
+  <!-- Dashboard Script -->
+  <script src="js/dashboard.js"></script>
+  
+  <!-- Stock In Script -->
+  <script src="js/stockin.js"></script>
   
   <!-- Main Application Script -->
   <script src="js/app.js"></script>

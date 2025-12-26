@@ -20,9 +20,27 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING(50),
     defaultValue: '1'
   },
-  price: {
+  buy_price: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    defaultValue: 0,
+    comment: 'Harga beli produk'
+  },
+  sell_price: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: 'Harga jual produk'
+  },
+  discount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    comment: 'Diskon dalam persen'
+  },
+  expiry_date: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Tanggal kadaluarsa produk'
   },
   stock: {
     type: DataTypes.INTEGER,

@@ -279,4 +279,131 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+// GET empty stock report (stok kosong)
+router.get('/empty-stock', authenticateToken, async (req, res) => {
+  try {
+    console.log('✓ GET /api/reports/empty-stock');
+    
+    // Get products dengan stock = 0
+    const emptyStockProducts = await Product.findAll({
+      where: {
+        stock: 0
+      },
+      order: [['name', 'ASC']]
+    });
+    
+    console.log('📊 Empty stock products:', emptyStockProducts.length);
+    
+    res.json({
+      success: true,
+      count: emptyStockProducts.length,
+      products: emptyStockProducts
+    });
+  } catch (error) {
+    console.error('❌ Error getting empty stock report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error loading empty stock report',
+      products: []
+    });
+  }
+});
+
+// GET profit/loss report (laporan laba/rugi)
+router.get('/profit-loss', authenticateToken, async (req, res) => {
+  try {
+    console.log('✓ GET /api/reports/profit-loss');
+    
+    const allTransactions = await Transaction.findAll({
+      attributes: ['items', 'total', 'discount', 'createdAt'],
+      raw: true
+    });
+    
+    let profitLossData = [];
+    let totalProfit = 0;
+    let totalLoss = 0;
+    let totalRevenue = 0;
+    let totalCost = 0;
+    
+    allTransactions.forEach(trans => {
+      if (!trans.items) return;
+      
+      let items = trans.items;
+      if (typeof items === 'string') {
+        try {
+          items = JSON.parse(items);
+        } catch (e) {
+          return;
+        }
+      }
+      
+      if (!Array.isArray(items)) return;
+      
+      items.forEach(item => {
+        try {
+          const productId = item.id || item.product_id;
+          const quantity = parseInt(item.quantity) || 0;
+          const sellPrice = parseInt(item.price) || 0;
+          const buyPrice = parseInt(item.buy_price) || 0;
+          const itemRevenue = quantity * sellPrice;
+          const itemCost = quantity * buyPrice;
+          const itemProfit = itemRevenue - itemCost;
+          
+          // Cari atau buat entry untuk produk ini
+          let existingEntry = profitLossData.find(p => p.productId === productId);
+          
+          if (!existingEntry) {
+            existingEntry = {
+              productId,
+              name: item.name,
+              quantity: 0,
+              totalRevenue: 0,
+              totalCost: 0,
+              totalProfit: 0
+            };
+            profitLossData.push(existingEntry);
+          }
+          
+          existingEntry.quantity += quantity;
+          existingEntry.totalRevenue += itemRevenue;
+          existingEntry.totalCost += itemCost;
+          existingEntry.totalProfit += itemProfit;
+          
+          totalRevenue += itemRevenue;
+          totalCost += itemCost;
+          if (itemProfit >= 0) {
+            totalProfit += itemProfit;
+          } else {
+            totalLoss += Math.abs(itemProfit);
+          }
+        } catch (e) {
+          console.warn('⚠️ Error processing profit/loss item:', e.message);
+        }
+      });
+    });
+    
+    profitLossData.sort((a, b) => b.totalProfit - a.totalProfit);
+    
+    res.json({
+      success: true,
+      summary: {
+        totalRevenue,
+        totalCost,
+        totalProfit,
+        totalLoss,
+        netProfit: totalProfit - totalLoss
+      },
+      details: profitLossData
+    });
+  } catch (error) {
+    console.error('❌ Error getting profit/loss report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error loading profit/loss report',
+      summary: {},
+      details: []
+    });
+  }
+});
+
 module.exports = router;

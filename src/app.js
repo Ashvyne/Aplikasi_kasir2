@@ -88,8 +88,16 @@ let dbInitialized = false;
     console.log('✓ Database connected');
     
     // Sync models ke database (alter: true = update existing tables, don't drop data)
-    await sequelize.sync({ alter: true });
-    console.log('✓ Database tables synced');
+    // First time: force rebuild to ensure schema is clean
+    const needsRebuild = process.env.FORCE_SYNC === 'true';
+    if (needsRebuild) {
+      console.log('🔄 Force rebuilding database schema...');
+      await sequelize.sync({ force: true });
+      console.log('✓ Database schema rebuilt');
+    } else {
+      await sequelize.sync({ alter: true });
+      console.log('✓ Database tables synced');
+    }
     
     dbInitialized = true;
   } catch (error) {
@@ -136,6 +144,12 @@ app.use('/api/reports', require('./routes/reports'));
 
 // Export routes (Excel, PDF)
 app.use('/api/export', require('./routes/exports'));
+
+// Dashboard routes
+app.use('/api/dashboard', require('./routes/dashboard'));
+
+// Stock In (Barang Masuk) routes
+app.use('/api/stockin', require('./routes/stockin'));
 
 // ============ PAGE ROUTES ============
 // Serve HTML pages

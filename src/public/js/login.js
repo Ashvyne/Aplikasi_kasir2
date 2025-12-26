@@ -52,12 +52,24 @@ async function handleLogin(event) {
 // Cek apakah user sudah login saat halaman dimuat
 window.addEventListener('load', () => {
   const token = localStorage.getItem('token');
-  console.log('🔍 Checking token:', token ? '✓ Found' : '❌ Not found');
+  const currentPath = window.location.pathname;
   
-  if (token && !window.location.pathname.includes('login')) {
-    console.log('✓ User sudah login, lanjut ke dashboard');
-  } else if (!token && window.location.pathname === '/') {
+  console.log('🔍 Checking token:', token ? '✓ Found' : '❌ Not found');
+  console.log('📍 Current path:', currentPath);
+  
+  // If user has token and is on login page, redirect to dashboard
+  if (token && (currentPath === '/login' || currentPath === '/login.html')) {
+    console.log('✓ User sudah login, redirect ke dashboard');
+    window.location.href = '/';
+    return;
+  }
+  
+  // If user doesn't have token and is on dashboard, redirect to login
+  if (!token && currentPath === '/') {
     console.log('❌ User belum login, redirect ke login');
     window.location.href = '/login';
+    return;
   }
+  
+  console.log('✓ Auth check passed');
 });

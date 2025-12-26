@@ -86,7 +86,9 @@ router.post('/', authenticateToken, (req, res) => {
         return res.status(400).json({ message: err.message });
       }
 
-      const { name, sku, category, price, stock } = req.body;
+      const { name, sku, category, price, stock, buy_price, sell_price, expiry_date, discount } = req.body;
+
+      console.log('📝 Product POST received:', { name, sku, category, price, stock, buy_price, sell_price, expiry_date, discount });
 
       // Validasi input
       if (!name || !sku || !price) {
@@ -113,8 +115,11 @@ router.post('/', authenticateToken, (req, res) => {
         name,
         sku,
         category: category || '1',
-        price: parseInt(price),
+        buy_price: buy_price ? parseInt(buy_price) : (price ? parseInt(price) : 0),
+        sell_price: sell_price ? parseInt(sell_price) : (price ? parseInt(price) : 0),
         stock: parseInt(stock) || 0,
+        expiry_date: expiry_date || null,
+        discount: discount ? parseInt(discount) : 0,
         image_url: imageUrl
       });
 
@@ -128,8 +133,10 @@ router.post('/', authenticateToken, (req, res) => {
       if (req.file) {
         fs.unlink(req.file.path, (e) => {});
       }
-      console.error('❌ Error creating product:', error);
-      res.status(500).json({ message: 'Terjadi kesalahan' });
+      console.error('❌ Error creating product:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      console.error('❌ Error details:', error);
+      res.status(500).json({ message: error.message || 'Terjadi kesalahan' });
     }
   });
 });
@@ -313,10 +320,12 @@ router.post('/:id/duplicate', authenticateToken, async (req, res) => {
       name: newName,
       sku: newSku,
       category: product.category,
-      price: product.price,
+      buy_price: product.buy_price,
+      sell_price: product.sell_price,
+      discount: product.discount,
       stock: product.stock,
       image_url: product.image_url,
-      description: product.description
+      expiry_date: product.expiry_date
     });
 
     console.log('✓ POST /api/products/:id/duplicate - Created:', newName);

@@ -106,9 +106,13 @@ function toggleDarkMode() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   applyTheme(newTheme);
   
-  // Update charts if they exist
+  // Update charts if they exist - dengan error handling
   setTimeout(() => {
-    updateChartsForDarkMode();
+    try {
+      updateChartsForDarkMode();
+    } catch (error) {
+      console.warn('⚠️ Chart update failed (charts may not be loaded yet):', error.message);
+    }
     isTogglingTheme = false;
   }, 100);
 }
@@ -150,8 +154,13 @@ function initializeApp() {
   try {
     console.log('🔧 Initializing app...');
     
-    // Initialize dark mode
-    initializeDarkMode();
+    // Initialize dark mode FIRST - sebelum yang lain
+    try {
+      initializeDarkMode();
+      console.log('✓ Dark mode initialized');
+    } catch (dmError) {
+      console.error('❌ Dark mode initialization failed:', dmError);
+    }
     
     // Check server health
     console.log('🏥 Checking server health...');
@@ -172,6 +181,9 @@ function initializeApp() {
     
     // Setup navigation menu
     setupNavigation();
+    
+    // Navigate to dashboard on first load
+    navigateTo('dashboard');
     
     // Load semua data dengan error handling
     console.log('📦 Loading initial data...');
@@ -332,8 +344,8 @@ async function loadProducts() {
     console.log('📦 Loading products...');
     isLoading = true;
     
-    // Clear selection saat reload
-    clearProductSelection();
+    // JANGAN clear selection otomatis - biarkan user memilih kapan mau clear
+    // clearProductSelection();
     
     // Ambil token dari localStorage
     const token = localStorage.getItem('token');
@@ -350,7 +362,7 @@ async function loadProducts() {
         'Content-Type': 'application/json'
       }
     });
-    
+
     console.log('📊 Response status:', response.status);
     
     // Cek apakah response OK
@@ -368,8 +380,10 @@ async function loadProducts() {
     console.log('✓ Loaded', products.length, 'products');
     // Tampilkan produk di grid
     displayProducts();
-    // Tampilkan produk di table
+    // Tampilkan produk di table dengan tetap mempertahankan selection
     loadProductsTable();
+    // Update selection toolbar setelah re-render
+    updateSelectionToolbar();
     isLoading = false;
   } catch (error) {
     console.error('❌ Error loading products:', error);
@@ -386,6 +400,7 @@ async function loadProducts() {
     ];
     displayProducts();
     loadProductsTable();
+    updateSelectionToolbar();
   }
 }
 
@@ -622,7 +637,12 @@ function openProductModal(productId = null) {
         document.getElementById('productName').value = product.name || '';
         document.getElementById('productSku').value = product.sku || '';
         document.getElementById('productCategory').value = product.category || '1';
-        document.getElementById('productPrice').value = product.sell_price || product.price || 0;
+        
+        // Format price dengan Rp dan separator
+        const priceValue = product.sell_price || product.price || 0;
+        const priceInput = document.getElementById('productPrice');
+        priceInput.value = 'Rp ' + (priceValue ? parseInt(priceValue).toLocaleString('id-ID') : '0');
+        
         document.getElementById('productStock').value = product.stock || 0;
         
         // Tampilkan preview gambar jika ada
@@ -873,29 +893,58 @@ async function saveProduct(event) {
     
     // Validasi input
     if (!productName) {
-      showAlert('danger', 'Error', 'Nama produk harus diisi');
+      Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal!',
+        text: 'Nama produk harus diisi',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545'
+      });
       return;
     }
     if (!productSku) {
-      showAlert('danger', 'Error', 'SKU harus diisi');
+      Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal!',
+        text: 'SKU harus diisi',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545'
+      });
       return;
     }
     if (productPrice <= 0) {
-      showAlert('danger', 'Error', 'Harga harus lebih dari 0');
+      Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal!',
+        text: 'Harga harus lebih dari 0',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545'
+      });
       return;
     }
     if (productStock < 0) {
-      showAlert('danger', 'Error', 'Stok tidak boleh negatif');
+      Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal!',
+        text: 'Stok tidak boleh negatif',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545'
+      });
       return;
     }
     
     // Ambil token
     const token = localStorage.getItem('token');
     if (!token) {
-      showAlert('danger', 'Error', 'Token expired, login kembali');
-      setTimeout(() => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Session Expired!',
+        text: 'Token expired, silakan login kembali',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545'
+      }).then(() => {
         window.location.href = '/login';
-      }, 2000);
+      });
       return;
     }
     
@@ -915,9 +964,22 @@ async function saveProduct(event) {
     // Tentukan URL dan method berdasarkan mode
     const url = productId ? `/api/products/${productId}` : '/api/products';
     const method = productId ? 'PUT' : 'POST';
+    const actionType = productId ? 'diperbarui' : 'ditambahkan';
     
     console.log(`📡 ${method} ${url}`);
     console.log('Sending FormData with image...');
+    
+    // Tampilkan loading dialog
+    Swal.fire({
+      title: 'Memproses...',
+      html: '<p>Sedang menyimpan produk...</p>',
+      icon: 'info',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
     
     // Kirim request ke API
     const response = await fetch(url, {
@@ -937,27 +999,45 @@ async function saveProduct(event) {
       console.log('✓ Product saved:', data);
       
       // Tentukan pesan sukses
-      let successMessage = 'Produk berhasil ditambahkan';
-      if (productId) {
-        successMessage = 'Produk berhasil diperbarui';
-      }
-      
-      showAlert('success', 'Berhasil', successMessage);
+      let successMessage = `Produk "${productName}" berhasil ${actionType}`;
       
       // Tutup modal dan reload data
-      setTimeout(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: successMessage,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#198754',
+        timer: 2000,
+        timerProgressBar: true
+      }).then(() => {
         closeProductModal();
         loadProducts();
-      }, 1500);
+      });
     } else {
       // Handle error response
       const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
       console.error('❌ API Error:', response.status, errorData);
-      showAlert('danger', 'Error', errorData.message || 'Gagal menyimpan produk');
+      
+      const errorMessage = errorData.message || 'Gagal menyimpan produk';
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Menyimpan!',
+        text: errorMessage,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc3545'
+      });
     }
   } catch (error) {
     console.error('❌ Save product error:', error);
-    showAlert('danger', 'Error', 'Terjadi kesalahan: ' + error.message);
+    Swal.fire({
+      icon: 'error',
+      title: 'Terjadi Kesalahan!',
+      text: 'Error: ' + error.message,
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#dc3545'
+    });
   }
 }
 
@@ -1012,9 +1092,14 @@ async function deleteProduct(productId) {
         const response = await fetch(`/api/products/${productId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
+        
+        console.log('Delete response status:', response.status);
+        const data = await response.json();
+        console.log('Delete response data:', data);
         
         // Jika sukses
         if (response.ok) {
@@ -1024,11 +1109,14 @@ async function deleteProduct(productId) {
           // Reload halaman produk
           loadProducts();
         } else {
-          showAlertModal('Gagal!', 'Gagal menghapus produk', 'danger');
+          // Tampilkan error message dari backend
+          const errorMsg = data.message || data.error || 'Gagal menghapus produk';
+          console.error('Delete error response:', errorMsg);
+          showAlertModal('Gagal!', errorMsg, 'danger');
         }
       } catch (error) {
         console.error('❌ Delete error:', error);
-        showAlertModal('Error!', 'Terjadi kesalahan', 'danger');
+        showAlertModal('Error!', 'Terjadi kesalahan: ' + error.message, 'danger');
       }
     }
   });
@@ -1105,23 +1193,22 @@ function updateSelectAllCheckbox() {
  */
 function updateSelectionToolbar() {
   const toolbar = document.getElementById('productSelectionToolbar');
-  const headerNoSkuProduk = document.getElementById('headerNoSkuProduk');
   const selectedCount = document.getElementById('selectedCount');
   
   if (selectedProducts.size > 0) {
     // Show toolbar dengan animasi smooth
-    toolbar.style.display = 'block';
     setTimeout(() => {
       toolbar.style.opacity = '1';
-      toolbar.classList.add('visible');
-    }, 10);
+      toolbar.style.transform = 'translateY(0)';
+      toolbar.style.pointerEvents = 'auto';
+    }, 0);
     selectedCount.textContent = selectedProducts.size;
     
     // Update row highlights
     document.querySelectorAll('#productsTableBody tr').forEach(row => {
       const checkbox = row.querySelector('.product-checkbox');
       if (checkbox && checkbox.checked) {
-        row.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+        row.style.backgroundColor = 'rgba(13, 110, 253, 0.08)';
       } else {
         row.style.backgroundColor = '';
       }
@@ -1129,10 +1216,8 @@ function updateSelectionToolbar() {
   } else {
     // Hide toolbar dengan animasi smooth
     toolbar.style.opacity = '0';
-    toolbar.classList.remove('visible');
-    setTimeout(() => {
-      toolbar.style.display = 'none';
-    }, 300);
+    toolbar.style.transform = 'translateY(10px)';
+    toolbar.style.pointerEvents = 'none';
     selectedCount.textContent = '0';
     document.querySelectorAll('#productsTableBody tr').forEach(row => {
       row.style.backgroundColor = '';
@@ -1443,17 +1528,38 @@ function updateTotal() {
   }
 }
 
+// Function untuk format currency input secara real-time
+function formatCurrencyInput(input) {
+  try {
+    // Ambil hanya angka dari input
+    let value = input.value.replace(/\D/g, '');
+    
+    // Format dengan separator ribuan
+    if (value) {
+      value = parseInt(value).toLocaleString('id-ID');
+      input.value = 'Rp ' + value;
+    } else {
+      input.value = '';
+    }
+  } catch (error) {
+    console.error('❌ Format currency input error:', error);
+  }
+}
+
 // Function untuk hitung kembalian
 function calculateChange() {
   try {
     // Ambil total dan uang yang diterima
     const total = getTotalAmount();
-    const receivedInput = document.getElementById('cashReceived').value.replace(/\D/g, '');
-    const received = parseInt(receivedInput) || 0;
+    
+    // Extract angka dari input (remove 'Rp ' dan separator)
+    const cashReceivedInput = document.getElementById('cashReceived').value;
+    const received = parseInt(cashReceivedInput.replace(/\D/g, '')) || 0;
+    
     // Hitung kembalian
     const change = Math.max(0, received - total);
     
-    // Update elemen DOM
+    // Update elemen DOM dengan format Rupiah
     document.getElementById('changeAmount').textContent = 'Rp ' + formatPrice(change);
   } catch (error) {
     console.error('❌ Calculate change error:', error);
@@ -1495,6 +1601,8 @@ function clearCart() {
       document.getElementById('discount').value = 0;
       document.getElementById('cashReceived').value = '';
       document.getElementById('changeAmount').textContent = 'Rp 0';
+      // Set placeholder kembali ke Rp 0
+      document.getElementById('cashReceived').placeholder = 'Rp 0';
       console.log('✓ Cart cleared');
     }
   });
@@ -1587,8 +1695,9 @@ async function checkoutTransaction() {
     // Ambil data transaksi
     const paymentMethod = document.getElementById('paymentMethod').value;
     const total = getTotalAmount();
-    const receivedInput = document.getElementById('cashReceived').value.replace(/\D/g, '');
-    const received = parseInt(receivedInput) || 0;
+    // Extract angka murni dari input (remove 'Rp ' dan separator)
+    const cashReceivedInput = document.getElementById('cashReceived').value;
+    const received = parseInt(cashReceivedInput.replace(/\D/g, '')) || 0;
     
     // Validasi untuk pembayaran tunai
     if (paymentMethod === 'Tunai' && received < total) {
@@ -1601,7 +1710,9 @@ async function checkoutTransaction() {
       items: cart,
       total: total,
       paymentMethod: paymentMethod,
-      discount: parseInt(document.getElementById('discount').value) || 0
+      discount: parseInt(document.getElementById('discount').value) || 0,
+      cash_received: received,
+      change_amount: received - total
     };
     
     console.log('📝 Transaction Data:', JSON.stringify(transactionData, null, 2));
@@ -1970,10 +2081,49 @@ function viewTransaction(transactionId) {
           // Tambahkan tombol print setelah modal terbuka
           const confirmButton = modal.querySelector('.swal2-confirm');
           const printButton = document.createElement('button');
-          printButton.className = 'btn btn-success me-2';
-          printButton.style.cssText = 'padding: 6px 12px; margin-right: 8px; font-size: 14px; cursor: pointer;';
-          printButton.innerHTML = '<i class="bi bi-printer me-1"></i> Cetak Resi';
+          printButton.className = 'btn btn-success';
+          printButton.style.cssText = `
+            padding: 8px 16px; 
+            margin-right: 10px; 
+            font-size: 14px; 
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background-color: #198754;
+            color: white;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+          `;
+          printButton.innerHTML = '<i class="bi bi-printer"></i> Cetak Resi';
+          printButton.onmouseover = () => {
+            printButton.style.backgroundColor = '#157347';
+            printButton.style.transform = 'translateY(-2px)';
+            printButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+          };
+          printButton.onmouseout = () => {
+            printButton.style.backgroundColor = '#198754';
+            printButton.style.transform = 'translateY(0)';
+            printButton.style.boxShadow = 'none';
+          };
           printButton.onclick = () => printReceipt(trans, items, subtotal, discount, total, invoiceNumber);
+          
+          // Style confirm button juga
+          if (confirmButton) {
+            confirmButton.style.cssText = `
+              padding: 8px 16px;
+              font-size: 14px;
+              font-weight: 500;
+              border: none;
+              border-radius: 6px;
+              background-color: #0d6efd;
+              color: white;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            `;
+          }
           
           // Insert button sebelum confirm button
           if (confirmButton && confirmButton.parentNode) {
@@ -2664,13 +2814,11 @@ function initializeCharts(data) {
     // Initialize Daily Revenue Chart
     initializeDailyRevenueChart(isDarkMode, textColor, gridColor, dailyData);
     
-    // Initialize Top Products Pie Chart
+    // Initialize Top Products Charts
     if (topProducts.length > 0) {
       initializeTopProductsPieChart(isDarkMode, textColor, colors, topProducts);
       initializeTopSalesChart(isDarkMode, textColor, gridColor, colors, topProducts);
       initializeRevenueChart(isDarkMode, textColor, gridColor, colors, topProducts);
-    } else {
-      console.warn('⚠️ No top products data available');
     }
     
     console.log('✓ Charts initialized');
@@ -3066,8 +3214,8 @@ function updateChartsForDarkMode() {
   console.log('🌙 Updating charts for dark mode...');
   
   // Check if chart data is available
-  if (!chartsData || !chartsData.dailyData) {
-    console.warn('⚠️ Chart data not available for update');
+  if (!chartsData) {
+    console.warn('⚠️ Chart data not initialized yet');
     return;
   }
   
@@ -3079,16 +3227,37 @@ function updateChartsForDarkMode() {
   console.log('🎨 Theme colors updated:', { isDarkMode, textColor, gridColor });
   
   try {
-    // Re-initialize all charts with new colors
-    initializeDailyRevenueChart(isDarkMode, textColor, gridColor, chartsData.dailyData);
-    
-    if (chartsData.topProducts && chartsData.topProducts.length > 0) {
-      initializeTopProductsPieChart(isDarkMode, textColor, chartsData.colors, chartsData.topProducts);
-      initializeTopSalesChart(isDarkMode, textColor, gridColor, chartsData.colors, chartsData.topProducts);
-      initializeRevenueChart(isDarkMode, textColor, gridColor, chartsData.colors, chartsData.topProducts);
+    // Re-initialize daily revenue chart if data exists
+    if (chartsData.dailyData && chartsData.dailyData.length > 0) {
+      try {
+        initializeDailyRevenueChart(isDarkMode, textColor, gridColor, chartsData.dailyData);
+      } catch (e) {
+        console.warn('⚠️ Daily revenue chart update failed:', e.message);
+      }
     }
     
-    console.log('✓ Charts updated successfully');
+    // Re-initialize other charts if top products data exists
+    if (chartsData.topProducts && chartsData.topProducts.length > 0) {
+      try {
+        initializeTopProductsPieChart(isDarkMode, textColor, chartsData.colors, chartsData.topProducts);
+      } catch (e) {
+        console.warn('⚠️ Top products chart update failed:', e.message);
+      }
+      
+      try {
+        initializeTopSalesChart(isDarkMode, textColor, gridColor, chartsData.colors, chartsData.topProducts);
+      } catch (e) {
+        console.warn('⚠️ Top sales chart update failed:', e.message);
+      }
+      
+      try {
+        initializeRevenueChart(isDarkMode, textColor, gridColor, chartsData.colors, chartsData.topProducts);
+      } catch (e) {
+        console.warn('⚠️ Revenue chart update failed:', e.message);
+      }
+    }
+    
+    console.log('✓ Charts update completed');
   } catch (error) {
     console.error('❌ Error updating charts:', error);
   }
