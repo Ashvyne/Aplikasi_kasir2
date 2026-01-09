@@ -88,6 +88,18 @@
             <!-- Current Time Display -->
             <span id="currentTime" class="text-muted small"></span>
             
+            <!-- Auto Refresh Status Badge -->
+            <span id="autoRefreshStatus" class="badge bg-secondary cursor-pointer" 
+                  data-bs-toggle="modal" data-bs-target="#autoRefreshModal" title="Klik untuk ubah pengaturan">
+              <i class="bi bi-pause text-muted"></i> Auto-refresh non-aktif
+            </span>
+            
+            <!-- Auto Refresh Settings Button -->
+            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#autoRefreshModal" 
+                    title="Pengaturan Auto Refresh">
+              <i class="bi bi-arrow-repeat"></i>
+            </button>
+            
             <!-- Dark Mode Toggle Button -->
             <button id="darkModeToggle" class="dark-mode-toggle" title="Toggle Dark Mode">
               <i class="bi bi-moon-fill"></i>
@@ -1003,6 +1015,114 @@
     </div>
   </div>
 
+  <!-- Auto Refresh Settings Modal -->
+  <div class="modal fade" id="autoRefreshModal" tabindex="-1" aria-labelledby="autoRefreshModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <!-- Modal Header -->
+        <div class="modal-header bg-primary text-white border-0">
+          <h5 class="modal-title fw-bold" id="autoRefreshModalLabel">
+            <i class="bi bi-arrow-repeat me-2"></i>Pengaturan Auto Refresh
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body p-4">
+          <p class="text-muted small mb-4">
+            <i class="bi bi-info-circle me-2"></i>Atur interval otomatis untuk refresh data di setiap halaman
+          </p>
+
+          <!-- Dashboard Refresh Setting -->
+          <div class="mb-4">
+            <label for="refreshDashboard" class="form-label fw-bold small mb-2">
+              <i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard
+            </label>
+            <div class="input-group input-group-sm">
+              <input type="number" class="form-control" id="refreshDashboard" 
+                     min="5000" max="120000" step="1000" value="10000">
+              <span class="input-group-text bg-light">ms</span>
+            </div>
+            <small class="text-muted">Waktu refresh dalam milidetik (minimum 5 detik)</small>
+          </div>
+
+          <!-- Products Refresh Setting -->
+          <div class="mb-4">
+            <label for="refreshProducts" class="form-label fw-bold small mb-2">
+              <i class="bi bi-box me-2 text-success"></i>Data Produk
+            </label>
+            <div class="input-group input-group-sm">
+              <input type="number" class="form-control" id="refreshProducts" 
+                     min="5000" max="120000" step="1000" value="15000">
+              <span class="input-group-text bg-light">ms</span>
+            </div>
+            <small class="text-muted">Waktu refresh dalam milidetik</small>
+          </div>
+
+          <!-- Transactions Refresh Setting -->
+          <div class="mb-4">
+            <label for="refreshTransactions" class="form-label fw-bold small mb-2">
+              <i class="bi bi-receipt me-2 text-info"></i>Riwayat Transaksi
+            </label>
+            <div class="input-group input-group-sm">
+              <input type="number" class="form-control" id="refreshTransactions" 
+                     min="5000" max="120000" step="1000" value="10000">
+              <span class="input-group-text bg-light">ms</span>
+            </div>
+            <small class="text-muted">Waktu refresh dalam milidetik</small>
+          </div>
+
+          <!-- Reports Refresh Setting -->
+          <div class="mb-4">
+            <label for="refreshReports" class="form-label fw-bold small mb-2">
+              <i class="bi bi-bar-chart me-2 text-warning"></i>Laporan
+            </label>
+            <div class="input-group input-group-sm">
+              <input type="number" class="form-control" id="refreshReports" 
+                     min="5000" max="120000" step="1000" value="30000">
+              <span class="input-group-text bg-light">ms</span>
+            </div>
+            <small class="text-muted">Waktu refresh dalam milidetik</small>
+          </div>
+
+          <!-- Stock In Refresh Setting -->
+          <div class="mb-4">
+            <label for="refreshStockIn" class="form-label fw-bold small mb-2">
+              <i class="bi bi-box-seam me-2 text-secondary"></i>Barang Masuk
+            </label>
+            <div class="input-group input-group-sm">
+              <input type="number" class="form-control" id="refreshStockIn" 
+                     min="5000" max="120000" step="1000" value="15000">
+              <span class="input-group-text bg-light">ms</span>
+            </div>
+            <small class="text-muted">Waktu refresh dalam milidetik</small>
+          </div>
+
+          <!-- Info Box -->
+          <div class="alert alert-info small mb-0" role="alert">
+            <i class="bi bi-lightbulb me-2"></i>
+            <strong>Catatan:</strong> Interval lebih kecil = update lebih sering tetapi lebih berat di server
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer bg-light border-top">
+          <button type="button" class="btn btn-outline-secondary btn-sm" 
+                  onclick="resetAutoRefreshSettings()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Reset
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Batal
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" 
+                  onclick="saveAutoRefreshSettings()">
+            <i class="bi bi-check-circle me-1"></i>Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============== SCRIPTS ============== -->
   
   <!-- Bootstrap JS Bundle -->
@@ -1095,6 +1215,15 @@
           backdrop.style.display = 'none';
         }
       }, 0);
+    });
+
+    // Auto Refresh Modal Event Handlers
+    const autoRefreshModalEl = document.getElementById('autoRefreshModal');
+    autoRefreshModalEl.addEventListener('show.bs.modal', function () {
+      // Load current settings when modal opens
+      if (typeof openAutoRefreshModal === 'function') {
+        openAutoRefreshModal();
+      }
     });
   </script>
 </body>

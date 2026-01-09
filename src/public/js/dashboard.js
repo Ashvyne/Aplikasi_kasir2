@@ -2,8 +2,6 @@
  * DASHBOARD FUNCTIONS
  */
 
-let dashboardRefreshInterval = null;
-
 async function loadDashboard() {
   try {
     const response = await fetch('/api/dashboard/summary', {
@@ -35,9 +33,9 @@ async function loadDashboard() {
     document.getElementById('dashboardExpiringItems').textContent = data.expiring_soon_items || 0;
     document.getElementById('dashboardTotalStock').textContent = data.total_stock || 0;
 
-    // Start auto-refresh if not already running
-    if (!dashboardRefreshInterval) {
-      dashboardRefreshInterval = setInterval(loadDashboard, 10000); // Refresh every 10 seconds
+    // Start auto-refresh if not already running (menggunakan sistem global)
+    if (!autoRefreshIntervals.dashboard) {
+      startAutoRefresh('dashboard', loadDashboard);
     }
 
   } catch (error) {

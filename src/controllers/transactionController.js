@@ -59,8 +59,8 @@ exports.createTransaction = (req, res) => {
       // Insert transaction items FIRST
       items.forEach((item, idx) => {
         console.log(`Inserting item ${idx + 1}:`, item);
-        
-        db.run(
+         
+        db.r1SSXzaXzxDASDASDASDASQWEQWEQWQQQWWEEESADSAun(
           `INSERT INTO transaction_items 
            (transaction_id, product_id, quantity, subtotal) 
            VALUES (?, ?, ?, ?)`,

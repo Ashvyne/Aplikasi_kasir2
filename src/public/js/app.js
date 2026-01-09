@@ -34,6 +34,246 @@ let chartsData = {
 // Menyimpan selected products untuk bulk operations
 let selectedProducts = new Set();
 
+// ============ AUTO REFRESH SYSTEM ============
+// Menyimpan interval IDs untuk auto refresh
+let autoRefreshIntervals = {
+  dashboard: null,
+  products: null,
+  transactions: null,
+  reports: null,
+  stockin: null
+};
+
+// Menyimpan interval values (dalam milliseconds)
+let autoRefreshSettings = {
+  dashboard: 10000,      // 10 detik
+  products: 15000,       // 15 detik
+  transactions: 10000,   // 10 detik
+  reports: 30000,        // 30 detik
+  stockin: 15000         // 15 detik
+};
+
+// Load saved refresh settings dari localStorage
+function loadAutoRefreshSettings() {
+  const saved = localStorage.getItem('autoRefreshSettings');
+  if (saved) {
+    try {
+      autoRefreshSettings = { ...autoRefreshSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      console.warn('Failed to load saved refresh settings');
+    }
+  }
+}
+
+// Save refresh settings ke localStorage
+function saveAutoRefreshSettings() {
+  localStorage.setItem('autoRefreshSettings', JSON.stringify(autoRefreshSettings));
+}
+
+// Function untuk mengelola auto refresh
+function startAutoRefresh(page, loadFunction, interval = null) {
+  // Gunakan interval yang diberikan atau ambil dari settings
+  const refreshInterval = interval || autoRefreshSettings[page] || 10000;
+  
+  // Hentikan interval sebelumnya jika ada
+  if (autoRefreshIntervals[page]) {
+    clearInterval(autoRefreshIntervals[page]);
+  }
+  
+  // Mulai interval baru
+  autoRefreshIntervals[page] = setInterval(() => {
+    console.log(`🔄 Auto-refreshing ${page}...`);
+    loadFunction().catch(e => console.warn(`⚠️ Auto-refresh failed for ${page}:`, e));
+  }, refreshInterval);
+  
+  console.log(`✓ Auto-refresh started for ${page} (interval: ${refreshInterval}ms)`);
+  
+  // Update UI
+  updateAutoRefreshStatus();
+}
+
+// Function untuk menghentikan auto refresh
+function stopAutoRefresh(page) {
+  if (autoRefreshIntervals[page]) {
+    clearInterval(autoRefreshIntervals[page]);
+    autoRefreshIntervals[page] = null;
+    console.log(`⏸️  Auto-refresh stopped for ${page}`);
+    updateAutoRefreshStatus();
+  }
+}
+
+// Function untuk mengupdate interval auto refresh
+function updateAutoRefreshInterval(page, newInterval) {
+  autoRefreshSettings[page] = newInterval;
+  saveAutoRefreshSettings();
+  
+  // Restart interval jika sedang berjalan
+  if (autoRefreshIntervals[page]) {
+    // Tentukan function yang tepat
+    let loadFunction = loadDashboard;
+    if (page === 'products') loadFunction = loadProducts;
+    else if (page === 'transactions') loadFunction = loadTransactions;
+    else if (page === 'reports') loadFunction = loadReports;
+    
+    startAutoRefresh(page, loadFunction, newInterval);
+  }
+}
+
+// Function untuk update status di UI
+function updateAutoRefreshStatus() {
+  const statusElement = document.getElementById('autoRefreshStatus');
+  if (statusElement) {
+    const activeRefreshes = Object.entries(autoRefreshIntervals)
+      .filter(([_, interval]) => interval !== null)
+      .map(([page, _]) => page);
+    
+    if (activeRefreshes.length > 0) {
+      statusElement.innerHTML = `<i class="bi bi-arrow-repeat text-success"></i> Auto-refresh aktif (${activeRefreshes.join(', ')})`;
+      statusElement.className = 'badge bg-success';
+    } else {
+      statusElement.innerHTML = '<i class="bi bi-pause text-muted"></i> Auto-refresh non-aktif';
+      statusElement.className = 'badge bg-secondary';
+    }
+  }
+}
+
+// ============ AUTO REFRESH MODAL HANDLERS ============
+
+// Function untuk membuka modal dan load current settings
+function openAutoRefreshModal() {
+  try {
+    // Load current settings dari localStorage ke input fields
+    document.getElementById('refreshDashboard').value = autoRefreshSettings.dashboard || 10000;
+    document.getElementById('refreshProducts').value = autoRefreshSettings.products || 15000;
+    document.getElementById('refreshTransactions').value = autoRefreshSettings.transactions || 10000;
+    document.getElementById('refreshReports').value = autoRefreshSettings.reports || 30000;
+    document.getElementById('refreshStockIn').value = autoRefreshSettings.stockin || 15000;
+    
+    console.log('✓ Auto refresh settings loaded in modal');
+  } catch (error) {
+    console.error('❌ Error opening auto refresh modal:', error);
+  }
+}
+
+// Function untuk save auto refresh settings
+function saveAutoRefreshSettings() {
+  try {
+    const newSettings = {
+      dashboard: parseInt(document.getElementById('refreshDashboard').value) || 10000,
+      products: parseInt(document.getElementById('refreshProducts').value) || 15000,
+      transactions: parseInt(document.getElementById('refreshTransactions').value) || 10000,
+      reports: parseInt(document.getElementById('refreshReports').value) || 30000,
+      stockin: parseInt(document.getElementById('refreshStockIn').value) || 15000
+    };
+    
+    // Validasi minimal interval
+    Object.keys(newSettings).forEach(key => {
+      if (newSettings[key] < 5000) {
+        newSettings[key] = 5000;
+      }
+      if (newSettings[key] > 120000) {
+        newSettings[key] = 120000;
+      }
+    });
+    
+    // Update settings
+    autoRefreshSettings = newSettings;
+    saveAutoRefreshSettings();
+    
+    // Restart active intervals dengan setting baru
+    Object.keys(autoRefreshIntervals).forEach(page => {
+      if (autoRefreshIntervals[page]) {
+        let loadFunction = loadDashboard;
+        if (page === 'products') loadFunction = loadProducts;
+        else if (page === 'transactions') loadFunction = loadTransactions;
+        else if (page === 'reports') loadFunction = loadReports;
+        else if (page === 'stockin') loadFunction = initStockInPage;
+        
+        // Restart with new interval
+        startAutoRefresh(page, loadFunction, newSettings[page]);
+      }
+    });
+    
+    // Tutup modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('autoRefreshModal'));
+    if (modal) modal.hide();
+    
+    // Tampilkan notifikasi sukses
+    showAlertModal('✓ Sukses!', 'Pengaturan auto-refresh telah disimpan', 'success');
+    console.log('✓ Auto refresh settings saved:', newSettings);
+  } catch (error) {
+    console.error('❌ Error saving auto refresh settings:', error);
+    showAlertModal('❌ Error!', 'Gagal menyimpan pengaturan auto-refresh', 'danger');
+  }
+}
+
+// Function untuk reset auto refresh settings ke default
+function resetAutoRefreshSettings() {
+  try {
+    // Reset ke default
+    autoRefreshSettings = {
+      dashboard: 10000,
+      products: 15000,
+      transactions: 10000,
+      reports: 30000,
+      stockin: 15000
+    };
+    
+    // Save ke localStorage
+    localStorage.setItem('autoRefreshSettings', JSON.stringify(autoRefreshSettings));
+    
+    // Update input fields
+    document.getElementById('refreshDashboard').value = 10000;
+    document.getElementById('refreshProducts').value = 15000;
+    document.getElementById('refreshTransactions').value = 10000;
+    document.getElementById('refreshReports').value = 30000;
+    document.getElementById('refreshStockIn').value = 15000;
+    
+    // Restart active intervals dengan setting default
+    Object.keys(autoRefreshIntervals).forEach(page => {
+      if (autoRefreshIntervals[page]) {
+        let loadFunction = loadDashboard;
+        if (page === 'products') loadFunction = loadProducts;
+        else if (page === 'transactions') loadFunction = loadTransactions;
+        else if (page === 'reports') loadFunction = loadReports;
+        else if (page === 'stockin') loadFunction = initStockInPage;
+        
+        // Restart dengan interval default
+        startAutoRefresh(page, loadFunction, autoRefreshSettings[page]);
+      }
+    });
+    
+    showAlertModal('✓ Sukses!', 'Pengaturan auto-refresh telah direset ke default', 'success');
+    console.log('✓ Auto refresh settings reset to default');
+  } catch (error) {
+    console.error('❌ Error resetting auto refresh settings:', error);
+    showAlertModal('❌ Error!', 'Gagal mereset pengaturan auto-refresh', 'danger');
+  }
+}
+
+// Function untuk toggle all auto refresh on/off
+function toggleAllAutoRefresh() {
+  try {
+    const hasActiveRefresh = Object.values(autoRefreshIntervals).some(interval => interval !== null);
+    
+    if (hasActiveRefresh) {
+      // Stop all
+      Object.keys(autoRefreshIntervals).forEach(page => {
+        stopAutoRefresh(page);
+      });
+      console.log('⏸️  All auto-refresh stopped');
+    } else {
+      // Start all for current page
+      // This will be handled when navigating to a page
+      console.log('▶️  Auto-refresh ready to start on next page navigation');
+    }
+    
+    updateAutoRefreshStatus();
+  } catch (error) {
+    console.error('❌ Error toggling auto refresh:', error);
+  }
+}
+
 // ============ DARK MODE MANAGEMENT ============
 
 /**
@@ -150,6 +390,9 @@ function initializeApp() {
   try {
     console.log('🔧 Initializing app...');
     
+    // Load saved auto refresh settings
+    loadAutoRefreshSettings();
+    
     // Initialize dark mode
     initializeDarkMode();
     
@@ -212,20 +455,48 @@ function setupNavigation() {
         navigateTo(pageName);
       });
     });
+    
+    // ============ BROWSER HISTORY SUPPORT ============
+    // Handle back/forward button dan page restore
+    window.addEventListener('popstate', (event) => {
+      console.log('🔙 Popstate detected:', event.state);
+      
+      if (event.state && event.state.page) {
+        // Navigate tanpa push ke history (sudah ada dari back button)
+        navigateToPage(event.state.page);
+      }
+    });
+    
+    // Handle initial page load - detect page dari URL
+    const currentPath = window.location.pathname;
+    const pages = ['dashboard', 'products', 'stockin', 'stock', 'pos', 'transactions', 'reports'];
+    
+    // Extract page dari URL (misal /dashboard -> dashboard)
+    let initialPage = 'dashboard'; // default
+    for (const page of pages) {
+      if (currentPath.includes(`/${page}`)) {
+        initialPage = page;
+        break;
+      }
+    }
+    
+    console.log('📍 Initial page from URL:', initialPage);
+    // Navigate ke page sesuai URL (jangan push state, karena sudah ada di URL)
+    navigateToPage(initialPage);
+    
     console.log('✓ Navigation setup complete');
   } catch (error) {
     console.error('❌ Navigation setup error:', error);
   }
 }
 
-// Function untuk navigasi ke halaman tertentu
-function navigateTo(pageName) {
+// Function untuk navigate tanpa push state (gunakan untuk popstate/initial load)
+function navigateToPage(pageName) {
   try {
-    console.log('📄 Navigate to:', pageName);
+    console.log('📄 Navigate to page (no push state):', pageName);
     
     // Sembunyikan semua halaman
     const allPages = document.querySelectorAll('.page');
-    console.log('📄 Found', allPages.length, 'pages');
     allPages.forEach(page => {
       page.classList.remove('active');
     });
@@ -236,7 +507,6 @@ function navigateTo(pageName) {
       throw new Error(`Page not found: ${pageName}-page`);
     }
     page.classList.add('active');
-    console.log('✓ Page shown:', pageName);
     
     // Update class active di navigation
     const navItems = document.querySelectorAll('.nav-item');
@@ -247,7 +517,6 @@ function navigateTo(pageName) {
     const activeNav = document.querySelector(`[data-page="${pageName}"]`);
     if (activeNav) {
       activeNav.classList.add('active');
-      console.log('✓ Nav updated');
     }
     
     // Update title halaman di header
@@ -265,39 +534,98 @@ function navigateTo(pageName) {
       pageTitle.textContent = titles[pageName] || 'Page';
     }
     
-    // Reload data jika diperlukan
+    // ============ AUTO REFRESH MANAGEMENT ============
+    // Stop all existing auto refresh intervals
+    Object.keys(autoRefreshIntervals).forEach(page => {
+      if (autoRefreshIntervals[page]) {
+        clearInterval(autoRefreshIntervals[page]);
+        autoRefreshIntervals[page] = null;
+      }
+    });
+    
+    // Reload data dan mulai auto-refresh sesuai halaman
     if (pageName === 'dashboard') {
       console.log('🔄 Reloading dashboard...');
-      loadDashboard();
+      loadDashboard().then(() => {
+        startAutoRefresh('dashboard', loadDashboard);
+      });
     } else {
-      // Clear dashboard refresh interval when leaving dashboard
       if (typeof dashboardRefreshInterval !== 'undefined' && dashboardRefreshInterval) {
         clearInterval(dashboardRefreshInterval);
         dashboardRefreshInterval = null;
       }
     }
+    
     if (pageName === 'products') {
       console.log('🔄 Reloading products...');
-      loadProducts();
+      loadProducts().then(() => {
+        startAutoRefresh('products', loadProducts);
+      });
     }
+    
     if (pageName === 'stockin') {
       console.log('🔄 Reloading stock in...');
-      initStockInPage();
+      initStockInPage().then(() => {
+        startAutoRefresh('stockin', initStockInPage);
+      }).catch(e => console.error('Stock in error:', e));
     }
+    
     if (pageName === 'stock') {
       console.log('🔄 Reloading stock display...');
       loadStockDisplay();
     }
+    
     if (pageName === 'transactions') {
       console.log('🔄 Reloading transactions...');
-      loadTransactions();
-    }
-    if (pageName === 'reports') {
-      console.log('🔄 Reloading reports...');
-      loadReports();
+      loadTransactions().then(() => {
+        startAutoRefresh('transactions', loadTransactions);
+      });
     }
     
-    console.log('✓ Navigation complete');
+    if (pageName === 'reports') {
+      console.log('🔄 Reloading reports...');
+      loadReports().then(() => {
+        startAutoRefresh('reports', loadReports);
+      });
+    }
+    
+    console.log('✓ Page navigation complete');
+  } catch (error) {
+    console.error('❌ Page navigation error:', error);
+  }
+}
+
+// Function untuk navigasi ke halaman tertentu (dengan push state)
+function navigateTo(pageName) {
+  try {
+    console.log('📄 Navigate to:', pageName);
+    
+    // Update URL tanpa reload halaman (SPA navigation)
+    const currentUrl = window.location.pathname;
+    const newUrl = `/${pageName}`;
+    
+    if (currentUrl !== newUrl) {
+      const titles = {
+        dashboard: 'Dashboard',
+        products: 'Data Produk',
+        stockin: 'Barang Masuk',
+        stock: 'Stok Barang',
+        pos: 'Kasir',
+        transactions: 'Riwayat Transaksi',
+        reports: 'Laporan'
+      };
+      
+      window.history.pushState(
+        { page: pageName }, 
+        titles[pageName] || 'Page',
+        newUrl
+      );
+      console.log('📍 URL updated to:', newUrl);
+    }
+    
+    // Navigate ke page
+    navigateToPage(pageName);
+    
   } catch (error) {
     console.error('❌ Navigation error:', error);
   }
@@ -371,6 +699,11 @@ async function loadProducts() {
     // Tampilkan produk di table
     loadProductsTable();
     isLoading = false;
+    
+    // Start auto-refresh if not already running
+    if (!autoRefreshIntervals.products) {
+      startAutoRefresh('products', loadProducts);
+    }
   } catch (error) {
     console.error('❌ Error loading products:', error);
     isLoading = false;
@@ -1774,6 +2107,11 @@ async function loadTransactions() {
       
       console.log(`✓ Loaded ${transactions.length} transactions`);
       displayTransactions();
+      
+      // Start auto-refresh if not already running
+      if (!autoRefreshIntervals.transactions) {
+        startAutoRefresh('transactions', loadTransactions);
+      }
     } else {
       console.error('❌ Failed to load transactions:', response.statusText);
     }
@@ -2370,6 +2708,84 @@ function logout() {
   });
 }
 
+// ============ AUTO REFRESH SETTINGS MODAL ============
+
+// Function untuk menampilkan current settings di modal
+function openAutoRefreshModal() {
+  document.getElementById('refreshDashboard').value = autoRefreshSettings.dashboard;
+  document.getElementById('refreshProducts').value = autoRefreshSettings.products;
+  document.getElementById('refreshTransactions').value = autoRefreshSettings.transactions;
+  document.getElementById('refreshReports').value = autoRefreshSettings.reports;
+  document.getElementById('refreshStockIn').value = autoRefreshSettings.stockin;
+}
+
+// Function untuk menyimpan auto refresh settings
+function saveAutoRefreshSettings() {
+  try {
+    // Ambil nilai dari input fields
+    const dashboard = parseInt(document.getElementById('refreshDashboard').value);
+    const products = parseInt(document.getElementById('refreshProducts').value);
+    const transactions = parseInt(document.getElementById('refreshTransactions').value);
+    const reports = parseInt(document.getElementById('refreshReports').value);
+    const stockin = parseInt(document.getElementById('refreshStockIn').value);
+    
+    // Validasi nilai (minimum 5 detik = 5000ms)
+    if (dashboard < 5000 || products < 5000 || transactions < 5000 || reports < 5000 || stockin < 5000) {
+      showAlertModal('⚠️ Peringatan', 'Interval minimum adalah 5 detik (5000 ms)', 'warning');
+      return;
+    }
+    
+    // Update global settings
+    autoRefreshSettings = {
+      dashboard,
+      products,
+      transactions,
+      reports,
+      stockin
+    };
+    
+    // Simpan ke localStorage
+    saveAutoRefreshSettings();
+    
+    // Restart auto refresh dengan settings baru (jika sudah berjalan)
+    if (autoRefreshIntervals.dashboard) startAutoRefresh('dashboard', loadDashboard, dashboard);
+    if (autoRefreshIntervals.products) startAutoRefresh('products', loadProducts, products);
+    if (autoRefreshIntervals.transactions) startAutoRefresh('transactions', loadTransactions, transactions);
+    if (autoRefreshIntervals.reports) startAutoRefresh('reports', loadReports, reports);
+    
+    // Tutup modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('autoRefreshModal'));
+    if (modal) modal.hide();
+    
+    showAlertModal('✓ Berhasil', 'Pengaturan auto refresh telah diperbarui', 'success');
+  } catch (error) {
+    console.error('❌ Error saving auto refresh settings:', error);
+    showAlertModal('❌ Error', 'Gagal menyimpan pengaturan auto refresh', 'danger');
+  }
+}
+
+// Function untuk reset auto refresh settings ke default
+function resetAutoRefreshSettings() {
+  autoRefreshSettings = {
+    dashboard: 10000,
+    products: 15000,
+    transactions: 10000,
+    reports: 30000,
+    stockin: 15000
+  };
+  
+  saveAutoRefreshSettings();
+  
+  // Update form inputs
+  document.getElementById('refreshDashboard').value = 10000;
+  document.getElementById('refreshProducts').value = 15000;
+  document.getElementById('refreshTransactions').value = 10000;
+  document.getElementById('refreshReports').value = 30000;
+  document.getElementById('refreshStockIn').value = 15000;
+  
+  showAlertModal('✓ Reset', 'Pengaturan auto refresh telah direset ke default', 'success');
+}
+
 // Function untuk menampilkan SweetAlert2 modal
 function showAlertModal(title, message, type = 'success') {
   const iconMap = {
@@ -2420,6 +2836,11 @@ async function loadReports() {
       const data = await response.json();
       console.log('📊 Reports data:', data);
       displayReports(data);
+      
+      // Start auto-refresh if not already running
+      if (!autoRefreshIntervals.reports) {
+        startAutoRefresh('reports', loadReports);
+      }
     } else {
       const errorData = await response.json();
       console.error('❌ Reports error:', errorData);
