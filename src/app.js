@@ -154,9 +154,27 @@ app.use('/api/stockin', require('./routes/stockin'));
 // ============ PAGE ROUTES ============
 // Serve HTML pages
 
-// Login page
+// Login pages - Role selection
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Login Admin Barang
+app.get('/login-barang', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-barang.html'));
+});
+
+app.get('/login-barang.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-barang.html'));
+});
+
+// Login Admin Kasir
+app.get('/login-kasir', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
+});
+
+app.get('/login-kasir.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
 });
 
 app.get('/login.html', (req, res) => {
@@ -219,6 +237,14 @@ app.get('/favicon.ico', (req, res) => {
 });
 
 // ============ 404 HANDLER ============
+// Main index route - check auth dan redirect accordingly
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.use((req, res) => {
   // Don't log 404 for static files (images, css, js, etc) - they should be handled by express.static

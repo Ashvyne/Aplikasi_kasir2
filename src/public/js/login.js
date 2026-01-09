@@ -3,6 +3,7 @@ async function handleLogin(event) {
   
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
+  const role = document.getElementById('role').value || 'admin_barang';
   const errorMessage = document.getElementById('errorMessage');
   
   if (!username || !password) {
@@ -14,13 +15,14 @@ async function handleLogin(event) {
   try {
     errorMessage.classList.remove('show');
     console.log('📡 Sending login request...');
+    console.log('👤 Role selected:', role);
     
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, role })
     });
     
     console.log('📊 Response status:', response.status);
@@ -29,11 +31,18 @@ async function handleLogin(event) {
     console.log('📦 Response data:', data);
     
     if (response.ok) {
+      // Override role dengan yang dipilih di login form
+      if (data.user) {
+        data.user.role = role;
+      }
+      
       // Simpan token dan user info ke localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       console.log('✓ Login successful');
+      console.log('👤 User role set to:', role);
+      
       // Redirect ke halaman utama
       window.location.href = '/';
     } else {

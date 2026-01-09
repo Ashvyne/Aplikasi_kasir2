@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Admin Kasir</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+    }
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+    .card-header {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border: none;
+      border-radius: 16px 16px 0 0;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .card-header h2 {
+      color: white;
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .card-header p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+    }
+    .card-header .badge {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+    }
+    .form-control:focus {
+      border-color: #f5576c;
+      box-shadow: 0 0 0 0.2rem rgba(245, 87, 108, 0.25);
+    }
+    .btn-login {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border: none;
+      font-weight: 600;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .btn-login:hover {
+      filter: brightness(1.1);
+    }
+    .error-message {
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
+    .switch-role {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e9ecef;
+    }
+    .switch-role p {
+      margin: 0 0 10px 0;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    .switch-role a {
+      color: #f5576c;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .switch-role a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-cart3"></i> KASIR</h2>
+        <span class="badge"><i class="bi bi-cash-coin me-1"></i>Admin Kasir</span>
+        <p>Sistem Manajemen Penjualan Modern</p>
+      </div>
+      <div class="card-body p-4">
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="mb-3">
+            <label for="username" class="form-label"><i class="bi bi-person"></i> Username</label>
+            <input type="text" class="form-control" id="username" required placeholder="Masukkan username" autofocus>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label"><i class="bi bi-key"></i> Password</label>
+            <input type="password" class="form-control" id="password" required placeholder="Masukkan password">
+          </div>
+          <div id="errorMessage" class="alert alert-danger error-message" role="alert"></div>
+          <button type="submit" class="btn btn-login btn-primary w-100">
+            <i class="bi bi-box-arrow-in-right"></i> Login Admin Kasir
+          </button>
+        </form>
+
+        <div class="switch-role">
+          <p>Ingin login sebagai Admin Barang?</p>
+          <a href="/login-barang"><i class="bi bi-arrow-right me-1"></i>Masuk sebagai Admin Barang</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const ROLE = 'admin_kasir';
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorMessage = document.getElementById('errorMessage');
+      
+      if (!username || !password) {
+        errorMessage.textContent = '❌ Username dan password harus diisi';
+        errorMessage.classList.add('show');
+        return;
+      }
+      
+      try {
+        errorMessage.classList.remove('show');
+        console.log('📡 Sending login request...');
+        
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password })
+        });
+        
+        console.log('📊 Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('📦 Response data:', data);
+        
+        if (response.ok) {
+          // Verify user has admin_kasir role
+          if (data.user?.role !== 'admin_kasir') {
+            errorMessage.textContent = '❌ Pengguna ini bukan Admin Kasir. Silakan gunakan akun Admin Kasir (kasir/123456).';
+            errorMessage.classList.add('show');
+            console.error('❌ Wrong role:', data.user?.role);
+            return;
+          }
+          
+          // Simpan token dan user info ke localStorage
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          console.log('✓ Login successful as Admin Kasir');
+          console.log('👤 User role from server:', data.user?.role);
+          
+          // Redirect ke POS/Kasir
+          window.location.href = '/pos';
+        } else {
+          errorMessage.textContent = '❌ ' + (data.message || data.error || 'Login gagal. Periksa username dan password.');
+          errorMessage.classList.add('show');
+          console.error('❌ Login error:', data.message || data.error);
+        }
+      } catch (error) {
+        console.error('❌ Network error:', error);
+        errorMessage.textContent = '❌ Terjadi kesalahan koneksi. Pastikan server running.';
+        errorMessage.classList.add('show');
+      }
+    }
+
+    // Cek apakah user sudah login saat halaman dimuat
+    window.addEventListener('load', () => {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      console.log('🔍 Auth check - Token:', token ? '✓ Found' : '❌ Not found');
+      console.log('👤 User role:', user.role);
+      
+      // If user already logged in, redirect to POS
+      if (token) {
+        console.log('✓ User sudah login, redirect ke POS');
+        window.location.href = '/pos';
+      }
+    });
+  </script>
+</body>
+</html>

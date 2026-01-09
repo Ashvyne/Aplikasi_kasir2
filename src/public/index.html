@@ -1162,7 +1162,7 @@
   <!-- SweetAlert2 Handler untuk Alert Modal -->
   <script>
     // Function untuk menampilkan SweetAlert2 dengan tipe success/danger/warning/info
-    function showAlertModal(title, message, type = 'success') {
+    function showAlertModal(title, message, type = 'success', timer = null) {
       // Map tipe alert ke icon SweetAlert2
       const iconMap = {
         'success': 'success',
@@ -1181,8 +1181,8 @@
 
       console.log(`🔔 Showing SweetAlert2: ${type} - ${title}`);
       
-      // Tampilkan SweetAlert2
-      Swal.fire({
+      // Buat config untuk Swal.fire
+      const config = {
         title: title,
         text: message,
         icon: iconMap[type] || 'info',
@@ -1190,7 +1190,19 @@
         confirmButtonText: '✓ OK',
         allowOutsideClick: false,
         allowEscapeKey: false
-      });
+      };
+
+      // Tambahkan timer jika disediakan
+      if (timer) {
+        config.timer = timer;
+        config.timerProgressBar = true;
+        config.didOpen = (modal) => {
+          Swal.showLoading();
+        };
+      }
+
+      // Tampilkan SweetAlert2
+      Swal.fire(config);
     }
 
     // Modal backdrop handling untuk product modal

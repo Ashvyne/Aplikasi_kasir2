@@ -4,10 +4,10 @@ const authController = require('../controllers/authController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 
-// Demo users (ganti dengan database queries)
+// Demo users dengan role
 const DEMO_USERS = {
-  'admin': { id: 1, username: 'admin', password: '123456' },
-  'kasir': { id: 2, username: 'kasir', password: '123456' }
+  'admin': { id: 1, username: 'admin', password: '123456', role: 'admin_barang' },
+  'kasir': { id: 2, username: 'kasir', password: '123456', role: 'admin_kasir' }
 };
 
 router.post('/register', authController.register);
@@ -26,15 +26,16 @@ router.post('/login', (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    console.log('✓ Login success:', username);
+    console.log('✓ Login success:', username, 'with role:', user.role);
     res.json({
+      message: 'Login berhasil',
       token,
-      user: { id: user.id, username: user.username }
+      user: { id: user.id, username: user.username, role: user.role }
     });
   } catch (error) {
     console.error('❌ Login error:', error);

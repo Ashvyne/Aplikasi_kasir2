@@ -1,5 +1,6 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
+const { verifyToken, requireAdminBarang } = require('../middleware/authMiddleware');
 const Product = require('../models/Product');
 const router = express.Router();
 
@@ -11,8 +12,10 @@ router.setUploadMiddleware = (upload) => {
   uploadMiddleware = upload.single('image');
 };
 
-// GET all products
-router.get('/', authenticateToken, async (req, res) => {
+// GET all products - Both roles can READ, but only for their use cases
+// admin_barang: product management
+// admin_kasir: POS selling
+router.get('/', verifyToken, async (req, res) => {
   try {
     console.log('✓ GET /api/products');
     const products = await Product.findAll();
@@ -27,8 +30,8 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// GET single product
-router.get('/:id', authenticateToken, async (req, res) => {
+// GET single product - Both roles can read
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) {
@@ -41,8 +44,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// POST create product with image upload
-router.post('/', authenticateToken, (req, res) => {
+// POST create product with image upload - Admin Barang only
+router.post('/', verifyToken, requireAdminBarang, (req, res) => {
   // Use upload middleware
   const upload = require('multer');
   const path = require('path');
@@ -141,8 +144,8 @@ router.post('/', authenticateToken, (req, res) => {
   });
 });
 
-// PUT update product (untuk edit nama, harga, kategori dan update stok)
-router.put('/:id', authenticateToken, (req, res) => {
+// PUT update product (untuk edit nama, harga, kategori dan update stok) - Admin Barang only
+router.put('/:id', verifyToken, requireAdminBarang, (req, res) => {
   const upload = require('multer');
   const path = require('path');
   const fs = require('fs');
@@ -240,9 +243,16 @@ router.put('/:id', authenticateToken, (req, res) => {
   });
 });
 
-// PUT reduce stock
-router.put('/:id/reduce-stock', authenticateToken, async (req, res) => {
+// PUT reduce stock - Admin Barang only
+// PUT reduce stock - Both Admin Barang (inventory) and Admin Kasir (sales) can reduce stock
+router.put('/:id/reduce-stock', verifyToken, async (req, res) => {
   try {
+    // Both roles can reduce stock
+    const userRole = req.user?.role;
+    if (userRole !== 'admin_barang' && userRole !== 'admin_kasir') {
+      return res.status(403).json({ error: 'Anda tidak memiliki akses ke fitur ini.' });
+    }
+
     const product = await Product.findByPk(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
@@ -340,8 +350,8 @@ router.post('/:id/duplicate', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE product
-router.delete('/:id', authenticateToken, async (req, res) => {
+// DELETE product - Admin Barang only
+router.delete('/:id', verifyToken, requireAdminBarang, async (req, res) => {
   try {
     const path = require('path');
     const fs = require('fs');

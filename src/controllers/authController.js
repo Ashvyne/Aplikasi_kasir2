@@ -4,21 +4,29 @@ const jwt = require('jsonwebtoken');
 
 // Register
 exports.register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
   
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Data tidak lengkap' });
   }
+  
+  // Validasi role - hanya admin_kasir atau admin_barang
+  const validRoles = ['admin_kasir', 'admin_barang'];
+  const userRole = validRoles.includes(role) ? role : 'admin_barang'; // Default ke admin_barang
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     db.run(
       `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
-      [username, email, hashedPassword, 'cashier'],
+      [username, email, hashedPassword, userRole],
       function(err) {
         if (err) return res.status(400).json({ error: 'Username atau email sudah terdaftar' });
-        res.status(201).json({ message: 'User berhasil dibuat', userId: this.lastID });
+        res.status(201).json({ 
+          message: 'User berhasil dibuat', 
+          userId: this.lastID,
+          role: userRole
+        });
       }
     );
   } catch (error) {

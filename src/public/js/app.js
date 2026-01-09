@@ -418,12 +418,24 @@ function initializeApp() {
     
     // Load semua data dengan error handling
     console.log('📦 Loading initial data...');
-    Promise.all([
+    
+    // Get user role untuk conditional loading
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role;
+    
+    // Build load promises sesuai role
+    const loadPromises = [
       loadDashboard().catch(e => console.warn('⚠️ Dashboard load failed:', e)),
       loadProducts().catch(e => console.warn('⚠️ Products load failed:', e)),
-      loadTransactions().catch(e => console.warn('⚠️ Transactions load failed:', e)),
       loadReports().catch(e => console.warn('⚠️ Reports load failed:', e))
-    ]).then(() => {
+    ];
+    
+    // Only load transactions untuk admin_kasir
+    if (userRole === 'admin_kasir') {
+      loadPromises.push(loadTransactions().catch(e => console.warn('⚠️ Transactions load failed:', e)));
+    }
+    
+    Promise.all(loadPromises).then(() => {
       console.log('✓ All data loaded');
     }).catch(error => {
       console.error('❌ Data loading error:', error);
@@ -442,17 +454,56 @@ function initializeApp() {
 // Function untuk setup event listener navigation menu
 function setupNavigation() {
   try {
+    // Get current user role
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role || 'admin_barang'; // default to admin_barang
+    
+    console.log('👤 User role:', userRole);
+    
+    // ============ ROLE-BASED MENU FILTERING ============
+    // Define which pages each role can access
+    const roleAccess = {
+      'admin_kasir': ['pos', 'transactions'],  // Only POS and Transactions
+      'admin_barang': ['dashboard', 'products', 'stockin', 'stock', 'reports']  // All others
+    };
+    
+    // Get allowed pages untuk user saat ini
+    const allowedPages = roleAccess[userRole] || [];
+    console.log('✓ Allowed pages for role:', allowedPages);
+    
     // Ambil semua menu item
     const navItems = document.querySelectorAll('.nav-item');
     console.log('📍 Found', navItems.length, 'nav items');
     
-    // Add click event ke setiap menu item
+    // Filter menu berdasarkan role
     navItems.forEach(item => {
+      const pageName = item.getAttribute('data-page');
+      
+      if (!allowedPages.includes(pageName)) {
+        // Hide menu item yang tidak diizinkan
+        item.style.display = 'none';
+        item.classList.add('disabled');
+        console.log(`🚫 Hiding menu for role ${userRole}:`, pageName);
+      } else {
+        // Show menu item yang diizinkan
+        item.style.display = '';
+        item.classList.remove('disabled');
+        console.log(`✓ Showing menu for role ${userRole}:`, pageName);
+      }
+      
+      // Add click event ke setiap menu item yang aktif
       item.addEventListener('click', (e) => {
         e.preventDefault();
-        const pageName = item.getAttribute('data-page');
-        console.log('🔗 Navigating to:', pageName);
-        navigateTo(pageName);
+        const clickedPage = item.getAttribute('data-page');
+        
+        // Double check access permission
+        if (!allowedPages.includes(clickedPage)) {
+          showAlertModal('❌ Access Denied!', 'Anda tidak memiliki akses ke halaman ini.', 'danger');
+          return;
+        }
+        
+        console.log('🔗 Navigating to:', clickedPage);
+        navigateTo(clickedPage);
       });
     });
     
@@ -472,9 +523,9 @@ function setupNavigation() {
     const pages = ['dashboard', 'products', 'stockin', 'stock', 'pos', 'transactions', 'reports'];
     
     // Extract page dari URL (misal /dashboard -> dashboard)
-    let initialPage = 'dashboard'; // default
+    let initialPage = allowedPages[0] || 'dashboard'; // default ke first allowed page
     for (const page of pages) {
-      if (currentPath.includes(`/${page}`)) {
+      if (currentPath.includes(`/${page}`) && allowedPages.includes(page)) {
         initialPage = page;
         break;
       }
@@ -575,9 +626,18 @@ function navigateToPage(pageName) {
       loadStockDisplay();
     }
     
+    if (pageName === 'pos') {
+      console.log('🔄 Reloading POS products...');
+      loadProducts().then(() => {
+        displayProducts();
+        startAutoRefresh('products', loadProducts);
+      });
+    }
+    
     if (pageName === 'transactions') {
       console.log('🔄 Reloading transactions...');
       loadTransactions().then(() => {
+        displayTransactions();
         startAutoRefresh('transactions', loadTransactions);
       });
     }
@@ -1206,26 +1266,26 @@ async function saveProduct(event) {
     
     // Validasi input
     if (!productName) {
-      showAlert('danger', 'Error', 'Nama produk harus diisi');
+      showAlertModal('Error', 'Nama produk harus diisi', 'danger');
       return;
     }
     if (!productSku) {
-      showAlert('danger', 'Error', 'SKU harus diisi');
+      showAlertModal('Error', 'SKU harus diisi', 'danger');
       return;
     }
     if (productPrice <= 0) {
-      showAlert('danger', 'Error', 'Harga harus lebih dari 0');
+      showAlertModal('Error', 'Harga harus lebih dari 0', 'danger');
       return;
     }
     if (productStock < 0) {
-      showAlert('danger', 'Error', 'Stok tidak boleh negatif');
+      showAlertModal('Error', 'Stok tidak boleh negatif', 'danger');
       return;
     }
     
     // Ambil token
     const token = localStorage.getItem('token');
     if (!token) {
-      showAlert('danger', 'Error', 'Token expired, login kembali');
+      showAlertModal('Error', 'Token expired, login kembali', 'danger');
       setTimeout(() => {
         window.location.href = '/login';
       }, 2000);
@@ -1275,22 +1335,23 @@ async function saveProduct(event) {
         successMessage = 'Produk berhasil diperbarui';
       }
       
-      showAlert('success', 'Berhasil', successMessage);
+      // Tampilkan alert dengan auto-close 3 detik
+      showAlertModal('Berhasil', successMessage, 'success', 3000);
       
       // Tutup modal dan reload data
       setTimeout(() => {
         closeProductModal();
         loadProducts();
-      }, 1500);
+      }, 3500);
     } else {
       // Handle error response
       const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
       console.error('❌ API Error:', response.status, errorData);
-      showAlert('danger', 'Error', errorData.message || 'Gagal menyimpan produk');
+      showAlertModal('Error', errorData.message || 'Gagal menyimpan produk', 'danger');
     }
   } catch (error) {
     console.error('❌ Save product error:', error);
-    showAlert('danger', 'Error', 'Terjadi kesalahan: ' + error.message);
+    showAlertModal('Error', 'Terjadi kesalahan: ' + error.message, 'danger');
   }
 }
 
@@ -2055,7 +2116,11 @@ async function checkoutTransaction() {
         
         // Reload semua data
         loadProducts();
-        loadTransactions();
+        // Only reload transactions untuk admin_kasir
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUser.role === 'admin_kasir') {
+          loadTransactions();
+        }
         loadReports();
       });
     } else {
@@ -2076,6 +2141,16 @@ async function checkoutTransaction() {
 // Function untuk load semua transaksi dari API
 async function loadTransactions() {
   try {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role;
+    
+    // Check role - hanya admin_kasir yang bisa akses
+    if (userRole !== 'admin_kasir') {
+      console.log('⚠️ User role is not admin_kasir, skipping transactions load');
+      return;
+    }
+    
     console.log('📋 Loading transactions...');
     const response = await fetch('/api/transactions', {
       headers: {
@@ -2417,8 +2492,11 @@ async function deleteTransaction(transactionId) {
             const data = await response.json();
             console.log('✓ Transaction deleted:', data);
 
-            // Reload transactions
-            await loadTransactions();
+            // Reload transactions - only untuk admin_kasir
+            const delUser = JSON.parse(localStorage.getItem('user') || '{}');
+            if (delUser.role === 'admin_kasir') {
+              await loadTransactions();
+            }
 
             Swal.fire({
               title: 'Berhasil!',
@@ -2823,6 +2901,16 @@ console.log('✓ App.js loaded successfully');
 // Function untuk load laporan dari API
 async function loadReports() {
   try {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role;
+    
+    // Check role - hanya admin_barang yang bisa akses
+    if (userRole !== 'admin_barang') {
+      console.log('⚠️ User role is not admin_barang, skipping reports load');
+      return;
+    }
+    
     console.log('📊 Loading reports...');
     const response = await fetch('/api/reports', {
       headers: {

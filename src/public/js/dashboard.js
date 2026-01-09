@@ -4,6 +4,16 @@
 
 async function loadDashboard() {
   try {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role;
+    
+    // Check role - hanya admin_barang yang bisa akses
+    if (userRole !== 'admin_barang') {
+      console.log('⚠️ User role is not admin_barang, skipping dashboard load');
+      return;
+    }
+    
     const response = await fetch('/api/dashboard/summary', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`

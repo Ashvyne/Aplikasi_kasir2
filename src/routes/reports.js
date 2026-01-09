@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
+const { verifyToken, requireAdminBarang } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const Product = require('../models/Product');
 const { Op } = require('sequelize');
 
-// GET reports dashboard
-router.get('/', authenticateToken, async (req, res) => {
+// GET reports dashboard - Admin Barang only
+router.get('/', verifyToken, requireAdminBarang, async (req, res) => {
   try {
     console.log('✓ GET /api/reports');
     

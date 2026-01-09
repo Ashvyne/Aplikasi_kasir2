@@ -1,12 +1,13 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
+const { verifyToken, requireAdminKasir } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const router = express.Router();
 
 let nextInvoiceNumber = 1001;
 
-// GET all transactions
-router.get('/', authenticateToken, async (req, res) => {
+// GET all transactions - Admin Kasir only
+router.get('/', verifyToken, requireAdminKasir, async (req, res) => {
   try {
     console.log('✓ GET /api/transactions');
     const transactions = await Transaction.findAll({ 
@@ -23,8 +24,8 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// GET single transaction
-router.get('/:id', authenticateToken, async (req, res) => {
+// GET single transaction - Admin Kasir only
+router.get('/:id', verifyToken, requireAdminKasir, async (req, res) => {
   try {
     const transaction = await Transaction.findByPk(req.params.id);
     if (!transaction) {
@@ -37,8 +38,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE transaction
-router.delete('/:id', authenticateToken, async (req, res) => {
+// DELETE transaction - Admin Kasir only
+router.delete('/:id', verifyToken, requireAdminKasir, async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`🗑️  DELETE /api/transactions/${id}`);
@@ -86,8 +87,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// POST create transaction
-router.post('/', authenticateToken, async (req, res) => {
+// POST create transaction - Admin Kasir only
+router.post('/', verifyToken, requireAdminKasir, async (req, res) => {
   try {
     const { items, total, paymentMethod, discount } = req.body;
 

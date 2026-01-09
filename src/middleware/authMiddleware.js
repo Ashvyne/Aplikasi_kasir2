@@ -23,9 +23,40 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
-exports.requireRole = (role) => {
+// Middleware untuk check role - admin_barang dapat akses
+exports.requireAdminBarang = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin_barang') {
+    return res.status(403).json({ error: 'Anda tidak memiliki akses ke fitur ini. Hanya Admin Barang yang dapat mengakses.' });
+  }
+  next();
+};
+
+// Middleware untuk check role - admin_kasir dapat akses
+exports.requireAdminKasir = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin_kasir') {
+    return res.status(403).json({ error: 'Anda tidak memiliki akses ke fitur ini. Hanya Admin Kasir yang dapat mengakses.' });
+  }
+  next();
+};
+
+// Legacy middleware untuk backward compatibility
+exports.requireRole = (allowedRoles) => {
   return (req, res, next) => {
-    if (req.user.role !== role && req.user.role !== 'admin') {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+    
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Anda tidak memiliki akses' });
     }
     next();
