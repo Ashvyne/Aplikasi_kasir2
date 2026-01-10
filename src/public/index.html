@@ -717,23 +717,54 @@
               <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
                   <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Form Input Barang Masuk</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Pilih Produk Barang Masuk</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                   </div>
-                  <div class="modal-body">
-                    <form id="stockinForm" onsubmit="submitStockIn(event)" class="row g-3">
-                      <!-- Pilih Produk -->
-                      <div class="col-md-6">
-                        <label for="stockinProductSelect" class="form-label fw-bold">Pilih Produk <span class="text-danger">*</span></label>
-                        <select id="stockinProductSelect" class="form-select" required onchange="updateStockInProductInfo()">
-                          <option value="">-- Pilih Produk --</option>
-                        </select>
+                  <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <!-- Pilih Produk dengan Card Grid -->
+                    <label class="form-label fw-bold mb-3">Pilih Produk <span class="text-danger">*</span></label>
+                    <div id="stockinProductGrid" class="row g-2">
+                      <div class="col-12 text-center text-muted py-4">
+                        <i class="bi bi-hourglass-split"></i> Memuat produk...
                       </div>
-                      
+                    </div>
+                    <!-- Hidden input untuk menyimpan selected product ID -->
+                    <input type="hidden" id="stockinProductId" value="">
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Modal Input Jumlah & Catatan -->
+            <div class="modal fade" id="stockinDetailModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2"></i>Input Detail Barang Masuk</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeStockInDetailModal()"></button>
+                  </div>
+                  <div class="modal-body">
+                    <!-- Selected Product Preview -->
+                    <div id="detailProductInfo" class="p-3 bg-light rounded mb-3">
+                      <small class="text-muted d-block mb-2">Produk Terpilih:</small>
+                      <div class="d-flex gap-2">
+                        <img id="detailProductImage" src="" alt="Product" style="width: 70px; height: 70px; object-fit: cover; border-radius: 4px;">
+                        <div>
+                          <div class="fw-bold" id="detailProductName"></div>
+                          <small class="text-muted">SKU: <code id="detailProductSku"></code></small>
+                          <div><small>Stok: <strong id="detailProductStock"></strong></small></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <form id="stockinDetailForm" onsubmit="submitStockIn(event)" class="row g-3">
                       <!-- Jumlah Masuk -->
-                      <div class="col-md-6">
+                      <div class="col-12">
                         <label for="stockinQuantity" class="form-label fw-bold">Jumlah <span class="text-danger">*</span></label>
-                        <input type="number" id="stockinQuantity" class="form-control" min="1" required placeholder="Masukkan jumlah">
+                        <input type="number" id="stockinQuantity" class="form-control form-control-lg" min="1" required placeholder="Masukkan jumlah">
                       </div>
                       
                       <!-- Catatan -->
@@ -744,8 +775,8 @@
                     </form>
                   </div>
                   <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-success" onclick="document.getElementById('stockinForm').dispatchEvent(new Event('submit'))">
+                    <button type="button" class="btn btn-outline-secondary" onclick="closeStockInDetailModal()">Kembali</button>
+                    <button type="button" class="btn btn-success" onclick="document.getElementById('stockinDetailForm').dispatchEvent(new Event('submit'))">
                       <i class="bi bi-check-circle me-1"></i> Simpan
                     </button>
                   </div>

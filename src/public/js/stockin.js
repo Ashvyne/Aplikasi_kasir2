@@ -35,7 +35,7 @@ async function initStockInPage() {
 }
 
 /**
- * Load products untuk dropdown barang masuk
+ * Load products untuk card grid barang masuk
  */
 async function loadStockInProducts() {
   try {
@@ -50,15 +50,11 @@ async function loadStockInProducts() {
     const data = await response.json();
     const products = Array.isArray(data) ? data : (data.products || []);
     
-    const select = document.getElementById('stockinProductSelect');
-    select.innerHTML = '<option value="">-- Pilih Produk --</option>';
+    // Store for later use
+    window.stockinAvailableProducts = products;
     
-    products.forEach(product => {
-      const option = document.createElement('option');
-      option.value = product.id;
-      option.textContent = `${product.name} (SKU: ${product.sku}) - Stok: ${product.stock || 0}`;
-      select.appendChild(option);
-    });
+    // Display product cards in grid
+    displayStockInProductCards(products);
     
     console.log('✓ Stock in products loaded:', products.length);
   } catch (error) {
@@ -68,20 +64,89 @@ async function loadStockInProducts() {
 }
 
 /**
- * Update product info ketika produk dipilih
+ * Display product cards dalam grid layout
  */
-function updateStockInProductInfo() {
+function displayStockInProductCards(products) {
+  const grid = document.getElementById('stockinProductGrid');
+  
+  if (!products || products.length === 0) {
+    grid.innerHTML = `
+      <div class="col-12 text-center text-muted py-4">
+        <i class="bi bi-inbox"></i> Tidak ada produk tersedia
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = products.map(product => {
+    const imageUrl = product.image_url || '/images/placeholder.png';
+    const stock = product.stock || 0;
+    const stockStatus = stock > 0 ? 'text-success' : 'text-danger';
+    
+    return `
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="card product-card h-100 cursor-pointer border-2 border-transparent transition-all" 
+             onclick="selectStockInProduct(${product.id})" 
+             data-product-id="${product.id}"
+             style="cursor: pointer;">
+          <div class="position-relative overflow-hidden" style="height: 150px; background: #f8f9fa;">
+            <img src="${imageUrl}" alt="${product.name}" 
+                 class="w-100 h-100" style="object-fit: cover;">
+            <div class="position-absolute top-0 end-0 m-2">
+              <span class="badge bg-info">${stock} stok</span>
+            </div>
+          </div>
+          <div class="card-body p-2">
+            <div class="fw-bold small text-truncate" title="${product.name}">${product.name}</div>
+            <div class="text-muted small">SKU: ${product.sku}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  console.log('✓ Product cards displayed');
+}
+
+/**
+ * Select product dari card dan buka detail modal
+ */
+function selectStockInProduct(productId) {
   try {
-    const productId = document.getElementById('stockinProductSelect').value;
-    if (!productId || !products) return;
+    const product = window.stockinAvailableProducts.find(p => p.id === productId);
+    if (!product) {
+      console.error('Product not found:', productId);
+      return;
+    }
     
-    const product = products.find(p => p.id == productId);
-    if (!product) return;
+    // Update hidden input
+    document.getElementById('stockinProductId').value = productId;
     
-    // Ini bisa digunakan untuk menampilkan info harga, dll
-    console.log('Selected product:', product);
+    // Update detail product info di modal detail
+    const imageUrl = product.image_url || '/images/placeholder.png';
+    
+    document.getElementById('detailProductImage').src = imageUrl;
+    document.getElementById('detailProductName').textContent = product.name;
+    document.getElementById('detailProductSku').textContent = product.sku;
+    document.getElementById('detailProductStock').textContent = (product.stock || 0) + ' unit';
+    
+    // Close first modal
+    const firstModal = bootstrap.Modal.getInstance(document.getElementById('stockinModal'));
+    if (firstModal) {
+      firstModal.hide();
+    }
+    
+    // Reset detail form
+    document.getElementById('stockinDetailForm').reset();
+    document.getElementById('stockinQuantity').focus();
+    
+    // Open detail modal
+    const detailModal = new bootstrap.Modal(document.getElementById('stockinDetailModal'));
+    detailModal.show();
+    
+    console.log('✓ Product selected, detail modal opened:', product.name);
   } catch (error) {
-    console.error('❌ Error updating stock in product info:', error);
+    console.error('❌ Error selecting stock in product:', error);
   }
 }
 
@@ -182,8 +247,33 @@ function displayStockInHistory() {
  */
 function openStockInModal() {
   // Reset form
-  document.getElementById('stockinForm').reset();
-  document.getElementById('stockinProductSelect').focus();
+  document.getElementById('stockinProductId').value = '';
+  
+  // Reset detail form
+  document.getElementById('stockinDetailForm').reset();
+  
+  // Clear selection highlight
+  document.querySelectorAll('#stockinProductGrid .product-card').forEach(card => {
+    card.classList.remove('border-success', 'bg-light');
+  });
+}
+
+/**
+ * Close detail modal dan kembali ke product selection
+ */
+function closeStockInDetailModal() {
+  try {
+    const detailModal = bootstrap.Modal.getInstance(document.getElementById('stockinDetailModal'));
+    if (detailModal) {
+      detailModal.hide();
+    }
+    
+    // Clear selected product
+    document.getElementById('stockinProductId').value = '';
+    document.getElementById('stockinDetailForm').reset();
+  } catch (error) {
+    console.error('❌ Error closing detail modal:', error);
+  }
 }
 
 /**
@@ -193,7 +283,7 @@ async function submitStockIn(event) {
   event.preventDefault();
   
   try {
-    const productId = document.getElementById('stockinProductSelect').value;
+    const productId = document.getElementById('stockinProductId').value;
     const quantity = parseInt(document.getElementById('stockinQuantity').value);
     const notes = document.getElementById('stockinNotes').value.trim();
     
@@ -231,8 +321,15 @@ async function submitStockIn(event) {
     
     console.log('✓ Stock in created:', data);
     
-    // Reset form
-    document.getElementById('stockinForm').reset();
+    // Reset forms
+    document.getElementById('stockinDetailForm').reset();
+    document.getElementById('stockinProductId').value = '';
+    
+    // Close detail modal
+    const detailModal = bootstrap.Modal.getInstance(document.getElementById('stockinDetailModal'));
+    if (detailModal) {
+      detailModal.hide();
+    }
     
     // Reload history
     await loadStockInHistory();
@@ -297,10 +394,12 @@ function handleStockInPage() {
 // Export functions untuk global access
 window.initStockInPage = initStockInPage;
 window.loadStockInProducts = loadStockInProducts;
-window.updateStockInProductInfo = updateStockInProductInfo;
+window.displayStockInProductCards = displayStockInProductCards;
+window.selectStockInProduct = selectStockInProduct;
 window.loadStockInHistory = loadStockInHistory;
 window.displayStockInHistory = displayStockInHistory;
 window.openStockInModal = openStockInModal;
+window.closeStockInDetailModal = closeStockInDetailModal;
 window.submitStockIn = submitStockIn;
 window.deleteStockIn = deleteStockIn;
 window.handleStockInPage = handleStockInPage;
