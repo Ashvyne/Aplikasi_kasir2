@@ -3,7 +3,7 @@ async function handleLogin(event) {
   
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
-  const role = document.getElementById('role').value || 'admin_barang';
+  const deviceRole = document.getElementById('role').value || 'admin_barang';
   const errorMessage = document.getElementById('errorMessage');
   
   if (!username || !password) {
@@ -15,14 +15,22 @@ async function handleLogin(event) {
   try {
     errorMessage.classList.remove('show');
     console.log('📡 Sending login request...');
-    console.log('👤 Role selected:', role);
+    console.log('👤 Device role selected:', deviceRole);
+    
+    // Generate unique device name untuk tracking multiple logins
+    const deviceName = `${deviceRole}-${new Date().getTime()}`;
     
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password, role })
+      body: JSON.stringify({ 
+        username, 
+        password, 
+        deviceRole,  // Role yang dipilih untuk device ini
+        deviceName   // Nama device untuk identifikasi
+      })
     });
     
     console.log('📊 Response status:', response.status);
@@ -31,17 +39,15 @@ async function handleLogin(event) {
     console.log('📦 Response data:', data);
     
     if (response.ok) {
-      // Override role dengan yang dipilih di login form
-      if (data.user) {
-        data.user.role = role;
-      }
-      
-      // Simpan token dan user info ke localStorage
+      // Simpan token, sessionId, dan user info ke localStorage
       localStorage.setItem('token', data.token);
+      localStorage.setItem('sessionId', data.sessionId);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('deviceRole', deviceRole); // Simpan role device
       
       console.log('✓ Login successful');
-      console.log('👤 User role set to:', role);
+      console.log('👤 User role:', data.user.role);
+      console.log('📱 Session ID:', data.sessionId);
       
       // Redirect ke halaman utama
       window.location.href = '/';
@@ -61,9 +67,11 @@ async function handleLogin(event) {
 // Cek apakah user sudah login saat halaman dimuat
 window.addEventListener('load', () => {
   const token = localStorage.getItem('token');
+  const sessionId = localStorage.getItem('sessionId');
   const currentPath = window.location.pathname;
   
   console.log('🔍 Checking token:', token ? '✓ Found' : '❌ Not found');
+  console.log('📱 Session ID:', sessionId ? '✓ Found' : '❌ Not found');
   console.log('📍 Current path:', currentPath);
   
   // If user has token and is on login page, redirect to dashboard

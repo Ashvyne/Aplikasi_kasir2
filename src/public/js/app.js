@@ -1342,6 +1342,13 @@ async function saveProduct(event) {
       setTimeout(() => {
         closeProductModal();
         loadProducts();
+        
+        // Jika halaman POS (Kasir) sedang aktif, refresh juga halaman itu
+        const activePage = document.querySelector('.page.active');
+        if (activePage && activePage.id === 'pos-page') {
+          console.log('🔄 Auto-refreshing POS page because product was saved');
+          displayProducts();
+        }
       }, 3500);
     } else {
       // Handle error response
@@ -2765,23 +2772,52 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Function untuk logout user
+// Function untuk logout user (hanya logout session device ini, bukan semua)
 function logout() {
   Swal.fire({
     title: 'Keluar dari Aplikasi?',
-    text: 'Anda akan logout dan kembali ke halaman login',
+    text: 'Anda akan logout dari device ini. Device lain tetap login.',
     icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#dc3545',
     cancelButtonColor: '#6c757d',
     confirmButtonText: 'Ya, Logout',
     cancelButtonText: 'Batal'
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      console.log('✓ User logged out');
-      window.location.href = '/login';
+      try {
+        const token = localStorage.getItem('token');
+        const sessionId = localStorage.getItem('sessionId');
+        
+        // Send logout request ke server untuk tandai session ini sebagai inactive
+        if (token && sessionId) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ sessionId })
+          }).catch(err => console.warn('Logout API error (non-critical):', err));
+        }
+        
+        // Clear local storage untuk device ini saja
+        localStorage.removeItem('token');
+        localStorage.removeItem('sessionId');
+        localStorage.removeItem('user');
+        localStorage.removeItem('deviceRole');
+        
+        console.log('✓ User logged out from this device');
+        window.location.href = '/login';
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Tetap logout meski ada error
+        localStorage.removeItem('token');
+        localStorage.removeItem('sessionId');
+        localStorage.removeItem('user');
+        localStorage.removeItem('deviceRole');
+        window.location.href = '/login';
+      }
     }
   });
 }
