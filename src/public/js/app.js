@@ -375,7 +375,7 @@ window.addEventListener('load', () => {
     try {
       const userData = JSON.parse(user);
       document.getElementById('userDisplay').textContent = userData.username;
-      console.log('✓ User loaded:', userData.username);
+      console.log('✓ User loaded:', userData.username, 'with role:', userData.role);
     } catch (e) {
       console.error('❌ Error parsing user:', e);
     }

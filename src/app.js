@@ -84,19 +84,32 @@ let dbInitialized = false;
     sequelize = db;
     
     // Connect ke database
-    await initDatabase();
+    const connected = await initDatabase();
+    if (!connected) {
+      throw new Error('Failed to connect to database');
+    }
     console.log('✓ Database connected');
     
     // Sync models ke database (alter: true = update existing tables, don't drop data)
-    // First time: force rebuild to ensure schema is clean
-    const needsRebuild = process.env.FORCE_SYNC === 'true';
-    if (needsRebuild) {
-      console.log('🔄 Force rebuilding database schema...');
-      await sequelize.sync({ force: true });
-      console.log('✓ Database schema rebuilt');
-    } else {
-      await sequelize.sync({ alter: true });
-      console.log('✓ Database tables synced');
+    // Skip sync if no models are defined or if it fails
+    try {
+      const models = Object.keys(sequelize.models);
+      if (models.length > 0) {
+        const needsRebuild = process.env.FORCE_SYNC === 'true';
+        if (needsRebuild) {
+          console.log('🔄 Force rebuilding database schema...');
+          await sequelize.sync({ force: true });
+          console.log('✓ Database schema rebuilt');
+        } else {
+          await sequelize.sync({ alter: true });
+          console.log('✓ Database tables synced');
+        }
+      } else {
+        console.log('ℹ️ No models registered for sync');
+      }
+    } catch (syncError) {
+      console.warn('⚠️ Database sync warning (non-critical):', syncError.message);
+      // Don't fail on sync errors - app can work without schema sync
     }
     
     dbInitialized = true;

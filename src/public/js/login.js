@@ -40,10 +40,11 @@ async function handleLogin(event) {
     
     if (response.ok) {
       // Simpan token, sessionId, dan user info ke localStorage
+      // Token sudah memiliki role yang benar dari server
       localStorage.setItem('token', data.token);
       localStorage.setItem('sessionId', data.sessionId);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('deviceRole', deviceRole); // Simpan role device
+      localStorage.setItem('user', JSON.stringify(data.user)); // User role sudah benar dari server
+      localStorage.setItem('deviceRole', data.user.role); // Simpan role device (sesuai yang dari server)
       
       console.log('✓ Login successful');
       console.log('👤 User role:', data.user.role);
