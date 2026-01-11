@@ -9,12 +9,18 @@ exports.verifyToken = (req, res, next) => {
       return res.status(401).json({ message: 'Token tidak ditemukan' });
     }
 
+    console.log('🔐 Verifying token...');
+    console.log('🔑 JWT_SECRET available:', !!process.env.JWT_SECRET);
+    
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
-        return res.status(403).json({ message: 'Token tidak valid' });
+        console.error('🔐 JWT verification error:', err.message);
+        console.error('🔐 Error type:', err.name);
+        return res.status(403).json({ message: 'Token tidak valid: ' + err.message });
       }
 
       req.user = user;
+      console.log('✓ Token verified for user:', user.username);
       next();
     });
   } catch (error) {

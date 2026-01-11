@@ -546,6 +546,31 @@ function navigateToPage(pageName) {
   try {
     console.log('📄 Navigate to page (no push state):', pageName);
     
+    // Check user role access
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role || 'admin_barang';
+    
+    const roleAccess = {
+      'admin_kasir': ['pos', 'transactions', 'dashboard'],
+      'admin_barang': ['dashboard', 'products', 'stockin', 'stock', 'reports']
+    };
+    
+    const allowedPages = roleAccess[userRole] || [];
+    
+    // Validate access
+    if (!allowedPages.includes(pageName)) {
+      console.warn('🚫 Access denied for role', userRole, 'to page', pageName);
+      showAlertModal(
+        '❌ Access Denied!', 
+        `Role ${userRole} tidak memiliki akses ke halaman ${pageName}. Silakan gunakan akun yang tepat.`,
+        'danger'
+      );
+      // Redirect ke halaman pertama yang diizinkan
+      const defaultPage = allowedPages[0] || 'dashboard';
+      setTimeout(() => navigateToPage(defaultPage), 2000);
+      return;
+    }
+    
     // Sembunyikan semua halaman
     const allPages = document.querySelectorAll('.page');
     allPages.forEach(page => {
@@ -730,6 +755,9 @@ async function loadProducts() {
     }
     
     console.log('📡 Fetching from /api/products');
+    console.log('🔐 Token present:', !!token);
+    console.log('📏 Token length:', token ? token.length : 0);
+    
     // Kirim request GET ke API products
     const response = await fetch('/api/products', {
       method: 'GET',
@@ -740,9 +768,16 @@ async function loadProducts() {
     });
     
     console.log('📊 Response status:', response.status);
+    console.log('📊 Response statusText:', response.statusText);
     
     // Cek apakah response OK
     if (!response.ok) {
+      // Jika 403, kemungkinan token tidak valid
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({ message: 'Token tidak valid atau expired' }));
+        console.error('🔐 Authorization error:', errorData);
+        throw new Error(`Authorization failed: ${errorData.message || response.statusText}`);
+      }
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
     
@@ -766,6 +801,7 @@ async function loadProducts() {
     }
   } catch (error) {
     console.error('❌ Error loading products:', error);
+    console.error('Error message:', error.message);
     isLoading = false;
     
     // Gunakan demo data jika API error

@@ -39,12 +39,28 @@ async function initStockInPage() {
  */
 async function loadStockInProducts() {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token not found');
+    }
+    
+    console.log('📦 Loading stock in products...');
     const response = await fetch('/api/products', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      method: 'GET',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     });
     
+    console.log('📊 Response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Failed to load products');
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({ message: 'Token tidak valid' }));
+        throw new Error(`Authorization failed: ${errorData.message || response.statusText}`);
+      }
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -59,7 +75,8 @@ async function loadStockInProducts() {
     console.log('✓ Stock in products loaded:', products.length);
   } catch (error) {
     console.error('❌ Error loading stock in products:', error);
-    showAlertModal('Error!', 'Gagal memuat data produk', 'danger');
+    console.error('Error message:', error.message);
+    showAlertModal('Error!', 'Gagal memuat data produk: ' + error.message, 'danger');
   }
 }
 
@@ -155,12 +172,28 @@ function selectStockInProduct(productId) {
  */
 async function loadStockInHistory() {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token not found');
+    }
+    
+    console.log('📦 Loading stock in history...');
     const response = await fetch('/api/stockin', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      method: 'GET',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     });
     
+    console.log('📊 Response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Failed to load stock in history');
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({ error: 'Permission denied' }));
+        throw new Error(`Authorization failed: ${errorData.error || response.statusText}`);
+      }
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -175,7 +208,8 @@ async function loadStockInHistory() {
     displayStockInHistory();
   } catch (error) {
     console.error('❌ Error loading stock in history:', error);
-    showAlertModal('Error!', 'Gagal memuat riwayat barang masuk', 'danger');
+    console.error('Error message:', error.message);
+    showAlertModal('Error!', 'Gagal memuat riwayat barang masuk: ' + error.message, 'danger');
   }
 }
 
