@@ -44,6 +44,93 @@ let autoRefreshIntervals = {
   stockin: null
 };
 
+// ============ ROLE-BASED MENU FILTERING ============
+
+// Function untuk filter navigation menu berdasarkan user role
+function filterNavigationByRole() {
+  try {
+    // Ambil user data dari localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = user.role || 'admin_barang';
+    
+    console.log('👤 Current user role:', userRole);
+    console.log('📋 Filtering navigation based on role...');
+    
+    // Ambil semua nav items
+    const navMenu = document.getElementById('navMenu');
+    if (!navMenu) {
+      console.error('❌ navMenu element not found!');
+      return;
+    }
+    
+    const navItems = navMenu.querySelectorAll('.nav-link.nav-item');
+    console.log(`📊 Total nav items found: ${navItems.length}`);
+    
+    let visibleCount = 0;
+    let firstVisibleNav = null;
+    
+    // Pertama, sembunyikan semua items
+    navItems.forEach(item => {
+      item.style.display = 'none';
+      item.classList.add('d-none');
+    });
+    
+    // Kemudian, tampilkan hanya items yang sesuai dengan role
+    navItems.forEach((item, index) => {
+      const allowedRoles = item.getAttribute('data-roles');
+      const pageName = item.getAttribute('data-page');
+      const menuText = item.textContent.trim();
+      
+      console.log(`  [${index}] ${menuText} - roles: "${allowedRoles}"`);
+      
+      if (allowedRoles) {
+        // Check apakah user role cocok dengan allowed roles
+        if (allowedRoles.includes(userRole)) {
+          // Tampilkan item jika role cocok
+          item.style.display = 'flex';
+          item.classList.remove('d-none');
+          item.classList.add('d-flex');
+          visibleCount++;
+          
+          if (!firstVisibleNav) {
+            firstVisibleNav = item;
+          }
+          
+          console.log(`✓ SHOWING: ${menuText} (allowed for ${userRole})`);
+        } else {
+          // Ensure item tetap tersembunyi
+          item.style.display = 'none !important';
+          item.classList.add('d-none');
+          console.log(`✕ HIDING: ${menuText} (NOT allowed for ${userRole})`);
+          
+          // Juga sembunyikan page-nya
+          const page = document.getElementById(`${pageName}-page`);
+          if (page) {
+            page.style.display = 'none';
+            console.log(`  └─ Hidden page: ${pageName}-page`);
+          }
+        }
+      }
+    });
+    
+    console.log(`✓ Menu filtering complete: ${visibleCount} menu(s) visible for ${userRole}`);
+    
+    // Pastikan minimal satu nav item visible dan set sebagai active
+    if (firstVisibleNav) {
+      // Check apakah ada yang active, kalau tidak set yang pertama visible sebagai active
+      const hasActiveVisible = document.querySelector('.nav-link.nav-item.active');
+      if (!hasActiveVisible) {
+        firstVisibleNav.click();
+        console.log(`📄 Set default page to: ${firstVisibleNav.getAttribute('data-page')}`);
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Error filtering navigation:', error);
+  }
+}
+
+// ============ AUTO REFRESH SYSTEM ============
 // Menyimpan interval values (dalam milliseconds)
 let autoRefreshSettings = {
   dashboard: 10000,      // 10 detik
@@ -390,6 +477,9 @@ function initializeApp() {
   try {
     console.log('🔧 Initializing app...');
     
+    // Filter navigation menu berdasarkan user role
+    filterNavigationByRole();
+    
     // Load saved auto refresh settings
     loadAutoRefreshSettings();
     
@@ -415,6 +505,11 @@ function initializeApp() {
     
     // Setup navigation menu
     setupNavigation();
+    
+    // Filter navigation menu again after setup
+    setTimeout(() => {
+      filterNavigationByRole();
+    }, 100);
     
     // Load semua data dengan error handling
     console.log('📦 Loading initial data...');
@@ -1856,8 +1951,9 @@ function displayCart() {
 // Function untuk update total belanja
 function updateTotal() {
   try {
-    // Ambil nilai diskon transaksi keseluruhan
-    const transactionDiscount = parseInt(document.getElementById('discount').value) || 0;
+    // Ambil nilai diskon transaksi keseluruhan (jika ada)
+    const discountElement = document.getElementById('discount');
+    const transactionDiscount = (discountElement) ? (parseInt(discountElement.value) || 0) : 0;
     let subtotal = 0;
     let totalItemDiscounts = 0;
     
@@ -1899,7 +1995,8 @@ function calculateChange() {
 
 // Function untuk ambil total amount
 function getTotalAmount() {
-  const transactionDiscount = parseInt(document.getElementById('discount').value) || 0;
+  const discountElement = document.getElementById('discount');
+  const transactionDiscount = (discountElement) ? (parseInt(discountElement.value) || 0) : 0;
   let subtotal = 0;
   let totalItemDiscounts = 0;
   
@@ -2034,11 +2131,14 @@ async function checkoutTransaction() {
     }
     
     // Buat object transaksi
+    const change = Math.max(0, received - total);
     const transactionData = {
       items: cart,
       total: total,
       paymentMethod: paymentMethod,
-      discount: parseInt(document.getElementById('discount').value) || 0
+      discount: 0,
+      cash_received: received,
+      change_amount: change
     };
     
     console.log('📝 Transaction Data:', JSON.stringify(transactionData, null, 2));
@@ -2153,7 +2253,10 @@ async function checkoutTransaction() {
         cart = [];
         displayCart();
         updateTotal();
-        document.getElementById('discount').value = 0;
+        const discountElement = document.getElementById('discount');
+        if (discountElement) {
+          discountElement.value = 0;
+        }
         document.getElementById('cashReceived').value = '';
         document.getElementById('changeAmount').textContent = 'Rp 0';
         
@@ -2375,6 +2478,8 @@ function viewTransaction(transactionId) {
       const discount = parseInt(trans.discount || trans.diskon || 0) || 0;
       const invoiceNumber = trans.invoiceNumber || trans.invoice_number || 'N/A';
       const paymentMethod = trans.paymentMethod || trans.payment_method || 'Tunai';
+      const cashReceived = parseInt(trans.cash_received || 0) || 0;
+      const changeAmount = parseInt(trans.change_amount || 0) || 0;
       
       // Tampilkan SweetAlert2 dengan detail transaksi
       Swal.fire({
@@ -2415,6 +2520,16 @@ function viewTransaction(transactionId) {
                 <span style="color: inherit;">Total Bayar:</span>
                 <span style="color: inherit;">Rp ${formatPrice(total)}</span>
               </div>
+              ${cashReceived > 0 ? `
+              <div class="calc-row" style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; margin-top: 12px;">
+                <span>Uang Diterima:</span>
+                <span>Rp ${formatPrice(cashReceived)}</span>
+              </div>
+              <div class="calc-row" style="display: flex; justify-content: space-between; font-size: 14px; padding: 8px; background-color: #d4edda; border-radius: 4px; border: 1px solid #c3e6cb;">
+                <span style="color: #155724;">Kembalian:</span>
+                <span style="color: #155724; font-weight: bold;">Rp ${formatPrice(changeAmount)}</span>
+              </div>
+              ` : ''}
             </div>
           </div>
         `,
@@ -2429,7 +2544,7 @@ function viewTransaction(transactionId) {
           printButton.className = 'btn btn-success me-2';
           printButton.style.cssText = 'padding: 6px 12px; margin-right: 8px; font-size: 14px; cursor: pointer;';
           printButton.innerHTML = '<i class="bi bi-printer me-1"></i> Cetak Resi';
-          printButton.onclick = () => printReceipt(trans, items, subtotal, discount, total, invoiceNumber);
+          printButton.onclick = () => printReceipt(trans, items, subtotal, discount, total, invoiceNumber, cashReceived, changeAmount);
           
           // Insert button sebelum confirm button
           if (confirmButton && confirmButton.parentNode) {
@@ -2895,7 +3010,11 @@ function saveAutoRefreshSettings() {
     };
     
     // Simpan ke localStorage
-    saveAutoRefreshSettings();
+    try {
+      localStorage.setItem('autoRefreshSettings', JSON.stringify(autoRefreshSettings));
+    } catch (storageError) {
+      console.error('⚠️ LocalStorage save error:', storageError);
+    }
     
     // Restart auto refresh dengan settings baru (jika sudah berjalan)
     if (autoRefreshIntervals.dashboard) startAutoRefresh('dashboard', loadDashboard, dashboard);
@@ -3686,7 +3805,7 @@ function updateChartsForDarkMode() {
  * @param {Number} total - Total pembayaran
  * @param {String} invoiceNumber - Nomor invoice
  */
-function printReceipt(transaction, items, subtotal, discount, total, invoiceNumber) {
+function printReceipt(transaction, items, subtotal, discount, total, invoiceNumber, cashReceived = 0, changeAmount = 0) {
   try {
     console.log('🖨️  Printing receipt:', invoiceNumber);
     
@@ -3938,6 +4057,16 @@ function printReceipt(transaction, items, subtotal, discount, total, invoiceNumb
             <span>TOTAL BAYAR:</span>
             <span>Rp ${formatPrice(total)}</span>
           </div>
+          ${cashReceived > 0 ? `
+          <div class="summary-row" style="margin-top: 3mm; padding-top: 3mm; border-top: 1px dotted #000;">
+            <span>Uang Diterima:</span>
+            <span>Rp ${formatPrice(cashReceived)}</span>
+          </div>
+          <div class="summary-row" style="font-weight: bold; color: #28a745;">
+            <span>Kembalian:</span>
+            <span>Rp ${formatPrice(changeAmount)}</span>
+          </div>
+          ` : ''}
         </div>
         
         <!-- Payment Method -->
