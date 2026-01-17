@@ -928,57 +928,43 @@ function displayProducts() {
     
     // Jika tidak ada produk, tampilkan pesan
     if (products.length === 0) {
-      grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-muted);">Tidak ada produk</p>';
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: #6c757d;"><i class="bi bi-box" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i><p>Tidak ada produk</p></div>';
       return;
     }
     
-    // Loop setiap produk dan buat card
+    // Loop setiap produk dan buat card dengan desain modern
     products.forEach(product => {
       const card = document.createElement('div');
-      card.className = `product-card ${product.stock === 0 ? 'unavailable' : ''}`;
+      card.className = `pos-product-card ${product.stock === 0 ? 'unavailable' : ''}`;
       
       // Tentukan status stok
       const stockStatus = product.stock === 0 ? 'empty' : product.stock < 10 ? 'low' : 'ok';
       
-      // Map kategori ke emoji dan warna
+      // Map kategori ke nama
       const categoryMap = {
-        '1': { emoji: '🍜', name: 'Makanan' },
-        '2': { emoji: '🥤', name: 'Minuman' },
-        '3': { emoji: '🍿', name: 'Snack' },
-        '4': { emoji: '📱', name: 'Elektronik' },
-        '5': { emoji: '📦', name: 'Lainnya' }
+        '1': 'Makanan',
+        '2': 'Minuman',
+        '3': 'Snack',
+        '4': 'Elektronik',
+        '5': 'Lainnya'
       };
-      const category = categoryMap[product.category] || { emoji: '📦', name: 'Produk' };
+      const categoryName = categoryMap[product.category] || 'Produk';
       
-      // Buat HTML untuk card dengan gambar
+      // Buat HTML untuk card modern
       card.innerHTML = `
-        <div class="product-card-image">
+        <div class="pos-product-image">
           ${product.image_url ? 
-            `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" class="product-card-img">` :
-            `<div class="product-card-image-placeholder">${category.emoji}</div>`
+            `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" style="width: 100%; height: 100%; object-fit: cover;">` :
+            `<div style="width: 100%; height: 100%; background-color: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 3rem;">📦</div>`
           }
         </div>
-        <div class="product-card-header">
-          <div class="product-card-header-content">
-            <h4 class="product-card-name">${escapeHtml(product.name)}</h4>
-            <div>
-              ${product.stock < 5 && product.stock > 0 ? '<span class="product-card-badge">⚠️ Terbatas</span>' : ''}
-              ${product.stock === 0 ? '<span class="product-card-badge" style="background: #ef4444;">Habis</span>' : ''}
-            </div>
-          </div>
-        </div>
-        <div class="product-card-content">
-          <div>
-            <div class="product-card-price">Rp ${formatPrice(product.sell_price || product.price || 0)}</div>
-            <div class="product-card-stock ${stockStatus}">
-              <span class="product-card-stock-indicator"></span>
-              <span>${product.stock} stok</span>
-            </div>
-          </div>
-        </div>
-        <div class="product-card-footer">
-          <button class="product-card-btn" onclick="addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''}>
-            Tambah ke Keranjang
+        <div class="pos-product-info">
+          <div class="pos-product-category">${categoryName}</div>
+          <div class="pos-product-name" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</div>
+          <div class="pos-product-price">Rp ${formatPrice(product.sell_price || product.price || 0)}</div>
+          <div class="pos-product-stock">Stok: ${product.stock}</div>
+          <button class="pos-product-btn" onclick="addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''} style="${product.stock === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
+            <i class="bi bi-plus-lg"></i> Tambah
           </button>
         </div>
       `;
@@ -1909,9 +1895,15 @@ function displayCart() {
     const cartDiv = document.getElementById('cartItems');
     cartDiv.innerHTML = '';
     
+    // Update cart item count in header
+    const cartItemCount = document.getElementById('cartItemCount');
+    if (cartItemCount) {
+      cartItemCount.textContent = cart.length;
+    }
+    
     // Jika keranjang kosong
     if (cart.length === 0) {
-      cartDiv.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">Keranjang kosong</p>';
+      cartDiv.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 2rem 1rem;"><i class="bi bi-bag-x" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i><p style="font-size: 0.9rem;">Keranjang kosong</p></div>';
       return;
     }
     
@@ -1922,23 +1914,20 @@ function displayCart() {
       const itemAfterDiscount = itemSubtotal - itemDiscount;
       
       const cartItem = document.createElement('div');
-      cartItem.className = 'cart-item';
+      cartItem.className = 'pos-cart-item';
       cartItem.innerHTML = `
-        <div class="cart-item-info">
-          <div class="cart-item-name">${escapeHtml(item.name)}</div>
-          <div class="cart-item-detail">Rp ${formatPrice(item.price)} x ${item.quantity}</div>
-          ${itemDiscount > 0 ? `<div class="cart-item-detail" style="color: #dc3545; font-size: 12px;">Diskon: -Rp ${formatPrice(itemDiscount)}</div>` : ''}
+        <div class="pos-cart-item-info">
+          <div class="pos-cart-item-name">${escapeHtml(item.name)}</div>
+          <div class="pos-cart-item-price">Rp ${formatPrice(item.price)} × ${item.quantity}</div>
+          ${itemDiscount > 0 ? `<div class="pos-cart-item-discount" style="color: #dc3545; font-size: 0.8rem;">Diskon: -Rp ${formatPrice(itemDiscount)}</div>` : ''}
         </div>
-        <div class="cart-item-qty">
-          <button onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">−</button>
-          <span>${item.quantity}</span>
-          <button onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button class="btn btn-sm btn-outline-secondary" onclick="editItemDiscount(${item.id})" title="Edit diskon item">
+        <div class="pos-cart-item-actions">
+          <button class="pos-cart-item-discount-btn" onclick="openDiscountModal(${item.id}, ${itemSubtotal})" title="Edit diskon">
             <i class="bi bi-percent"></i>
           </button>
-          <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
+          <button class="pos-cart-item-remove" onclick="removeFromCart(${item.id})" title="Hapus">
+            <i class="bi bi-trash"></i>
+          </button>
         </div>
       `;
       cartDiv.appendChild(cartItem);
@@ -1966,10 +1955,15 @@ function updateTotal() {
     
     // Hitung total: subtotal - (diskon item + diskon transaksi)
     const totalDiscount = totalItemDiscounts + transactionDiscount;
-    const total = Math.max(0, subtotal - totalDiscount);
+    const totalBeforeTax = Math.max(0, subtotal - totalDiscount);
+    
+    // Hitung pajak (PPN 10%)
+    const tax = Math.round(totalBeforeTax * 0.1);
+    const total = totalBeforeTax + tax;
     
     // Update elemen DOM
     document.getElementById('subtotal').textContent = 'Rp ' + formatPrice(subtotal);
+    document.getElementById('taxAmount').textContent = 'Rp ' + formatPrice(tax);
     document.getElementById('total').textContent = 'Rp ' + formatPrice(total);
   } catch (error) {
     console.error('❌ Update total error:', error);
@@ -2006,7 +2000,19 @@ function getTotalAmount() {
   });
   
   const totalDiscount = totalItemDiscounts + transactionDiscount;
-  return Math.max(0, subtotal - totalDiscount);
+  const totalBeforeTax = Math.max(0, subtotal - totalDiscount);
+  const tax = Math.round(totalBeforeTax * 0.1);
+  return totalBeforeTax + tax;
+}
+
+// Function untuk buka history transaksi
+function openTransactionHistory() {
+  try {
+    // Navigate to transactions page
+    showPage('transactions');
+  } catch (error) {
+    console.error('❌ Open transaction history error:', error);
+  }
 }
 
 // Function untuk clear/batal transaksi
@@ -2034,33 +2040,31 @@ function clearCart() {
   });
 }
 
-// Function untuk edit diskon per item
-function editItemDiscount(productId) {
+// Function untuk buka discount modal per item
+function openDiscountModal(productId, itemTotal) {
   try {
     const item = cart.find(i => i.id === productId);
     if (!item) return;
     
-    const itemTotal = item.price * item.quantity;
-    
     Swal.fire({
-      title: `Edit Diskon - ${item.name}`,
+      title: `Diskon - ${item.name}`,
       html: `
         <div style="text-align: left;">
-          <p><strong>Subtotal Item:</strong> Rp ${formatPrice(itemTotal)}</p>
-          <div style="margin-bottom: 10px;">
-            <label for="discountAmount" style="display: block; margin-bottom: 5px; font-weight: 500;">Diskon (Rp):</label>
-            <input type="number" id="discountAmount" class="form-control" value="${item.discount || 0}" min="0" max="${itemTotal}" step="100" />
+          <p style="margin-bottom: 1rem;"><strong>Subtotal:</strong> Rp ${formatPrice(itemTotal)}</p>
+          <div style="margin-bottom: 1.5rem;">
+            <label for="discountAmount" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Diskon (Rp):</label>
+            <input type="number" id="discountAmount" class="form-control" value="${item.discount || 0}" min="0" max="${itemTotal}" step="1000" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;" />
           </div>
           <div>
-            <label for="discountPercent" style="display: block; margin-bottom: 5px; font-weight: 500;">Atau Diskon (%):</label>
-            <input type="number" id="discountPercent" class="form-control" value="${item.discount_percent || 0}" min="0" max="100" step="1" />
+            <label for="discountPercent" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Atau Diskon (%):</label>
+            <input type="number" id="discountPercent" class="form-control" value="${item.discount_percent || 0}" min="0" max="100" step="1" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;" />
           </div>
-          <small style="color: #6b7280;">Masukkan diskon dalam Rp atau %. Yang terakhir diisi akan digunakan.</small>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Simpan',
+      confirmButtonText: 'Terapkan',
       cancelButtonText: 'Batal',
+      confirmButtonColor: '#212529',
       didOpen: () => {
         const amountInput = document.getElementById('discountAmount');
         const percentInput = document.getElementById('discountPercent');
@@ -2068,19 +2072,21 @@ function editItemDiscount(productId) {
         // Ketika user input persentase, konversi ke rupiah
         percentInput.addEventListener('change', () => {
           const percent = parseInt(percentInput.value) || 0;
-          if (percent > 0) {
+          if (percent > 0 && percent <= 100) {
             const amount = Math.round((itemTotal * percent) / 100);
             amountInput.value = amount;
+          } else if (percent === 0) {
+            amountInput.value = 0;
           }
         });
         
         // Ketika user input rupiah, konversi ke persentase
         amountInput.addEventListener('change', () => {
           const amount = parseInt(amountInput.value) || 0;
-          if (amount > 0) {
+          if (amount > 0 && amount <= itemTotal) {
             const percent = Math.round((amount / itemTotal) * 100);
             percentInput.value = percent;
-          } else {
+          } else if (amount === 0) {
             percentInput.value = 0;
           }
         });
@@ -2092,18 +2098,33 @@ function editItemDiscount(productId) {
         
         // Validasi diskon tidak boleh lebih dari total item
         if (finalAmount > itemTotal) {
-          showAlertModal('Error!', 'Diskon tidak boleh lebih dari total item', 'danger');
+          Swal.fire('Peringatan', 'Diskon tidak boleh melebihi total item', 'warning');
           return;
         }
         
-        item.discount = finalAmount;
-        item.discount_percent = finalPercent;
+        // Simpan diskon ke item
+        item.discount = Math.max(0, finalAmount);
+        item.discount_percent = Math.max(0, finalPercent);
         
+        // Update tampilan
         displayCart();
         updateTotal();
-        showAlertModal('Berhasil!', `Diskon disimpan untuk ${item.name}`, 'success');
+        console.log(`✓ Diskon diterapkan ke ${item.name}: Rp ${formatPrice(item.discount)}`);
       }
     });
+  } catch (error) {
+    console.error('❌ Discount modal error:', error);
+  }
+}
+
+// Function untuk edit diskon per item
+function editItemDiscount(productId) {
+  try {
+    const item = cart.find(i => i.id === productId);
+    if (!item) return;
+    
+    const itemTotal = item.price * item.quantity;
+    openDiscountModal(productId, itemTotal);
   } catch (error) {
     console.error('❌ Edit item discount error:', error);
   }
@@ -2837,14 +2858,43 @@ async function exportProductsExcel() {
 function searchProducts() {
   try {
     const keyword = document.getElementById('searchProduct').value.toLowerCase();
-    const cards = document.querySelectorAll('.product-card');
+    const cards = document.querySelectorAll('.pos-product-card');
     
     cards.forEach(card => {
-      const name = card.querySelector('.product-card-name')?.textContent.toLowerCase() || '';
+      const name = card.querySelector('.pos-product-name')?.textContent.toLowerCase() || '';
       card.style.display = name.includes(keyword) ? 'block' : 'none';
     });
   } catch (error) {
     console.error('❌ Search error:', error);
+  }
+}
+
+// Function untuk filter produk berdasarkan kategori di POS
+function filterByCategory(category) {
+  try {
+    // Update button active state
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.getAttribute('data-category') === category) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Filter cards based on category
+    const cards = document.querySelectorAll('.pos-product-card');
+    cards.forEach(card => {
+      const cardCategory = card.querySelector('.pos-product-category')?.textContent.trim() || '';
+      
+      if (category === 'all') {
+        card.style.display = 'block';
+      } else {
+        card.style.display = cardCategory === category ? 'block' : 'none';
+      }
+    });
+    
+    console.log(`✓ Filtered by category: ${category}`);
+  } catch (error) {
+    console.error('❌ Filter category error:', error);
   }
 }
 

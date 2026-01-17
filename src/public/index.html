@@ -127,126 +127,106 @@
       <div class="pages-container flex-grow-1 overflow-auto">
         
         <!-- ============== POS PAGE ============== -->
-        <div id="pos-page" class="page">
-          <div class="container-fluid p-2" style="height: calc(100vh - 70px); display: flex; flex-direction: column;">
-            <!-- Page Header -->
-            <div class="mb-2">
-              <h2 class="mb-0" style="font-size: 1.5rem;">🛒 Penjualan</h2>
+        <div id="pos-page" class="page pos-page-modern">
+          <div class="container-fluid p-0" style="height: calc(100vh - 70px); display: flex; flex-direction: column; background-color: #f8f9fa;">
+            
+            <!-- Top Header Section -->
+            <div class="pos-header-section">
+              <!-- POS Title -->
+              <h1 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: #212529;">POS Kasir</h1>
+              
+              <!-- Search Bar -->
+              <div class="mb-3">
+                <div class="input-group" style="max-width: 100%;">
+                  <span class="input-group-text" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+                    <i class="bi bi-search"></i>
+                  </span>
+                  <input type="text" class="form-control" id="searchProduct" 
+                         placeholder="Cari produk..." onkeyup="searchProducts()"
+                         style="border: 1px solid #dee2e6; padding: 0.75rem 1rem;">
+                </div>
+              </div>
+              
+              <!-- Category Buttons -->
+              <div class="d-flex gap-2 overflow-x-auto" style="padding-bottom: 0.5rem;">
+                <button class="btn btn-dark btn-sm category-btn active" data-category="all" onclick="filterByCategory('all')">
+                  Semua
+                </button>
+                <button class="btn btn-outline-secondary btn-sm category-btn" data-category="Makanan" onclick="filterByCategory('Makanan')">
+                  Makanan
+                </button>
+                <button class="btn btn-outline-secondary btn-sm category-btn" data-category="Minuman" onclick="filterByCategory('Minuman')">
+                  Minuman
+                </button>
+                <button class="btn btn-outline-secondary btn-sm category-btn" data-category="Snack" onclick="filterByCategory('Snack')">
+                  Snack
+                </button>
+              </div>
             </div>
             
-            <!-- Alert Container untuk POS Page -->
-            <div id="posAlertContainer" class="mb-1"></div>
+            <!-- Alert Container -->
+            <div id="posAlertContainer" style="padding: 0 1.5rem; margin-top: 0.5rem;"></div>
             
-            <!-- Main POS Content -->
-            <div class="row g-2 flex-grow-1" style="min-height: 0;">
-              <!-- Products Section (Left Column) -->
-              <div class="col-lg-8" style="min-height: 0; display: flex; flex-direction: column;">
-                <div class="card border-0 shadow-sm d-flex flex-column" style="height: 100%;">
-                  <!-- Search Product Section -->
-                  <div class="card-header bg-white border-bottom p-2">
-                    <h6 class="mb-2 fw-bold small"><i class="bi bi-search me-2"></i>Cari Produk</h6>
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search"></i>
-                      </span>
-                      <input type="text" class="form-control border-start-0 form-control-sm" id="searchProduct" 
-                             placeholder="Cari nama produk, SKU, atau kategori..." onkeyup="searchProducts()">
-                    </div>
-                  </div>
-                  
-                  <!-- Products Grid -->
-                  <div class="card-body p-2 overflow-auto flex-grow-1" id="productsContainer" style="min-height: 0;">
-                    <div id="productsGrid" class="row g-3">
-                      <!-- Products will be loaded here -->
-                    </div>
+            <!-- Main Content Area -->
+            <div class="flex-grow-1 d-flex" style="min-height: 0; padding: 1.5rem; gap: 1.5rem;">
+              
+              <!-- Products Grid Section (Left) -->
+              <div class="flex-grow-1" style="min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+                <div id="productsContainer" class="overflow-auto flex-grow-1" style="min-height: 0;">
+                  <div id="productsGrid" class="row g-3" style="margin: 0;">
+                    <!-- Products will be loaded here as cards -->
                   </div>
                 </div>
               </div>
               
-              <!-- Shopping Cart Section (Right Column) -->
-              <div class="col-lg-4" style="min-height: 0; display: flex; flex-direction: column;">
-                <div class="card border-0 shadow-sm d-flex flex-column" style="height: 100%;">
-                  <!-- Cart Header -->
-                  <div class="card-header bg-primary text-white border-0 p-2">
-                    <h6 class="mb-0 fw-bold small">
-                      <i class="bi bi-bag-check me-2"></i> Keranjang Belanja
-                    </h6>
+              <!-- Shopping Cart Section (Right Sidebar) -->
+              <div style="width: 320px; display: flex; flex-direction: column; background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                
+                <!-- Cart Header -->
+                <div class="pos-cart-header">
+                  <h5 style="margin: 0; font-weight: 700; font-size: 1.1rem; color: #212529;">
+                    <i class="bi bi-bag me-2"></i> Keranjang
+                  </h5>
+                  <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
+                    <span id="cartItemCount">0</span> item
+                  </div>
+                </div>
+                
+                <!-- Cart Items List -->
+                <div id="cartItems" class="overflow-auto flex-grow-1" style="flex: 1; min-height: 200px; border-bottom: 1px solid #e9ecef;">
+                  <div class="text-center py-5">
+                    <i class="bi bi-bag-x" style="font-size: 2.5rem; color: #ccc;"></i>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">Keranjang kosong</p>
+                  </div>
+                </div>
+                
+                <!-- Calculation & Checkout -->
+                <div style="padding: 1.5rem; background-color: #f8f9fa;">
+                  
+                  <!-- Subtotal -->
+                  <div class="d-flex justify-content-between mb-2">
+                    <span style="color: #495057; font-size: 0.9rem; font-weight: 500;">Subtotal</span>
+                    <span id="subtotal" style="font-weight: 600; color: #212529;">Rp 0</span>
                   </div>
                   
-                  <!-- Cart Items & Calculation -->
-                  <div class="card-body p-2 flex-grow-1 overflow-hidden d-flex flex-column" style="min-height: 0;">
-                    <!-- Cart Items List -->
-                    <div id="cartItems" class="cart-items mb-1 overflow-auto" style="flex: 1; min-height: 0;">
-                      <div class="text-center py-5">
-                        <i class="bi bi-bag-x" style="font-size: 2.5rem; color: #ccc;"></i>
-                        <p class="text-muted mt-2 mb-0">Keranjang kosong</p>
-                      </div>
-                    </div>
-                    
-                    <!-- Separator -->
-                    <hr class="my-1">
-                    
-                    <!-- Calculation Details -->
-                    <div class="mb-1" style="font-size: 0.9rem;">
-                      <!-- Subtotal -->
-                      <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted small">Subtotal</span>
-                        <strong id="subtotal" class="subtotal-amount small">Rp 0</strong>
-                      </div>
-                      
-                      <!-- Total Amount -->
-                      <div class="alert alert-info mb-1 py-1 pos-total-alert">
-                        <div class="d-flex justify-content-between align-items-center">
-                          <span class="fw-bold small">Total</span>
-                          <strong id="total" class="total-amount small">Rp 0</strong>
-                        </div>
-                      </div>
-                      
-                      <!-- Payment Method Selection -->
-                      <div class="mb-1">
-                        <label for="paymentMethod" class="form-label small fw-bold mb-1">
-                          <i class="bi bi-credit-card me-1"></i> Metode Pembayaran
-                        </label>
-                        <select id="paymentMethod" class="form-select form-select-sm">
-                          <option>Tunai</option>
-                          <option>Kartu Debit</option>
-                          <option>Kartu Kredit</option>
-                          <option>Transfer</option>
-                        </select>
-                      </div>
-                      
-                      <!-- Cash Received Input -->
-                      <div class="mb-1">
-                        <label for="cashReceived" class="form-label small fw-bold mb-1">
-                          <i class="bi bi-wallet2 me-1"></i> Uang Diterima
-                        </label>
-                        <div class="input-group input-group-sm">
-                          <span class="input-group-text" style="font-size: 0.875rem;">Rp</span>
-                          <input type="text" id="cashReceived" class="form-control form-control-sm" 
-                                 placeholder="0" onchange="calculateChange()" autocomplete="off">
-                        </div>
-                      </div>
-                      
-                      <!-- Change Amount Display -->
-                      <div class="alert alert-success mb-0 py-1 pos-change-alert">
-                        <small class="text-muted d-block mb-1">Kembalian</small>
-                        <div class="small change-amount-text" id="changeAmount">Rp 0</div>
-                      </div>
+                  <!-- PPN Tax -->
+                  <div class="d-flex justify-content-between mb-3">
+                    <span style="color: #495057; font-size: 0.9rem; font-weight: 500;">PPN (10%)</span>
+                    <span id="taxAmount" style="font-weight: 600; color: #212529;">Rp 0</span>
+                  </div>
+                  
+                  <!-- Total -->
+                  <div style="padding: 1rem; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <div class="d-flex justify-content-between">
+                      <span style="font-weight: 600; color: #212529;">Total</span>
+                      <span id="total" style="font-weight: 700; font-size: 1.1rem; color: #212529;">Rp 0</span>
                     </div>
                   </div>
                   
-                  <!-- Action Buttons -->
-                  <div class="card-footer bg-light border-top p-2">
-                    <!-- Checkout Button -->
-                    <button class="btn btn-success w-100 mb-1 btn-sm fw-bold" onclick="checkoutTransaction()">
-                      <i class="bi bi-check-circle me-1"></i> Selesaikan
-                    </button>
-                    
-                    <!-- Cancel Button -->
-                    <button class="btn btn-outline-danger w-100 btn-sm fw-bold" onclick="clearCart()">
-                      <i class="bi bi-x-circle me-1"></i> Batalkan
-                    </button>
-                  </div>
+                  <!-- Checkout Button -->
+                  <button class="btn btn-dark w-100 fw-bold py-2" onclick="checkoutTransaction()" style="border-radius: 8px;">
+                    Checkout
+                  </button>
                 </div>
               </div>
             </div>
