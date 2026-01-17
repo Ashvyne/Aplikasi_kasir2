@@ -2732,6 +2732,55 @@ small, .small {
   color: #ff6b6b;
 }
 
+/* Payment Section Styling */
+.pos-payment-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #212529;
+  cursor: pointer;
+}
+
+.pos-payment-prefix {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  font-weight: 600;
+  color: #212529;
+}
+
+.pos-payment-input {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.pos-payment-input::placeholder {
+  color: #adb5bd;
+}
+
+/* Dark Mode for Payment Section */
+[data-theme="dark"] .pos-payment-label {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .pos-payment-prefix {
+  background-color: #3a3a3a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .pos-payment-input {
+  background-color: #3a3a3a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .pos-payment-input::placeholder {
+  color: #888;
+}
+
 /* Dark mode for calculation section */
 [data-theme="dark"] .pos-page-modern > div > div:last-child > div:nth-child(3) {
   background-color: #3a3a3a;

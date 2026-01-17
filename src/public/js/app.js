@@ -2032,9 +2032,10 @@ function clearCart() {
       cart = [];
       displayCart();
       updateTotal();
-      document.getElementById('discount').value = 0;
-      document.getElementById('cashReceived').value = '';
-      document.getElementById('changeAmount').textContent = 'Rp 0';
+      const cashReceivedElement = document.getElementById('cashReceived');
+      if (cashReceivedElement) cashReceivedElement.value = '';
+      const changeAmountElement = document.getElementById('changeAmount');
+      if (changeAmountElement) changeAmountElement.textContent = 'Rp 0';
       console.log('✓ Cart cleared');
     }
   });
@@ -2135,19 +2136,20 @@ async function checkoutTransaction() {
   try {
     // Cek apakah keranjang ada isi
     if (cart.length === 0) {
-      showAlertModal('Gagal!', 'Keranjang masih kosong', 'danger');
+      Swal.fire('Gagal!', 'Keranjang masih kosong', 'error');
       return;
     }
     
-    // Ambil data transaksi
-    const paymentMethod = document.getElementById('paymentMethod').value;
-    const total = getTotalAmount();
-    const receivedInput = document.getElementById('cashReceived').value.replace(/\D/g, '');
+    // Get cash received value
+    const cashReceivedElement = document.getElementById('cashReceived');
+    const receivedInput = (cashReceivedElement?.value || '0').replace(/\D/g, '');
     const received = parseInt(receivedInput) || 0;
     
-    // Validasi untuk pembayaran tunai
-    if (paymentMethod === 'Tunai' && received < total) {
-      showAlertModal('Gagal!', 'Uang diterima tidak cukup', 'danger');
+    const total = getTotalAmount();
+    
+    // Validasi pembayaran
+    if (received < total) {
+      Swal.fire('Peringatan!', 'Uang diterima tidak cukup', 'warning');
       return;
     }
     
@@ -2156,7 +2158,7 @@ async function checkoutTransaction() {
     const transactionData = {
       items: cart,
       total: total,
-      paymentMethod: paymentMethod,
+      paymentMethod: 'Tunai', // Default to cash since new design only has cash payment
       discount: 0,
       cash_received: received,
       change_amount: change
@@ -2252,7 +2254,8 @@ async function checkoutTransaction() {
       
       let stockMessage = allStockReduced ? 'Semua stok berhasil diperbarui ✓' : '⚠️ Beberapa item gagal update stok';
       
-      // Tampilkan success alert
+      // Tampilkan success alert dengan countdown auto-close
+      let countdownSeconds = 5;
       Swal.fire({
         title: 'Transaksi Berhasil! 🎉',
         html: `
@@ -2262,24 +2265,44 @@ async function checkoutTransaction() {
               <strong>Total:</strong> Rp ${formatPrice(total)}<br>
               <strong>Stok:</strong> ${stockMessage}
             </div>
+            <div id="countdownTimer" style="margin-top: 20px; padding: 12px; background-color: #e8f5e9; border-radius: 6px; font-weight: 600; color: #2e7d32;">
+              ⏱️ Ditutup otomatis dalam <span id="countdown">${countdownSeconds}</span> detik
+            </div>
           </div>
         `,
         icon: 'success',
         confirmButtonColor: '#28a745',
         confirmButtonText: '✓ OK',
         allowOutsideClick: false,
-        allowEscapeKey: false
+        allowEscapeKey: false,
+        didOpen: () => {
+          // Countdown timer
+          const countdownInterval = setInterval(() => {
+            countdownSeconds--;
+            const countdownEl = document.getElementById('countdown');
+            if (countdownEl) {
+              countdownEl.textContent = countdownSeconds;
+            }
+            
+            if (countdownSeconds <= 0) {
+              clearInterval(countdownInterval);
+              Swal.close();
+            }
+          }, 1000);
+        }
       }).then(() => {
         // Clear keranjang
         cart = [];
         displayCart();
         updateTotal();
-        const discountElement = document.getElementById('discount');
-        if (discountElement) {
-          discountElement.value = 0;
+        const cashReceivedElement = document.getElementById('cashReceived');
+        if (cashReceivedElement) {
+          cashReceivedElement.value = '';
         }
-        document.getElementById('cashReceived').value = '';
-        document.getElementById('changeAmount').textContent = 'Rp 0';
+        const changeAmountElement = document.getElementById('changeAmount');
+        if (changeAmountElement) {
+          changeAmountElement.textContent = 'Rp 0';
+        }
         
         // Reload semua data
         loadProducts();
