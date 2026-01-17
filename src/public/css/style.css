@@ -1,12 +1,12 @@
 /* ============== ROOT VARIABLES ============== */
 :root {
-  --primary: #0d6efd;
-  --primary-dark: #0a58ca;
-  --secondary: #6c757d;
-  --success: #198754;
+  --primary: #FFD700;
+  --primary-dark: #DAA520;
+  --secondary: #20B2AA;
+  --success: #20B2AA;
   --danger: #dc3545;
-  --warning: #ffc107;
-  --info: #0dcaf0;
+  --warning: #FFD700;
+  --info: #20B2AA;
   --light: #f8f9fa;
   --dark: #212529;
   --white: #ffffff;
@@ -26,7 +26,7 @@
   --bg-secondary: #ffffff;
   --bg-tertiary: #f0f4f8;
   --text-primary: #212529;
-  --text-secondary: #6c757d;
+  --text-secondary: #20B2AA;
   --text-muted: #999;
   --border-color: #e9ecef;
   --shadow-color: rgba(0, 0, 0, 0.075);
@@ -129,7 +129,7 @@ body {
 }
 
 .nav-item:hover {
-  background-color: rgba(13, 110, 253, 0.1);
+  background-color: rgba(32, 178, 170, 0.1);
   color: var(--primary);
   transform: translateX(4px);
 }
@@ -455,7 +455,7 @@ body {
 
 .product-card-btn:hover:not(:disabled) {
   transform: scale(1.02);
-  box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+  box-shadow: 0 5px 15px rgba(32, 178, 170, 0.4);
 }
 
 .product-card-btn:disabled {
@@ -477,7 +477,7 @@ body {
 
 .form-control:focus, .form-select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.2);
+  box-shadow: 0 0 0 0.15rem rgba(32, 178, 170, 0.2);
   background-color: #ffffff;
   color: #212529;
 }
@@ -516,7 +516,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+  box-shadow: 0 5px 15px rgba(32, 178, 170, 0.4);
   color: white;
 }
 
@@ -527,7 +527,7 @@ body {
 
 .btn-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
+  box-shadow: 0 5px 15px rgba(32, 178, 170, 0.4);
   color: white;
 }
 
@@ -566,7 +566,7 @@ body {
 
 /* Active states for each button type */
 .btn-outline-secondary.stock-filter-btn.active {
-  background: #6c757d;
+  background: #20B2AA;
   border-color: #6c757d;
 }
 
@@ -582,8 +582,8 @@ body {
 }
 
 .btn-outline-success.stock-filter-btn.active {
-  background: #198754;
-  border-color: #198754;
+  background: #20B2AA;
+  border-color: #20B2AA;
 }
 
 .stock-filter-btn.active:before {
@@ -845,9 +845,9 @@ body {
 }
 
 .badge-success {
-  background-color: #198754;
+  background-color: #20B2AA;
   color: white;
-  box-shadow: 0 2px 4px rgba(25, 135, 84, 0.3);
+  box-shadow: 0 2px 4px rgba(32, 178, 170, 0.3);
 }
 
 .badge-warning {
@@ -881,7 +881,7 @@ body {
 }
 
 .table-btn-primary {
-  background: rgba(13, 110, 253, 0.1);
+  background: rgba(32, 178, 170, 0.1);
   color: var(--primary);
 }
 
@@ -1039,7 +1039,7 @@ body {
 
 .dark-mode-toggle:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 3px rgba(32, 178, 170, 0.25);
 }
 
 .dark-mode-toggle i {
@@ -1073,7 +1073,7 @@ body {
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25);
 }
 
 /* Bootstrap Form Controls */
@@ -1087,7 +1087,7 @@ body {
   background-color: #3a3a3a;
   color: #ffffff;
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25);
 }
 
 [data-theme="dark"] .form-control::placeholder {
@@ -1106,7 +1106,7 @@ body {
   background-color: #3a3a3a;
   color: #ffffff;
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25);
 }
 
 [data-theme="dark"] .form-select option {
@@ -1265,9 +1265,9 @@ body {
 }
 
 [data-theme="dark"] .badge-success {
-  background-color: #198754;
+  background-color: #20B2AA;
   color: #ffffff;
-  border: 1px solid rgba(25, 135, 84, 0.4);
+  border: 1px solid rgba(32, 178, 170, 0.4);
 }
 
 [data-theme="dark"] .badge-warning {
@@ -1338,7 +1338,7 @@ body {
 }
 
 [data-theme="dark"] .alert-success {
-  background-color: rgba(25, 135, 84, 0.25);
+  background-color: rgba(32, 178, 170, 0.25);
   color: #9cff9a;
   border-left-color: #51cf66;
   border: 1px solid rgba(81, 207, 102, 0.3);
@@ -1407,12 +1407,12 @@ body {
 }
 
 #imagePreviewContainer:hover {
-  background-color: rgba(13, 110, 253, 0.05);
-  border-color: #0d6efd;
+  background-color: rgba(32, 178, 170, 0.05);
+  border-color: #20B2AA;
 }
 
 [data-theme="dark"] #imagePreviewContainer:hover {
-  background-color: rgba(13, 110, 253, 0.1);
+  background-color: rgba(32, 178, 170, 0.1);
   border-color: #4dd9ff;
 }
 
@@ -1583,7 +1583,7 @@ body {
 /* Light Mode - Code/Invoice Styling */
 .swal2-html-container code {
   background-color: #e9ecef;
-  color: #0d6efd;
+  color: #FFD700;
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid #dee2e6;
@@ -1593,7 +1593,7 @@ body {
 }
 
 [data-theme="dark"] .swal2-html-container .badge {
-  background-color: #198754 !important;
+  background-color: #20B2AA !important;
   color: #ffffff !important;
   padding: 4px 12px;
 }
@@ -1663,7 +1663,7 @@ body {
 }
 
 [data-theme="dark"] .swal2-html-container .calc-row.total {
-  background-color: rgba(13, 110, 253, 0.2) !important;
+  background-color: rgba(32, 178, 170, 0.2) !important;
   border: 1px solid rgba(77, 217, 255, 0.2) !important;
   color: #4dd9ff !important;
 }
@@ -1812,7 +1812,7 @@ body {
 }
 
 .pos-change-alert {
-  background-color: rgba(25, 135, 84, 0.15);
+  background-color: rgba(32, 178, 170, 0.15);
   border-left: 4px solid #51cf66;
 }
 
@@ -1827,7 +1827,7 @@ body {
 }
 
 [data-theme="dark"] .pos-change-alert {
-  background-color: rgba(25, 135, 84, 0.25);
+  background-color: rgba(32, 178, 170, 0.25);
 }
 
 /* ============== SWAL CUSTOM ============== */
@@ -1849,14 +1849,14 @@ body {
 .swal2-styled.swal2-confirm {
   border-radius: 8px;
   padding: 14px 36px;
-  background-color: #0d6efd;
+  background-color: #20B2AA;
   color: white;
   font-size: 1.05rem;
   font-weight: 600;
 }
 
 .swal2-styled.swal2-confirm:hover {
-  background-color: #0a58ca;
+  background-color: #008B8B;
 }
 
 .swal2-styled.swal2-cancel {
@@ -2066,12 +2066,12 @@ small, .small {
 }
 
 .product-checkbox:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+  background-color: #20B2AA;
+  border-color: #20B2AA;
 }
 
 .product-checkbox:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(32, 178, 170, 0.25);
 }
 
 /* Selected row highlight */
@@ -2080,7 +2080,7 @@ small, .small {
 }
 
 #productsTableBody tr[data-selected="true"] {
-  background-color: rgba(13, 110, 253, 0.1) !important;
+  background-color: rgba(32, 178, 170, 0.1) !important;
 }
 
 /* Selection toolbar buttons */
@@ -2108,7 +2108,7 @@ small, .small {
   font-weight: 700;
   padding: 0.35rem 0.6rem !important;
   font-size: 0.8rem;
-  box-shadow: 0 1px 4px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 1px 4px rgba(32, 178, 170, 0.3);
 }
 
 #productSelectionToolbar .text-muted {
@@ -2118,12 +2118,12 @@ small, .small {
 
 /* Dark mode adjustments for selection */
 [data-theme="dark"] #productSelectionToolbar {
-  background-color: rgba(13, 110, 253, 0.15) !important;
-  border-left-color: #0d6efd !important;
+  background-color: rgba(32, 178, 170, 0.15) !important;
+  border-left-color: #20B2AA !important;
 }
 
 [data-theme="dark"] #productsTableBody tr:has(.product-checkbox:checked) {
-  background-color: rgba(13, 110, 253, 0.15) !important;
+  background-color: rgba(32, 178, 170, 0.15) !important;
 }
 
 /* Select all checkbox */
@@ -2133,8 +2133,8 @@ small, .small {
 }
 
 #selectAllProducts:indeterminate {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+  background-color: #20B2AA;
+  border-color: #20B2AA;
 }
 
 /* ============== APEXCHARTS DARK MODE ============== */
@@ -2232,7 +2232,7 @@ small, .small {
 
 #imagePreviewContainer:hover {
   border-color: var(--primary);
-  background-color: rgba(13, 110, 253, 0.05);
+  background-color: rgba(32, 178, 170, 0.05);
 }
 
 #imagePreviewContainer i {
@@ -2251,7 +2251,7 @@ small, .small {
 
 [data-theme="dark"] #imagePreviewContainer:hover {
   border-color: var(--primary);
-  background-color: rgba(13, 110, 253, 0.1);
+  background-color: rgba(32, 178, 170, 0.1);
 }
 
 /* ============== STOCK IN PRODUCT CARDS ============== */
@@ -2268,7 +2268,7 @@ small, .small {
 
 .product-card.border-success {
   border-color: var(--success) !important;
-  background-color: rgba(25, 135, 84, 0.05) !important;
+  background-color: rgba(32, 178, 170, 0.05) !important;
 }
 
 [data-theme="dark"] .product-card {
@@ -2282,7 +2282,7 @@ small, .small {
 
 [data-theme="dark"] .product-card.border-success {
   border-color: var(--success) !important;
-  background-color: rgba(25, 135, 84, 0.2) !important;
+  background-color: rgba(32, 178, 170, 0.2) !important;
 }
 
 .product-card .card-body {

@@ -8,6 +8,9 @@ let cart = [];
 // Menyimpan data transaksi dari API
 let transactions = [];
 
+// Menyimpan profit data (hanya tracking, tidak ditampilkan di UI kasir)
+let transactionProfit = 0;
+
 // Flag untuk menandakan sedang loading data
 let isLoading = false;
 
@@ -2131,6 +2134,102 @@ function editItemDiscount(productId) {
   }
 }
 
+/**
+ * ============ PROFIT CALCULATION SYSTEM ============
+ * 
+ * Struktur Data Profit:
+ * - Harga Awal (Modal) = buy_price dari database
+ * - Harga Jual = sell_price dari database
+ * - Rumus Profit = (Harga Jual - Harga Awal) × Qty
+ * 
+ * Contoh Perhitungan:
+ * Produk: Coba asjah
+ * - Buy Price (Modal): Rp 60.000
+ * - Sell Price: Rp 100.000
+ * - Quantity: 4
+ * - Profit per item: Rp 100.000 - Rp 60.000 = Rp 40.000
+ * - Total Profit: Rp 40.000 × 4 = Rp 160.000
+ * 
+ * Produk: Es Teh Manis
+ * - Buy Price (Modal): Rp 6.000
+ * - Sell Price: Rp 10.000
+ * - Quantity: 9
+ * - Profit per item: Rp 10.000 - Rp 6.000 = Rp 4.000
+ * - Total Profit: Rp 4.000 × 9 = Rp 36.000
+ * 
+ * Total Profit Transaksi = Rp 160.000 + Rp 36.000 = Rp 196.000
+ */
+
+// Function untuk hitung profit per item
+function calculateItemProfit(item) {
+  try {
+    // Cari produk di database untuk mendapat buy_price
+    const product = products.find(p => p.id === item.id);
+    if (!product) {
+      console.warn(`⚠️ Produk ${item.id} tidak ditemukan`);
+      return 0;
+    }
+    
+    const buyPrice = product.buy_price || 0;
+    const sellPrice = item.price || 0;
+    const profitPerUnit = Math.max(0, sellPrice - buyPrice);
+    const totalProfit = profitPerUnit * item.quantity;
+    
+    return totalProfit;
+  } catch (error) {
+    console.error('❌ Profit calculation error:', error);
+    return 0;
+  }
+}
+
+// Function untuk hitung total profit transaksi
+function calculateTotalProfit() {
+  try {
+    let totalProfit = 0;
+    
+    cart.forEach(item => {
+      const itemProfit = calculateItemProfit(item);
+      totalProfit += itemProfit;
+    });
+    
+    transactionProfit = totalProfit;
+    console.log(`💰 Total Transaction Profit: Rp ${formatPrice(totalProfit)}`);
+    return totalProfit;
+  } catch (error) {
+    console.error('❌ Total profit calculation error:', error);
+    return 0;
+  }
+}
+
+// Function untuk log profit details (hanya untuk backend/analytics)
+function logProfitDetails() {
+  try {
+    console.log('📊 ===== PROFIT DETAILS =====');
+    
+    cart.forEach((item, index) => {
+      const product = products.find(p => p.id === item.id);
+      if (product) {
+        const buyPrice = product.buy_price || 0;
+        const sellPrice = item.price || 0;
+        const profitPerUnit = Math.max(0, sellPrice - buyPrice);
+        const totalProfit = profitPerUnit * item.quantity;
+        
+        console.log(`${index + 1}. ${item.name}`);
+        console.log(`   Buy Price: Rp ${formatPrice(buyPrice)}`);
+        console.log(`   Sell Price: Rp ${formatPrice(sellPrice)}`);
+        console.log(`   Quantity: ${item.quantity}`);
+        console.log(`   Profit per Unit: Rp ${formatPrice(profitPerUnit)}`);
+        console.log(`   Total Profit: Rp ${formatPrice(totalProfit)}`);
+      }
+    });
+    
+    console.log(`💰 Transaction Profit: Rp ${formatPrice(transactionProfit)}`);
+    console.log('========================');
+  } catch (error) {
+    console.error('❌ Error logging profit details:', error);
+  }
+}
+
 // Function untuk checkout/selesaikan transaksi
 async function checkoutTransaction() {
   try {
@@ -2153,6 +2252,10 @@ async function checkoutTransaction() {
       return;
     }
     
+    // Calculate profit for this transaction
+    calculateTotalProfit();
+    logProfitDetails();
+    
     // Buat object transaksi
     const change = Math.max(0, received - total);
     const transactionData = {
@@ -2161,7 +2264,8 @@ async function checkoutTransaction() {
       paymentMethod: 'Tunai', // Default to cash since new design only has cash payment
       discount: 0,
       cash_received: received,
-      change_amount: change
+      change_amount: change,
+      profit: transactionProfit // Include profit in transaction data for backend processing
     };
     
     console.log('📝 Transaction Data:', JSON.stringify(transactionData, null, 2));
