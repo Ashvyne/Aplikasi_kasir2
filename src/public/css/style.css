@@ -494,6 +494,44 @@ body {
   font-size: 0.85rem;
 }
 
+/* ============== CHECKBOXES & RADIO BUTTONS ============== */
+.form-check-input {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  accent-color: #20B2AA;
+}
+
+.form-check-input:checked {
+  background-color: #20B2AA;
+  border-color: #20B2AA;
+}
+
+.form-check-input:focus {
+  background-color: #ffffff;
+  border-color: #20B2AA;
+  box-shadow: 0 0 0 0.25rem rgba(32, 178, 170, 0.25);
+}
+
+.form-check-input:disabled {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  cursor: not-allowed;
+}
+
+.form-check-label {
+  color: #212529;
+  cursor: pointer;
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #20B2AA;
+}
+
 /* ============== BUTTONS ============== */
 .btn {
   border-radius: 8px;
@@ -2747,6 +2785,10 @@ small, .small {
   border: 1px solid #dee2e6;
   font-weight: 600;
   color: #212529;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pos-payment-input {
@@ -2766,19 +2808,80 @@ small, .small {
 }
 
 [data-theme="dark"] .pos-payment-prefix {
-  background-color: #3a3a3a;
-  border-color: #404040;
-  color: #e0e0e0;
+  background-color: #404040 !important;
+  border-color: #505050 !important;
+  color: #e0e0e0 !important;
+  font-weight: 600;
 }
 
 [data-theme="dark"] .pos-payment-input {
-  background-color: #3a3a3a;
-  border-color: #404040;
-  color: #e0e0e0;
+  background-color: #3a3a3a !important;
+  border-color: #505050 !important;
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .pos-payment-input:focus {
+  background-color: #3a3a3a !important;
+  border-color: #20B2AA !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25) !important;
 }
 
 [data-theme="dark"] .pos-payment-input::placeholder {
   color: #888;
+}
+
+/* Dark mode styling for change display */
+[data-theme="dark"] .pos-page-modern > div > div:last-child > div[style*="background-color: #e8f5e9"] {
+  background-color: #1a3a3a !important;
+  border: 1px solid #2b5f5f !important;
+}
+
+[data-theme="dark"] .pos-page-modern > div > div:last-child > div[style*="background-color: #e8f5e9"] small {
+  color: #48D1CC !important;
+}
+
+[data-theme="dark"] .pos-page-modern > div > div:last-child > div[style*="background-color: #e8f5e9"] #changeAmount {
+  color: #4dd9ff !important;
+}
+
+/* Dark mode for checkboxes and form-check elements */
+[data-theme="dark"] .form-check-input {
+  background-color: #3a3a3a;
+  border-color: #505050;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .form-check-input:checked {
+  background-color: #20B2AA;
+  border-color: #20B2AA;
+}
+
+[data-theme="dark"] .form-check-input:focus {
+  background-color: #3a3a3a;
+  border-color: #20B2AA;
+  box-shadow: 0 0 0 0.25rem rgba(32, 178, 170, 0.25);
+}
+
+[data-theme="dark"] .form-check-input:disabled {
+  background-color: #2d2d2d;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .form-check-label {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] input[type="checkbox"] {
+  background-color: #3a3a3a;
+  border-color: #505050;
+  accent-color: #20B2AA;
+}
+
+[data-theme="dark"] input[type="radio"] {
+  background-color: #3a3a3a;
+  border-color: #505050;
+  accent-color: #20B2AA;
 }
 
 /* Dark mode for calculation section */
