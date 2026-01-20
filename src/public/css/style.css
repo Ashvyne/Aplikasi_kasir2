@@ -2457,7 +2457,7 @@ small, .small {
 .pos-product-btn {
   width: 100%;
   padding: 0.75rem;
-  background-color: #212529;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 6px;
@@ -2472,7 +2472,8 @@ small, .small {
 }
 
 .pos-product-btn:hover {
-  background-color: #000;
+  background-color: #0056b3;
+  box-shadow: 0 2px 4px rgba(0, 86, 179, 0.2);
 }
 
 .pos-product-btn:active {
@@ -2691,12 +2692,13 @@ small, .small {
 }
 
 [data-theme="dark"] .pos-product-btn {
-  background-color: #e0e0e0;
-  color: #1a1a1a;
+  background-color: #0d6efd;
+  color: white;
 }
 
 [data-theme="dark"] .pos-product-btn:hover {
-  background-color: #ffffff;
+  background-color: #0a58ca;
+  box-shadow: 0 2px 4px rgba(10, 88, 202, 0.3);
 }
 
 /* Dark mode for cart sidebar */
@@ -2718,12 +2720,16 @@ small, .small {
 }
 
 [data-theme="dark"] .pos-cart-item {
-  border-bottom-color: #404040;
+  border-bottom-color: #505050;
   background-color: #2d2d2d;
 }
 
 [data-theme="dark"] .pos-cart-item:hover {
   background-color: #3a3a3a;
+}
+
+[data-theme="dark"] .pos-cart-items-container {
+  border-bottom-color: #505050 !important;
 }
 
 [data-theme="dark"] .pos-cart-item-name {
@@ -2835,7 +2841,7 @@ small, .small {
 
 /* Dark Mode for Payment Section */
 [data-theme="dark"] .pos-payment-label {
-  color: #000000;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .pos-payment-prefix {

@@ -682,6 +682,74 @@ html, body {
 }
 
 /* Dark mode scrollbar */
+/* Dark mode for calculation section */
+[data-theme="dark"] .pos-calc-section {
+  background-color: #2d2d2d !important;
+}
+
+[data-theme="dark"] .pos-calc-label {
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .pos-calc-value {
+  color: #e0e0e0 !important;
+}
+
+/* Dark mode for total section */
+[data-theme="dark"] .pos-total-section {
+  background-color: #3a3a3a !important;
+}
+
+/* Checkout button - Yellow-Green combination */
+.pos-checkout-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #8bc34a 100%);
+  color: #1a1a1a;
+  border: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.pos-checkout-btn:hover {
+  background: linear-gradient(135deg, #c9a834 0%, #7cb342 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  color: #1a1a1a;
+}
+
+.pos-checkout-btn:active {
+  transform: translateY(0);
+}
+
+/* Dark mode for checkout button */
+[data-theme="dark"] .pos-checkout-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #8bc34a 100%);
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .pos-checkout-btn:hover {
+  background: linear-gradient(135deg, #c9a834 0%, #7cb342 100%);
+  color: #1a1a1a;
+}
+
+/* Dark mode for cart totals */
+[data-theme="dark"] .pos-total-label,
+[data-theme="dark"] .pos-total-value {
+  color: #e0e0e0 !important;
+}
+
+/* Dark mode for change display section */
+[data-theme="dark"] .pos-change-display {
+  background-color: #1b4620 !important;
+}
+
+[data-theme="dark"] .pos-change-label {
+  color: #4caf50 !important;
+}
+
+[data-theme="dark"] .pos-change-amount {
+  color: #81c784 !important;
+}
+
 [data-theme="dark"] ::-webkit-scrollbar-track {
   background: #2d2d2d;
 }

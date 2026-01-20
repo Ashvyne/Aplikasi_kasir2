@@ -183,7 +183,7 @@
                 </div>
                 
                 <!-- Cart Items List -->
-                <div id="cartItems" class="overflow-auto flex-grow-1" style="flex: 1; min-height: 200px; border-bottom: 1px solid #e9ecef;">
+                <div id="cartItems" class="overflow-auto flex-grow-1 pos-cart-items-container" style="flex: 1; min-height: 200px; border-bottom: 1px solid #e9ecef;">
                   <div class="text-center py-5">
                     <i class="bi bi-bag-x" style="font-size: 2.5rem; color: #ccc;"></i>
                     <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">Keranjang kosong</p>
@@ -191,25 +191,25 @@
                 </div>
                 
                 <!-- Calculation & Checkout -->
-                <div style="padding: 1.5rem; background-color: #f8f9fa;">
+                <div class="pos-calc-section" style="padding: 1.5rem; background-color: #f8f9fa;">
                   
                   <!-- Subtotal -->
                   <div class="d-flex justify-content-between mb-2">
-                    <span style="color: #495057; font-size: 0.9rem; font-weight: 500;">Subtotal</span>
-                    <span id="subtotal" style="font-weight: 600; color: #212529;">Rp 0</span>
+                    <span class="pos-calc-label" style="color: #495057; font-size: 0.9rem; font-weight: 500;">Subtotal</span>
+                    <span id="subtotal" class="pos-calc-value" style="font-weight: 600; color: #212529;">Rp 0</span>
                   </div>
                   
                   <!-- PPN Tax -->
                   <div class="d-flex justify-content-between mb-3">
-                    <span style="color: #495057; font-size: 0.9rem; font-weight: 500;">PPN (10%)</span>
-                    <span id="taxAmount" style="font-weight: 600; color: #212529;">Rp 0</span>
+                    <span class="pos-calc-label" style="color: #495057; font-size: 0.9rem; font-weight: 500;">PPN (10%)</span>
+                    <span id="taxAmount" class="pos-calc-value" style="font-weight: 600; color: #212529;">Rp 0</span>
                   </div>
                   
                   <!-- Total -->
-                  <div style="padding: 1rem; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 1.5rem;">
+                  <div class="pos-total-section" style="padding: 1rem; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 1.5rem;">
                     <div class="d-flex justify-content-between">
-                      <span style="font-weight: 600; color: #212529;">Total</span>
-                      <span id="total" style="font-weight: 700; font-size: 1.1rem; color: #212529;">Rp 0</span>
+                      <span style="font-weight: 600; color: #212529;" class="pos-total-label">Total</span>
+                      <span id="total" style="font-weight: 700; font-size: 1.1rem; color: #212529;" class="pos-total-value">Rp 0</span>
                     </div>
                   </div>
                   
@@ -226,13 +226,13 @@
                   </div>
                   
                   <!-- Change Display -->
-                  <div style="padding: 1rem; background-color: #e8f5e9; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <small style="color: #2e7d32; display: block; margin-bottom: 0.5rem; font-weight: 500;">Kembalian</small>
-                    <div id="changeAmount" style="font-weight: 700; font-size: 1rem; color: #1b5e20;">Rp 0</div>
+                  <div class="pos-change-display" style="padding: 1rem; background-color: #e8f5e9; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <small class="pos-change-label" style="color: #2e7d32; display: block; margin-bottom: 0.5rem; font-weight: 500;">Kembalian</small>
+                    <div id="changeAmount" class="pos-change-amount" style="font-weight: 700; font-size: 1rem; color: #1b5e20;">Rp 0</div>
                   </div>
                   
                   <!-- Checkout Button -->
-                  <button class="btn btn-dark w-100 fw-bold py-2" onclick="checkoutTransaction()" style="border-radius: 8px;">
+                  <button class="btn pos-checkout-btn w-100 fw-bold py-2" onclick="checkoutTransaction()" style="border-radius: 8px;">
                     Checkout
                   </button>
                 </div>
