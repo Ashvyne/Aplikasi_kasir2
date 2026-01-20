@@ -964,6 +964,7 @@ function displayProducts() {
         <div class="pos-product-info">
           <div class="pos-product-category">${categoryName}</div>
           <div class="pos-product-name" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</div>
+          <div class="pos-product-sku" style="font-size: 0.75rem; color: #6c757d; margin-bottom: 0.25rem;">SKU: ${escapeHtml(product.sku || 'N/A')}</div>
           <div class="pos-product-price">Rp ${formatPrice(product.sell_price || product.price || 0)}</div>
           <div class="pos-product-stock">Stok: ${product.stock}</div>
           <button class="pos-product-btn" onclick="addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''} style="${product.stock === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
@@ -1884,7 +1885,7 @@ function updateCartQuantity(productId, quantity) {
         updateTotal();
       } else {
         // Jika melebihi stok, tampilkan alert
-        alert('⚠️ Stok tidak cukup');
+        showAlertModal('Peringatan!', 'Stok tidak cukup', 'warning');
       }
     }
   } catch (error) {
@@ -1925,6 +1926,9 @@ function displayCart() {
           ${itemDiscount > 0 ? `<div class="pos-cart-item-discount" style="color: #dc3545; font-size: 0.8rem;">Diskon: -Rp ${formatPrice(itemDiscount)}</div>` : ''}
         </div>
         <div class="pos-cart-item-actions">
+          <button class="pos-cart-item-add-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})" title="Tambah jumlah">
+            <i class="bi bi-plus-lg"></i>
+          </button>
           <button class="pos-cart-item-discount-btn" onclick="openDiscountModal(${item.id}, ${itemSubtotal})" title="Edit diskon">
             <i class="bi bi-percent"></i>
           </button>
@@ -2981,6 +2985,60 @@ async function exportProductsExcel() {
 
 // ============ HELPERS ============
 
+// Function untuk handle barcode/SKU entry dengan Enter key
+// Barcode scanner menekan Enter setelah mengirim barcode
+function handleBarcodeEntry(event) {
+  try {
+    // Jika user menekan Enter
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      
+      const searchInput = document.getElementById('searchProduct');
+      const barcode = searchInput.value.trim();
+      
+      if (!barcode) {
+        return;
+      }
+      
+      // Cari produk berdasarkan SKU (barcode)
+      // SKU biasanya unik, jadi cari yang cocok dengan SKU
+      const product = products.find(p => 
+        p.sku && p.sku.toLowerCase() === barcode.toLowerCase()
+      );
+      
+      if (product) {
+        // Produk ditemukan, tambahkan ke keranjang
+        addToCart(product.id);
+        
+        // Tampilkan notifikasi sukses
+        showAlertModal('Sukses!', `${product.name} ditambahkan ke keranjang`, 'success');
+        
+        // Clear search input untuk siap scan produk berikutnya
+        searchInput.value = '';
+        
+        // Kembalikan fokus ke search input
+        searchInput.focus();
+        
+        console.log(`✓ Barcode ditemukan dan ditambahkan: ${barcode}`);
+      } else {
+        // Produk tidak ditemukan
+        showAlertModal('Gagal!', `Produk dengan barcode/SKU "${barcode}" tidak ditemukan`, 'danger');
+        
+        // Highlight search input untuk menunjukkan error
+        searchInput.style.borderColor = '#dc3545';
+        setTimeout(() => {
+          searchInput.style.borderColor = '#dee2e6';
+        }, 2000);
+        
+        console.warn(`✗ Barcode tidak ditemukan: ${barcode}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Barcode entry error:', error);
+    showAlertModal('Error!', 'Terjadi kesalahan saat memproses barcode', 'danger');
+  }
+}
+
 // Function untuk search/filter produk di POS (product cards)
 function searchProducts() {
   try {
@@ -2989,7 +3047,10 @@ function searchProducts() {
     
     cards.forEach(card => {
       const name = card.querySelector('.pos-product-name')?.textContent.toLowerCase() || '';
-      card.style.display = name.includes(keyword) ? 'block' : 'none';
+      const sku = card.querySelector('.pos-product-sku')?.textContent.toLowerCase() || '';
+      // Search by both name and SKU
+      const matches = name.includes(keyword) || sku.includes(keyword);
+      card.style.display = matches ? 'block' : 'none';
     });
   } catch (error) {
     console.error('❌ Search error:', error);
