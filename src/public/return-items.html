@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kembalikan Barang</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-content {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .grace-period-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .condition-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .condition-option input[type="radio"] {
+            display: none;
+        }
+
+        .condition-label {
+            display: block;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .condition-option input[type="radio"]:checked + .condition-label {
+            border-color: #667eea;
+            background: #f5f7ff;
+            color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: #f9f9f9;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #721c24;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #155724;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            font-size: 18px;
+            font-weight: 600;
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .success-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .countdown {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+            .modal {
+                max-height: 100vh;
+                max-width: 100%;
+                border-radius: 0;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📦 Kembalikan Barang</h2>
+                <button class="close-btn" onclick="closeModal()" title="Tutup">×</button>
+            </div>
+
+            <div class="modal-content">
+                <div id="alert-container"></div>
+
+                <!-- Form State -->
+                <div id="form-state">
+                    <div class="grace-period-info">
+                        ℹ️ Barang akan masuk <strong>masa tenggang selama 1 hari</strong> untuk pemeriksaan oleh staff.
+                    </div>
+
+                    <div class="form-group">
+                        <label>Kondisi Barang</label>
+                        <div class="condition-options">
+                            <div class="condition-option">
+                                <input type="radio" name="condition" value="Baik" id="cond-baik" checked>
+                                <label for="cond-baik" class="condition-label">✓ Baik</label>
+                            </div>
+                            <div class="condition-option">
+                                <input type="radio" name="condition" value="Rusak Ringan" id="cond-ringan">
+                                <label for="cond-ringan" class="condition-label">⚠️ Rusak Ringan</label>
+                            </div>
+                            <div class="condition-option">
+                                <input type="radio" name="condition" value="Rusak Berat" id="cond-berat">
+                                <label for="cond-berat" class="condition-label">❌ Rusak Berat</label>
+                            </div>
+                            <div class="condition-option">
+                                <input type="radio" name="condition" value="Hilang" id="cond-hilang">
+                                <label for="cond-hilang" class="condition-label">🔴 Hilang</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="damage-notes">Catatan Kerusakan (Opsional)</label>
+                        <textarea id="damage-notes" placeholder="Deskripsikan kondisi barang..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="damage-cost">Estimasi Biaya (Rp)</label>
+                            <input type="number" id="damage-cost" placeholder="0" min="0" step="1000">
+                        </div>
+                        <div class="form-group">
+                            <label for="grace-period">Masa Tenggang (Hari)</label>
+                            <input type="number" id="grace-period" value="1" min="1" max="7" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success State -->
+                <div id="success-state" class="hidden">
+                    <div class="success-state">
+                        <div class="success-icon">✅</div>
+                        <div class="success-message">Pengembalian Berhasil!</div>
+                        <div class="success-subtitle">Barang masuk masa tenggang 1 hari untuk pemeriksaan.</div>
+                        <div class="countdown" id="countdown">5</div>
+                        <p style="font-size: 12px; color: #999;">Halaman akan ditutup otomatis...</p>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading-state" class="hidden">
+                    <div class="spinner"></div>
+                    <p style="text-align: center; color: #666;">Memproses pengembalian...</p>
+                </div>
+            </div>
+
+            <div class="modal-footer" id="footer-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn btn-submit" onclick="submitReturn()" id="submit-btn">Kirim Pengembalian</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiBaseUrl = '/api';
+        let selectedLoanId = null;
+
+        function getLoanIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return parseInt(urlParams.get('id'));
+        }
+
+        async function loadLoanData() {
+            selectedLoanId = getLoanIdFromUrl();
+            if (!selectedLoanId) {
+                showAlert('ID barang tidak ditemukan', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showAlert('Anda harus login terlebih dahulu', 'error');
+                setTimeout(() => closeModal(), 2000);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/loans/${selectedLoanId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Gagal memuat data');
+                const data = await response.json();
+                const loan = data.loan;
+
+                const header = document.querySelector('.modal-header h2');
+                header.textContent = `📦 Kembalikan: ${loan.equipment.name} (${loan.quantity} unit)`;
+            } catch (error) {
+                showAlert(`❌ ${error.message}`, 'error');
+            }
+        }
+
+        async function submitReturn() {
+            const condition = document.querySelector('input[name="condition"]:checked')?.value || 'Baik';
+            const damageNotes = document.getElementById('damage-notes').value;
+            const damageCost = parseInt(document.getElementById('damage-cost').value) || 0;
+            const gracePeriod = parseInt(document.getElementById('grace-period').value) || 1;
+
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('form-state').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${apiBaseUrl}/loans/${selectedLoanId}/submit-return`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        return_condition: condition,
+                        damage_notes: damageNotes || null,
+                        damage_cost: damageCost,
+                        grace_period_days: gracePeriod
+                    })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.message || 'Gagal mengembalikan barang');
+                }
+
+                // Show success state
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('success-state').classList.remove('hidden');
+                document.getElementById('footer-actions').classList.add('hidden');
+
+                // Countdown 5 seconds
+                let countdown = 5;
+                const countdownEl = document.getElementById('countdown');
+                const interval = setInterval(() => {
+                    countdown--;
+                    countdownEl.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(interval);
+                        closeModal();
+                    }
+                }, 1000);
+            } catch (error) {
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('form-state').classList.remove('hidden');
+                showAlert(error.message, 'error');
+            }
+        }
+
+        function closeModal() {
+            const referrer = document.referrer;
+            if (referrer && referrer.includes('localhost') && referrer.includes('dashboard')) {
+                window.location.href = referrer;
+            } else {
+                window.location.href = '/dashboard-borrower.html';
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(alert);
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        loadLoanData();
+    </script>
+</body>
+</html>

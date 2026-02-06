@@ -29,19 +29,102 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
-// Middleware untuk check role - admin_barang dapat akses
+// Middleware untuk check role - Admin only
+exports.requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Hanya Admin yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Petugas only
+exports.requirePetugas = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'petugas') {
+    return res.status(403).json({ error: 'Hanya Petugas yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Peminjam only
+exports.requirePeminjam = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'peminjam') {
+    return res.status(403).json({ error: 'Hanya Peminjam yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Admin atau Petugas
+exports.requireAdminOrPetugas = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin' && req.user.role !== 'petugas') {
+    return res.status(403).json({ error: 'Hanya Admin atau Petugas yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Staff only
+exports.requireStaff = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'staff') {
+    return res.status(403).json({ error: 'Hanya Staff yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Admin, Petugas, atau Staff
+exports.requireAdminOrStaff = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin' && req.user.role !== 'staff') {
+    return res.status(403).json({ error: 'Hanya Admin atau Staff yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Admin, Petugas, Staff
+exports.requireAdminOrPetugasOrStaff = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin' && req.user.role !== 'petugas' && req.user.role !== 'staff') {
+    return res.status(403).json({ error: 'Hanya Admin, Petugas, atau Staff yang dapat mengakses' });
+  }
+  next();
+};
+
+// Legacy middleware untuk backward compatibility
 exports.requireAdminBarang = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   
-  if (req.user.role !== 'admin_barang') {
+  if (req.user.role !== 'admin' && req.user.role !== 'manager' && req.user.role !== 'admin_barang') {
     return res.status(403).json({ error: 'Anda tidak memiliki akses ke fitur ini. Hanya Admin Barang yang dapat mengakses.' });
   }
   next();
 };
 
-// Middleware untuk check role - admin_kasir dapat akses
 exports.requireAdminKasir = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });

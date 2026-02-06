@@ -1,196 +1,253 @@
-const { db } = require('../config/database');
+const User = require('../models/User');
+const Borrower = require('../models/Borrower');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 
-// Register
-exports.register = async (req, res) => {
-  const { username, email, password, role } = req.body;
-  
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Data tidak lengkap' });
-  }
-  
-  // Validasi role - hanya admin_kasir atau admin_barang
-  const validRoles = ['admin_kasir', 'admin_barang'];
-  const userRole = validRoles.includes(role) ? role : 'admin_barang'; // Default ke admin_barang
+const authController = {
+  /**
+   * Register new user
+   * - If role='peminjam': public self-registration with phone and organization
+   * - Otherwise: admin-only user creation
+   */
+  register: async (req, res) => {
+    try {
+      const { name, email, password, phone, organization, role = 'peminjam' } = req.body;
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    db.run(
-      `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
-      [username, email, hashedPassword, userRole],
-      function(err) {
-        if (err) return res.status(400).json({ error: 'Username atau email sudah terdaftar' });
-        res.status(201).json({ 
-          message: 'User berhasil dibuat', 
-          userId: this.lastID,
-          role: userRole
+      if (!name || !email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Data tidak lengkap (diperlukan: name, email, password)'
         });
       }
-    );
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
-// Login - dengan multi-device session support
-exports.login = async (req, res) => {
-  const { username, password, deviceRole } = req.body;
-  
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username dan password diperlukan' });
-  }
-
-  db.get(
-    `SELECT * FROM users WHERE username = ?`,
-    [username],
-    async (err, user) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!user) return res.status(401).json({ error: 'User tidak ditemukan' });
-
-      try {
-        const validPassword = await bcrypt.compare(password, user.password);
-        
-        if (!validPassword) {
-          return res.status(401).json({ error: 'Password salah' });
-        }
-
-        // Generate unique session ID
-        const sessionId = uuidv4();
-        
-        // Tentukan role untuk session ini
-        // Jika deviceRole disediakan dan valid, gunakan itu
-        // Jika tidak, gunakan role default user
-        const validRoles = ['admin_kasir', 'admin_barang'];
-        const sessionRole = (deviceRole && validRoles.includes(deviceRole)) ? deviceRole : user.role;
-
-        // Create JWT token untuk session ini
-        const token = jwt.sign(
-          { 
-            id: user.id, 
-            username: user.username, 
-            role: sessionRole,
-            sessionId: sessionId
-          },
-          process.env.JWT_SECRET,
-          { expiresIn: '24h' }
-        );
-
-        // Simpan session ke database
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24);
-        
-        const userAgent = req.headers['user-agent'] || 'Unknown';
-        const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
-        const deviceName = req.body.deviceName || `Device-${sessionId.substring(0, 8)}`;
-
-        db.run(
-          `INSERT INTO sessions (id, user_id, device_name, ip_address, user_agent, token, role, expires_at) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [sessionId, user.id, deviceName, ipAddress, userAgent, token, sessionRole, expiresAt.toISOString()],
-          (err) => {
-            if (err) {
-              console.error('Session creation error:', err);
-              // Jika session gagal dibuat, tetap return token tapi log errornya
-              return res.json({ 
-                message: 'Login berhasil (session creation failed)',
-                token,
-                sessionId,
-                user: { id: user.id, username: user.username, role: sessionRole }
-              });
-            }
-
-            res.json({ 
-              message: 'Login berhasil',
-              token,
-              sessionId,
-              user: { id: user.id, username: user.username, role: sessionRole }
-            });
-          }
-        );
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      // Check if email exists
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email sudah terdaftar'
+        });
       }
+
+      // Validate role if specified
+      const validRoles = ['admin', 'petugas', 'peminjam'];
+      let userRole = role;
+      if (!validRoles.includes(userRole)) {
+        userRole = 'peminjam';
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // For peminjam role, user starts as inactive (needs admin approval)
+      const isActive = userRole !== 'peminjam';
+
+      const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        role: userRole,
+        is_active: isActive
+      });
+
+      // If registering as peminjam, create borrower record
+      if (userRole === 'peminjam' && phone) {
+        await Borrower.create({
+          name,
+          email,
+          phone,
+          organization: organization || null,
+          is_verified: false
+        });
+      }
+
+      res.status(201).json({
+        success: true,
+        message: userRole === 'peminjam' 
+          ? 'Registrasi berhasil! Tunggu persetujuan admin sebelum bisa login.'
+          : 'User berhasil dibuat',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: isActive ? 'Active' : 'Pending approval'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Register error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan saat registrasi'
+      });
     }
-  );
-};
+  },
 
-// Logout - logout hanya session tertentu, bukan semua
-exports.logout = async (req, res) => {
-  try {
-    const sessionId = req.body.sessionId || req.user?.sessionId;
-    const token = req.headers.authorization?.split(' ')[1];
+  /**
+   * Login with email/username and password
+   * Generates JWT token
+   */
+  login: async (req, res) => {
+    try {
+      const { email, username, password } = req.body;
+      const loginInput = email || username;
 
-    if (!sessionId && !token) {
-      return res.status(400).json({ error: 'Session ID atau token diperlukan' });
+      if (!loginInput || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username/Email dan password harus diisi'
+        });
+      }
+
+      // Find user by email or username
+      const user = await User.findOne({ 
+        where: {
+          [require('sequelize').Op.or]: [
+            { email: loginInput },
+            { username: loginInput }
+          ]
+        }
+      });
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Username/Email atau password salah'
+        });
+      }
+
+      // Check if user is active
+      if (!user.is_active) {
+        return res.status(403).json({
+          success: false,
+          message: 'Akun Anda belum diaktifkan. Hubungi admin.'
+        });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Username/Email atau password salah'
+        });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      console.log('✓ Login success:', loginInput, 'role:', user.role);
+
+      res.json({
+        success: true,
+        message: 'Login berhasil',
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan saat login'
+      });
     }
+  },
 
-    // Mark session as inactive di database
-    db.run(
-      `UPDATE sessions SET is_active = 0 WHERE (id = ? OR token = ?)`,
-      [sessionId, token],
-      (err) => {
-        if (err) {
-          console.error('Logout error:', err);
-          return res.status(500).json({ error: 'Gagal logout' });
-        }
-        res.json({ message: 'Logout berhasil' });
+  /**
+   * Change password for authenticated user
+   */
+  changePassword: async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const userId = req.user.id;
+
+      if (!oldPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password lama dan baru harus diisi'
+        });
       }
-    );
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+      const user = await User.findByPk(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User tidak ditemukan'
+        });
+      }
+
+      // Verify old password
+      const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Password lama tidak sesuai'
+        });
+      }
+
+      // Hash and update new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await user.update({ password: hashedPassword });
+
+      console.log('✓ Password changed:', user.email);
+
+      res.json({
+        success: true,
+        message: 'Password berhasil diubah'
+      });
+    } catch (error) {
+      console.error('❌ Change password error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan saat mengubah password'
+      });
+    }
+  },
+
+  /**
+   * Get current authenticated user
+   */
+  getCurrentUser: async (req, res) => {
+    try {
+      const user = await User.findByPk(req.user.id, {
+        attributes: { exclude: ['password'] }
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User tidak ditemukan'
+        });
+      }
+
+      res.json({
+        success: true,
+        user
+      });
+    } catch (error) {
+      console.error('❌ Get current user error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan'
+      });
+    }
   }
 };
 
-// Get all active sessions untuk user tertentu
-exports.getUserSessions = (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    db.all(
-      `SELECT id, device_name, ip_address, role, created_at, last_activity, is_active 
-       FROM sessions 
-       WHERE user_id = ? AND is_active = 1 
-       ORDER BY created_at DESC`,
-      [userId],
-      (err, sessions) => {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        res.json({ sessions });
-      }
-    );
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Logout device tertentu (untuk session management)
-exports.logoutDevice = (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const userId = req.user.id;
-
-    // Validasi bahwa session milik user saat ini
-    db.run(
-      `UPDATE sessions SET is_active = 0 
-       WHERE id = ? AND user_id = ?`,
-      [sessionId, userId],
-      (err) => {
-        if (err) {
-          return res.status(500).json({ error: 'Gagal logout device' });
-        }
-        res.json({ message: 'Device berhasil logout' });
-      }
-    );
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get current user
-exports.getCurrentUser = (req, res) => {
-  res.json(req.user);
-};
+module.exports = authController;

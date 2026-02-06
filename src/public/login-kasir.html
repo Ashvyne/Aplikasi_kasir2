@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Admin Kasir</title>
+  <title>Login - Sistem Peminjaman Alat Permesinan</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <style>
@@ -14,177 +14,198 @@
     }
     
     body {
-      background: linear-gradient(135deg, #20B2AA 0%, #008B8B 100%);
+      background: linear-gradient(135deg, #e8eef7 0%, #f3f6fb 100%);
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       min-height: 100vh;
     }
     
     .login-container {
       width: 100%;
-      max-width: 420px;
+      max-width: 480px;
       padding: 20px;
     }
     
     .card {
       border: none;
-      border-radius: 20px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
       overflow: hidden;
-      backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.98);
+      background: white;
     }
     
     .card-header {
-      background: linear-gradient(135deg, #20B2AA 0%, #008B8B 100%);
+      background: white;
       border: none;
-      padding: 40px 30px;
+      padding: 50px 40px 40px 40px;
       text-align: center;
       position: relative;
-      overflow: hidden;
     }
     
-    .card-header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 250px;
-      height: 250px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-    
-    .logo-circle {
-      width: 85px;
-      height: 85px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 18px;
+    .logo-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 12px;
+      margin: 0 auto 20px;
+      font-size: 40px;
+      color: white;
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.3);
     }
     
     .card-header h2 {
-      color: white;
-      font-weight: 800;
-      font-size: 2rem;
-      margin-bottom: 8px;
+      color: #1f2937;
+      font-weight: 700;
+      font-size: 1.8rem;
+      margin-bottom: 6px;
     }
     
     .card-header p {
-      color: rgba(255, 255, 255, 0.95);
-      font-size: 0.9rem;
-      margin-top: 8px;
-    }
-    
-    .card-header .badge {
-      background: rgba(255, 255, 255, 0.3);
-      color: white;
-      font-size: 0.8rem;
-      padding: 6px 14px;
-      margin: 12px 0 0 0;
-      backdrop-filter: blur(10px);
+      color: #6b7280;
+      font-size: 0.95rem;
+      margin: 8px 0 0 0;
     }
     
     .card-body {
-      padding: 35px;
+      padding: 40px;
     }
     
     .form-label {
       font-weight: 600;
       color: #374151;
       margin-bottom: 8px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
     
     .form-control {
-      border: 1px solid #E5E7EB !important;
+      border: 1.5px solid #e5e7eb !important;
       border-radius: 10px !important;
-      padding: 10px 14px !important;
+      padding: 11px 16px !important;
       font-size: 0.95rem !important;
       transition: all 0.3s ease !important;
       background: white !important;
+      color: #1f2937 !important;
     }
     
     .form-control:focus {
-      border-color: #20B2AA !important;
-      box-shadow: 0 0 0 3px rgba(32, 178, 170, 0.1) !important;
+      border-color: #1e40af !important;
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1) !important;
       outline: none !important;
     }
     
+    .form-control::placeholder {
+      color: #9ca3af;
+    }
+    
     .mb-3 {
-      margin-bottom: 16px !important;
+      margin-bottom: 18px !important;
     }
     
     .btn-login {
-      background: linear-gradient(135deg, #20B2AA 0%, #008B8B 100%);
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
       border: none;
-      font-weight: 700;
-      padding: 12px 20px;
+      font-weight: 600;
+      padding: 11px 20px;
       border-radius: 10px;
       transition: all 0.3s ease;
       color: white;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
     
     .btn-login:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(32, 178, 170, 0.4);
+      box-shadow: 0 10px 30px rgba(30, 64, 175, 0.35);
       color: white;
+    }
+    
+    .btn-login:active {
+      transform: translateY(0);
     }
     
     .alert {
       border: none;
       border-radius: 10px;
-      border-left: 4px solid #EF4444;
+      border-left: 4px solid #dc2626;
       padding: 12px 16px;
-    }
-    
-    .alert-danger {
-      background: rgba(239, 68, 68, 0.1);
-      color: #DC2626;
-    }
-    
-    .error-message {
+      margin-bottom: 20px;
       display: none;
     }
     
-    .error-message.show {
+    .alert-danger {
+      background: rgba(220, 38, 38, 0.08);
+      color: #991b1b;
+    }
+    
+    .alert.show {
       display: block;
       animation: slideInUp 0.3s ease;
     }
     
-    .switch-role {
-      text-align: center;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #E5E7EB;
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
-    .switch-role p {
-      margin: 0 0 10px 0;
-      color: #6B7280;
-      font-size: 0.9rem;
-      font-weight: 500;
+    .demo-accounts {
+      background: #f3f4f6;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 25px;
+      border-left: 4px solid #1e40af;
     }
     
-    .switch-role a {
-      color: #20B2AA;
-      text-decoration: none;
+    .demo-accounts h6 {
+      color: #1f2937;
       font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
     }
     
-    .switch-role a:hover {
-      gap: 10px;
+    .demo-item {
+      margin-bottom: 10px;
+      color: #4b5563;
+      font-size: 0.85rem;
+    }
+    
+    .demo-item strong {
+      color: #1e40af;
+      font-weight: 600;
+    }
+    
+    .demo-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    
+    .spinner.show {
+      display: inline-block;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     
     @media (max-width: 576px) {
@@ -193,11 +214,15 @@
       }
       
       .card-header {
-        padding: 30px 20px;
+        padding: 35px 20px 25px 20px;
       }
       
       .card-header h2 {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+      }
+      
+      .demo-accounts {
+        padding: 15px;
       }
     }
   </style>
@@ -206,56 +231,78 @@
   <div class="login-container">
     <div class="card">
       <div class="card-header">
-        <div class="logo-circle">
-          <img src="/images/musaba-logo.svg" alt="Kasir Logo" style="width: 65px; height: 65px; object-fit: contain;">
+        <div class="logo-icon">
+          <i class="bi bi-box-arrow-in-right"></i>
         </div>
-        <h2>KASIR</h2>
-        <span class="badge"><i class="bi bi-cash-coin me-1"></i>Admin Kasir</span>
-        <p>Sistem Manajemen Penjualan Modern</p>
+        <h2>Sistem Peminjaman Alat</h2>
+        <p>Permesinan</p>
       </div>
       <div class="card-body">
+        <div id="errorMessage" class="alert alert-danger" role="alert"></div>
+        
         <form id="loginForm" onsubmit="handleLogin(event)">
           <div class="mb-3">
-            <label for="username" class="form-label"><i class="bi bi-person me-2"></i>Username</label>
-            <input type="text" class="form-control" id="username" required placeholder="Masukkan username" autofocus>
+            <label for="username" class="form-label">Username</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="username" 
+              required 
+              placeholder="Masukkan username" 
+              autofocus
+            >
           </div>
           <div class="mb-3">
-            <label for="password" class="form-label"><i class="bi bi-key me-2"></i>Password</label>
-            <input type="password" class="form-control" id="password" required placeholder="Masukkan password">
+            <label for="password" class="form-label">Password</label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="password" 
+              required 
+              placeholder="Masukkan password"
+            >
           </div>
-          <div id="errorMessage" class="alert alert-danger error-message" role="alert"></div>
-          <button type="submit" class="btn btn-login btn-primary w-100">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Login Admin Kasir
+          
+          <button type="submit" class="btn btn-login w-100">
+            <span class="spinner" id="spinner"></span>
+            <span id="btnText">Login</span>
           </button>
         </form>
 
-        <div class="switch-role">
-          <p>Ingin login sebagai Admin Barang?</p>
-          <a href="/login-barang"><i class="bi bi-arrow-right"></i>Masuk sebagai Admin Barang</a>
+        <div class="demo-accounts">
+          <h6>Akun Demo:</h6>
+          <div class="demo-item"><strong>Admin:</strong> admin / admin123</div>
+          <div class="demo-item"><strong>Manager:</strong> manager / manager123</div>
+          <div class="demo-item"><strong>Cashier:</strong> cashier / cashier123</div>
+          <div class="demo-item"><strong>Supervisor:</strong> supervisor / supervisor123</div>
+          <div class="demo-item"><strong>Staff:</strong> staff01 / staff123</div>
+          <div class="demo-item"><strong>Peminjam:</strong> budi / budi123</div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const ROLE = 'admin_kasir';
-
     async function handleLogin(event) {
       event.preventDefault();
       
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
       const errorMessage = document.getElementById('errorMessage');
+      const btn = event.target.querySelector('button[type="submit"]');
+      const spinner = document.getElementById('spinner');
       
       if (!username || !password) {
-        errorMessage.textContent = '❌ Username dan password harus diisi';
+        errorMessage.textContent = 'Username dan password harus diisi';
         errorMessage.classList.add('show');
         return;
       }
       
       try {
         errorMessage.classList.remove('show');
+        btn.disabled = true;
+        spinner.classList.add('show');
+        
         console.log('📡 Sending login request...');
         
         const response = await fetch('/api/auth/login', {
@@ -264,59 +311,71 @@
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            username, 
-            password,
-            deviceRole: ROLE  // Send the role from this page
+            username: username,
+            email: username,
+            password: password
           })
         });
         
-        console.log('📊 Response status:', response.status);
-        
         const data = await response.json();
-        console.log('📦 Response data:', data);
         
-        if (response.ok) {
-          // Verify user has admin_kasir role
-          if (data.user?.role !== 'admin_kasir') {
-            errorMessage.textContent = '❌ Pengguna ini bukan Admin Kasir. Silakan gunakan akun Admin Kasir (kasir/123456).';
-            errorMessage.classList.add('show');
-            console.error('❌ Wrong role:', data.user?.role);
-            return;
-          }
-          
-          // Simpan token dan user info ke localStorage
+        if (response.ok && data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           
-          console.log('✓ Login successful as Admin Kasir');
-          console.log('👤 User role from server:', data.user?.role);
+          console.log('✓ Login successful');
           
-          // Redirect ke POS/Kasir
-          window.location.href = '/pos';
+          // Redirect based on role
+          const role = data.user?.role;
+          if (role === 'admin') {
+            window.location.href = '/dashboard-admin';
+          } else if (role === 'manager') {
+            window.location.href = '/dashboard-manager';
+          } else if (role === 'cashier') {
+            window.location.href = '/dashboard-cashier';
+          } else if (role === 'supervisor') {
+            window.location.href = '/dashboard-supervisor';
+          } else if (role === 'staff') {
+            window.location.href = '/dashboard-staff';
+          } else if (role === 'borrower') {
+            window.location.href = '/dashboard-borrower';
+          } else {
+            window.location.href = '/dashboard-admin';
+          }
         } else {
-          errorMessage.textContent = '❌ ' + (data.message || data.error || 'Login gagal. Periksa username dan password.');
+          errorMessage.textContent = data.message || 'Login gagal. Periksa username dan password.';
           errorMessage.classList.add('show');
-          console.error('❌ Login error:', data.message || data.error);
+          btn.disabled = false;
+          spinner.classList.remove('show');
         }
       } catch (error) {
         console.error('❌ Network error:', error);
-        errorMessage.textContent = '❌ Terjadi kesalahan koneksi. Pastikan server running.';
+        errorMessage.textContent = 'Terjadi kesalahan koneksi. Pastikan server running.';
         errorMessage.classList.add('show');
+        btn.disabled = false;
+        spinner.classList.remove('show');
       }
     }
 
     // Cek apakah user sudah login saat halaman dimuat
     window.addEventListener('load', () => {
       const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      console.log('🔍 Auth check - Token:', token ? '✓ Found' : '❌ Not found');
-      console.log('👤 User role:', user.role);
-      
-      // If user already logged in, redirect to POS
       if (token) {
-        console.log('✓ User sudah login, redirect ke POS');
-        window.location.href = '/pos';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const role = user.role;
+        if (role === 'admin') {
+          window.location.href = '/dashboard-admin';
+        } else if (role === 'manager') {
+          window.location.href = '/dashboard-manager';
+        } else if (role === 'cashier') {
+          window.location.href = '/dashboard-cashier';
+        } else if (role === 'supervisor') {
+          window.location.href = '/dashboard-supervisor';
+        } else if (role === 'staff') {
+          window.location.href = '/dashboard-staff';
+        } else if (role === 'borrower') {
+          window.location.href = '/dashboard-borrower';
+        }
       }
     });
   </script>

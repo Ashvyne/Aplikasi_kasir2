@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petugas Dashboard - Aplikasi Peminjaman Alat</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1>🛠️ Peminjaman Alat - Petugas</h1>
+            </div>
+            <div class="navbar-menu">
+                <span id="userName">Loading...</span>
+                <span class="separator">|</span>
+                <span id="userRole" class="badge">Petugas</span>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="menu">
+                <li class="menu-item active">
+                    <a href="#" onclick="switchTab('dashboard')">📊 Dashboard</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('approvals')">✅ Persetujuan</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('equipment')">🔧 Peralatan</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('borrowers')">👥 Peminjam</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('loans')">📋 Peminjaman</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h2>📊 Dashboard Petugas</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <h3>Menunggu Persetujuan</h3>
+                            <p id="pendingApprovals">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3>Disetujui Hari Ini</h3>
+                            <p id="approvedToday">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔧</div>
+                        <div class="stat-info">
+                            <h3>Total Peralatan</h3>
+                            <p id="totalEquipment">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>Total Peminjam</h3>
+                            <p id="totalBorrowers">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>⏳ Permohonan Menunggu Persetujuan</h3>
+                    <div id="pendingRequests" class="approvals-container">
+                        <!-- Pending approvals will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approvals Tab -->
+            <div id="approvals" class="tab-content">
+                <div class="tab-header">
+                    <h2>✅ Persetujuan Peminjaman</h2>
+                </div>
+
+                <div class="filter-section">
+                    <select id="approvalStatus" onchange="filterApprovals()">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                    </select>
+                </div>
+
+                <div id="approvalsList" class="approvals-container">
+                    <!-- Approvals will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Equipment Tab -->
+            <div id="equipment" class="tab-content">
+                <div class="tab-header">
+                    <h2>🔧 Inventaris Peralatan</h2>
+                </div>
+
+                <div class="filter-section">
+                    <input type="text" id="equipmentSearch" placeholder="Cari peralatan..." onkeyup="filterEquipment()">
+                    <select id="equipmentAvailable" onchange="filterEquipment()">
+                        <option value="">Semua Status</option>
+                        <option value="available">Tersedia</option>
+                        <option value="borrowed">Dipinjam</option>
+                    </select>
+                </div>
+
+                <div id="equipmentList" class="grid-container">
+                    <!-- Equipment will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Borrowers Tab -->
+            <div id="borrowers" class="tab-content">
+                <h2>👥 Daftar Peminjam</h2>
+
+                <div class="filter-section">
+                    <input type="text" id="borrowerSearch" placeholder="Cari peminjam...">
+                </div>
+
+                <div id="borrowersList" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>No. HP</th>
+                                <th>Aktif Sejak</th>
+                                <th>Peminjaman Aktif</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="borrowersBody">
+                            <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Loans Tab -->
+            <div id="loans" class="tab-content">
+                <h2>📋 Daftar Peminjaman</h2>
+
+                <div class="filter-section">
+                    <select id="loanStatus" onchange="filterLoans()">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu Persetujuan</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="active">Sedang Dipinjam</option>
+                        <option value="returned">Dikembalikan</option>
+                    </select>
+                </div>
+
+                <div id="loansList" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Peminjam</th>
+                                <th>Peralatan</th>
+                                <th>Tanggal Pinjam</th>
+                                <th>Tanggal Kembali</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loansBody">
+                            <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detail Permohonan</h3>
+                <button class="btn-close" onclick="closeApprovalModal()">&times;</button>
+            </div>
+            <div id="approvalDetails" class="approval-details"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeApprovalModal()">Tutup</button>
+                <button id="rejectBtn" class="btn-danger" onclick="rejectApproval()">Tolak</button>
+                <button id="approveBtn" class="btn-success" onclick="approveApproval()">Setujui</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Equipment Modal -->
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pengembalian Peralatan</h3>
+                <button class="btn-close" onclick="closeReturnModal()">&times;</button>
+            </div>
+            <form id="returnForm" onsubmit="handleReturn(event)">
+                <div class="form-group">
+                    <label>Catatan Pengembalian (Opsional)</label>
+                    <textarea id="returnNotes" placeholder="Kondisi peralatan, kerusakan, dll..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeReturnModal()">Batal</button>
+                    <button type="submit" class="btn-success">Terima Pengembalian</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!requireRole('petugas')) return;
+            
+            initializeFrontend();
+            setupLogoutButton();
+            
+            // Update user display
+            const user = getUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+            }
+            
+            loadDashboardData();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from menu
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Mark menu item as active
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Load data based on tab
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'approvals':
+                    loadApprovalsList();
+                    break;
+                case 'equipment':
+                    loadEquipmentList();
+                    break;
+                case 'borrowers':
+                    loadBorrowersList();
+                    break;
+                case 'loans':
+                    loadLoansList();
+                    break;
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const data = await getDashboardData();
+                const approvals = await getPendingApprovals();
+                
+                document.getElementById('pendingApprovals').textContent = approvals.length || 0;
+                document.getElementById('approvedToday').textContent = data.approvedToday || 0;
+                document.getElementById('totalEquipment').textContent = data.totalEquipment || 0;
+                document.getElementById('totalBorrowers').textContent = data.totalBorrowers || 0;
+                
+                // Display pending requests
+                displayPendingRequests(approvals.slice(0, 3));
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display pending requests
+        function displayPendingRequests(approvals) {
+            const container = document.getElementById('pendingRequests');
+            container.innerHTML = '';
+            
+            if (!approvals.length) {
+                container.innerHTML = '<p class="text-center">Tidak ada permohonan yang menunggu</p>';
+                return;
+            }
+            
+            approvals.forEach(approval => {
+                const card = document.createElement('div');
+                card.className = 'approval-card';
+                card.innerHTML = `
+                    <div class="approval-header">
+                        <h4>Permohonan #${approval.id}</h4>
+                        <span class="badge">Menunggu</span>
+                    </div>
+                    <div class="approval-details">
+                        <p><strong>Peminjam:</strong> ${approval.borrowerName}</p>
+                        <p><strong>Peralatan:</strong> ${approval.equipmentName}</p>
+                        <p><strong>Tanggal Pinjam:</strong> ${formatDate(approval.loan_date)}</p>
+                        <p><strong>Tanggal Kembali:</strong> ${formatDate(approval.return_date)}</p>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn-secondary" onclick="showApprovalModal(${approval.id})">Lihat Detail</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Load approvals list
+        async function loadApprovalsList() {
+            try {
+                const approvals = await getPendingApprovals();
+                displayApprovalsList(approvals);
+            } catch (error) {
+                console.error('Error loading approvals:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display approvals
+        function displayApprovalsList(approvals) {
+            const container = document.getElementById('approvalsList');
+            container.innerHTML = '';
+            
+            if (!approvals.length) {
+                container.innerHTML = '<p class="text-center">Tidak ada permohonan</p>';
+                return;
+            }
+            
+            approvals.forEach(approval => {
+                const card = document.createElement('div');
+                card.className = 'approval-card';
+                card.innerHTML = `
+                    <div class="approval-header">
+                        <h4>Permohonan #${approval.id}</h4>
+                        <span class="badge">${getApprovalStatusDisplay(approval.approval_status)}</span>
+                    </div>
+                    <div class="approval-details">
+                        <p><strong>Peminjam:</strong> ${approval.borrowerName}</p>
+                        <p><strong>Peralatan:</strong> ${approval.equipmentName}</p>
+                        <p><strong>Tanggal Pinjam:</strong> ${formatDate(approval.loan_date)}</p>
+                        <p><strong>Tanggal Kembali:</strong> ${formatDate(approval.return_date)}</p>
+                        <p><strong>Catatan:</strong> ${approval.notes || '-'}</p>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn-secondary" onclick="showApprovalModal(${approval.id})">Detail</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Show approval modal
+        async function showApprovalModal(approvalId) {
+            try {
+                // In real app, fetch specific approval details
+                const detailsDiv = document.getElementById('approvalDetails');
+                detailsDiv.innerHTML = `
+                    <div>
+                        <p><strong>ID Permohonan:</strong> ${approvalId}</p>
+                        <p><strong>Status:</strong> Loading...</p>
+                    </div>
+                `;
+                
+                // Store current approval ID for action buttons
+                window.currentApprovalId = approvalId;
+                
+                // Show appropriate buttons based on status
+                const rejectBtn = document.getElementById('rejectBtn');
+                const approveBtn = document.getElementById('approveBtn');
+                rejectBtn.style.display = 'block';
+                approveBtn.style.display = 'block';
+                
+                document.getElementById('approvalModal').classList.add('show');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Close approval modal
+        function closeApprovalModal() {
+            document.getElementById('approvalModal').classList.remove('show');
+            window.currentApprovalId = null;
+        }
+
+        // Approve request
+        async function approveApproval() {
+            if (!window.currentApprovalId) return;
+            
+            try {
+                await approveLoan(window.currentApprovalId, 'Disetujui oleh petugas');
+                showNotification('Peminjaman berhasil disetujui', 'success');
+                closeApprovalModal();
+                loadApprovalsList();
+                loadDashboardData();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Reject request
+        async function rejectApproval() {
+            if (!window.currentApprovalId) return;
+            
+            const reason = prompt('Alasan penolakan:');
+            if (!reason) return;
+            
+            try {
+                await rejectLoan(window.currentApprovalId, reason);
+                showNotification('Peminjaman berhasil ditolak', 'success');
+                closeApprovalModal();
+                loadApprovalsList();
+                loadDashboardData();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Load equipment list
+        async function loadEquipmentList() {
+            try {
+                const equipment = await getEquipment();
+                displayEquipmentList(equipment);
+            } catch (error) {
+                console.error('Error loading equipment:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display equipment
+        function displayEquipmentList(equipment) {
+            const container = document.getElementById('equipmentList');
+            container.innerHTML = '';
+            
+            if (!equipment.length) {
+                container.innerHTML = '<p class="text-center">Tidak ada data</p>';
+                return;
+            }
+            
+            equipment.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'equipment-card';
+                const status = item.is_available ? '✓ Tersedia' : '✗ Dipinjam';
+                const statusClass = item.is_available ? 'status-active' : 'status-inactive';
+                
+                card.innerHTML = `
+                    <h4>${item.name}</h4>
+                    <p>${item.description || '-'}</p>
+                    <div class="equipment-info">
+                        <span>Jumlah: ${item.quantity}</span>
+                        <span class="${statusClass}">${status}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Load borrowers
+        async function loadBorrowersList() {
+            try {
+                const borrowers = await getBorrowers();
+                displayBorrowersList(borrowers);
+            } catch (error) {
+                console.error('Error loading borrowers:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display borrowers
+        function displayBorrowersList(borrowers) {
+            const tbody = document.getElementById('borrowersBody');
+            tbody.innerHTML = '';
+            
+            if (!borrowers.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            borrowers.forEach(borrower => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${borrower.id}</td>
+                    <td>${borrower.name}</td>
+                    <td>${borrower.email}</td>
+                    <td>${borrower.phone || '-'}</td>
+                    <td>${formatDate(borrower.created_at)}</td>
+                    <td>${borrower.activeLoans || 0}</td>
+                    <td>
+                        <button class="btn-sm btn-secondary" onclick="viewBorrower(${borrower.id})">Lihat</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load loans
+        async function loadLoansList() {
+            try {
+                const loans = await getLoans();
+                displayLoansList(loans);
+            } catch (error) {
+                console.error('Error loading loans:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display loans
+        function displayLoansList(loans) {
+            const tbody = document.getElementById('loansBody');
+            tbody.innerHTML = '';
+            
+            if (!loans.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            loans.forEach(loan => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${loan.id}</td>
+                    <td>${loan.borrowerName || 'N/A'}</td>
+                    <td>${loan.equipmentName || 'N/A'}</td>
+                    <td>${formatDate(loan.loan_date)}</td>
+                    <td>${formatDate(loan.return_date)}</td>
+                    <td><span class="badge">${getLoanStatusDisplay(loan.status)}</span></td>
+                    <td>
+                        ${loan.status === 'active' ? `
+                            <button class="btn-sm btn-success" onclick="showReturnModal(${loan.id})">Terima Kembali</button>
+                        ` : `
+                            <button class="btn-sm btn-secondary" onclick="viewLoan(${loan.id})">Lihat</button>
+                        `}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Return modal
+        function showReturnModal(loanId) {
+            window.currentLoanId = loanId;
+            document.getElementById('returnForm').reset();
+            document.getElementById('returnModal').classList.add('show');
+        }
+
+        function closeReturnModal() {
+            document.getElementById('returnModal').classList.remove('show');
+            window.currentLoanId = null;
+        }
+
+        async function handleReturn(event) {
+            event.preventDefault();
+            
+            if (!window.currentLoanId) return;
+            
+            try {
+                const notes = document.getElementById('returnNotes').value;
+                await returnLoan(window.currentLoanId, notes);
+                showNotification('Pengembalian berhasil dicatat', 'success');
+                closeReturnModal();
+                loadLoansList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Filter functions
+        function filterApprovals() {
+            // Implement filtering
+        }
+
+        function filterEquipment() {
+            // Implement filtering
+        }
+
+        function filterLoans() {
+            // Implement filtering
+        }
+
+        // Helper functions
+        function viewBorrower(id) {
+            showNotification(`Membuka detail peminjam #${id}`, 'info');
+        }
+
+        function viewLoan(id) {
+            showNotification(`Membuka detail peminjaman #${id}`, 'info');
+        }
+
+        // Notification
+        function showNotification(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            // TODO: Implement proper notification UI
+            alert(message);
+        }
+    </script>
+</body>
+</html>

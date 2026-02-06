@@ -1,63 +1,147 @@
-# 🛒 Aplikasi Kasir Modern
+# � Aplikasi Peminjaman Alat Modern
 
-Aplikasi kasir modern berbasis web yang dirancang untuk mempermudah proses penjualan, manajemen produk, dan pencatatan transaksi.  
+Aplikasi manajemen peminjaman alat berbasis web yang dirancang untuk mempermudah proses penyewaan/peminjaman alat, manajemen inventory alat, dan pencatatan transaksi peminjaman.  
 Dibangun dengan **Node.js + Express + MySQL** (Backend) dan **Bootstrap + Vanilla JS** (Frontend).
 
 ---
 
 ## 📘 Deskripsi Proyek
 
-Aplikasi ini menyediakan fitur POS (Point of Sale), pengelolaan produk, laporan transaksi, dan dashboard analitik.  
-Data disimpan menggunakan **MySQL Database** dengan Sequelize ORM untuk data persistence yang reliable.
+Aplikasi ini menyediakan fitur lengkap untuk mengelola sistem peminjaman alat dengan:
+- **Manajemen Alat/Equipment**: CRUD lengkap untuk alat yang dapat dipinjam
+- **Manajemen Peminjam**: Database peminjam dengan verifikasi identitas
+- **Transaksi Peminjaman**: Pencatatan peminjaman dengan tracking status
+- **Pengembalian & Inspeksi**: Proses pengembalian dengan penilaian kondisi
+- **Perhitungan Biaya**: Otomatis hitung biaya sewa, denda keterlambatan, dan biaya kerusakan
+- **Dashboard Analitik**: Visualisasi data peminjaman dan status alat
+- **Laporan**: Export dan analisis data peminjaman
 
 Proyek ini cocok digunakan untuk:
-
-- UMKM kecil hingga menengah  
-- Toko retail / warung kopi  
-- Sistem inventory & POS integrated  
-- Learning project untuk Node.js + MySQL  
+- Toko penyewaan peralatan/tools
+- Perpustakaan digital peralatan kantor/perusahaan
+- Sistem peminjaman alat konstruksi
+- Manajemen aset perusahaan dengan fitur peminjaman
+- Learning project untuk Node.js + MySQL
 
 ---
 
 ## 🚀 Fitur Utama
 
-## 🧾 POS / Transaksi Penjualan
+### 🔧 Manajemen Alat/Equipment
+- Tambah alat dengan detail lengkap (nama, kode, kategori, tarif sewa)
+- Edit dan hapus alat
+- Track ketersediaan unit
+- Monitor kondisi alat
+- Kategori dan lokasi penyimpanan
 
-Tambah produk ke keranjang
+### 👥 Manajemen Peminjam
+- Daftar peminjam dengan data lengkap
+- Verifikasi identitas peminjam
+- Kontak dan informasi organisasi
+- Soft delete untuk peminjam inaktif
+- Track riwayat peminjaman per peminjam
 
-Hitung subtotal, diskon, total
+### 📦 Transaksi Peminjaman
+- Buat peminjaman baru dengan validasi stok
+- Assign alat ke peminjam
+- Set tanggal pinjam dan jatuh tempo
+- Track status peminjaman (Aktif, Terlambat, Selesai, Dibatalkan)
+- Nomor referensi peminjaman otomatis
 
-Hitung kembalian
+### 📋 Pengembalian Alat
+- Proses pengembalian dengan tanggal
+- Penilaian kondisi alat (Baik, Rusak Ringan, Rusak Berat, Hilang)
+- Catatan kerusakan detail
+- Otomatis hitung biaya perbaikan
+- Update inventory setelah pengembalian
 
-Simpan transaksi ke riwayat
+### 💰 Perhitungan Biaya
+- **Biaya Sewa**: Otomatis berdasarkan durasi × tarif harian
+- **Denda Keterlambatan**: 50% dari tarif harian per hari terlambat
+- **Biaya Kerusakan**: Manual input berdasarkan kondisi pengembalian
+- **Total Biaya**: Ringkasan lengkap per peminjaman
 
-GitHub
+### 📊 Dashboard & Laporan
+- KPI Cards: Total alat, total peminjam, peminjaman aktif, terlambat
+- Grafik aktivitas peminjaman
+- Distribusi status alat
+- Laporan peminjaman berdasarkan alat
+- Analisis durasi peminjaman
 
-## 📦 Manajemen Produk
+---
 
-Tambah produk baru
+## 🛠️ Installation & Setup
 
-Edit produk
+### Prerequisites
+- Node.js v14+
+- MySQL 5.7+
+- npm
 
-Hapus produk
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-GitHub
+### 2. Environment Configuration
+Buat file `.env`:
+```env
+DB_DIALECT=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=peminjaman_alat
+DB_USER=root
+DB_PASSWORD=your_password
+JWT_SECRET=your_secret_key
+```
 
-## 📊 Riwayat Transaksi
+### 3. Start Server
+```bash
+npm run dev
+```
 
-Lihat detail transaksi
+---
 
-Export data (kalau ditambah nanti)
+## 📚 API Endpoints
 
-GitHub
+### Equipment
+- `GET /api/equipment` - List alat
+- `POST /api/equipment` - Tambah alat
+- `PUT /api/equipment/:id` - Edit alat
+- `DELETE /api/equipment/:id` - Hapus alat
 
-## 📈 Dashboard
+### Borrowers
+- `GET /api/borrowers` - List peminjam
+- `POST /api/borrowers` - Tambah peminjam
+- `PUT /api/borrowers/:id` - Edit peminjam
+- `DELETE /api/borrowers/:id` - Hapus peminjam
 
-Total transaksi hari ini
+### Loans
+- `GET /api/loans` - List peminjaman
+- `POST /api/loans` - Buat peminjaman
+- `POST /api/loans/:id/return` - Proses pengembalian
+- `POST /api/loans/:id/cancel` - Batalkan peminjaman
 
-Total pendapatan
+---
 
-Produk paling laku
+## 👥 Default Credentials
+
+```
+Email: admin@example.com
+Password: 123456
+```
+
+---
+
+## 🎨 Tech Stack
+
+- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5, ApexCharts
+- **Backend**: Node.js, Express.js, Sequelize ORM
+- **Database**: MySQL
+- **Authentication**: JWT
+
+---
+
+Aplikasi Peminjaman Alat Modern ✨
 
 Produk dengan stok hampir habis
 

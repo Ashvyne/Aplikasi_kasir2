@@ -151,8 +151,8 @@ async function setupDatabase() {
         user_id INT NOT NULL,
         device_name VARCHAR(255),
         ip_address VARCHAR(45),
-        user_agent TEXT,
-        token TEXT NOT NULL UNIQUE,
+        user_agent VARCHAR(500),
+        token VARCHAR(500) NOT NULL UNIQUE,
         role VARCHAR(50),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -160,7 +160,7 @@ async function setupDatabase() {
         is_active BOOLEAN DEFAULT 1,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         KEY idx_user_id (user_id),
-        KEY idx_token (token)
+        KEY idx_token (token(255))
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     console.log('    ✅ sessions');

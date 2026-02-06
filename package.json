@@ -1,18 +1,19 @@
 {
-  "name": "aplikasi-kasir-modern",
+  "name": "aplikasi-peminjaman-alat",
   "version": "1.0.0",
-  "description": "Aplikasi Kasir Modern dengan Node.js dan SQLite",
+  "description": "Aplikasi Peminjaman Alat Modern dengan Node.js dan MySQL",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "seed:images": "node scripts/seed-product-images.js",
-    "seed:data": "node scripts/seed-initial-data.js"
+    "seed:data": "node scripts/seed-rental-data.js"
   },
   "keywords": [
-    "kasir",
-    "pos",
-    "penjualan"
+    "peminjaman",
+    "alat",
+    "equipment",
+    "rental",
+    "manajemen"
   ],
   "author": "",
   "license": "ISC",

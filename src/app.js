@@ -146,11 +146,23 @@ app.use('/uploads', express.static(uploadsDir, {
 // Authentication routes
 app.use('/api/auth', require('./routes/auth'));
 
-// Product management routes
-app.use('/api/products', require('./routes/products'));
+// User management routes (Admin only)
+app.use('/api/users', require('./routes/users'));
 
-// Transaction/Sales routes
-app.use('/api/transactions', require('./routes/transactions'));
+// Equipment management routes (Alat yang dapat dipinjam)
+app.use('/api/equipment', require('./routes/equipment'));
+
+// Category management routes (Kategori alat)
+app.use('/api/categories', require('./routes/categories'));
+
+// Borrower management routes (Data peminjam)
+app.use('/api/borrowers', require('./routes/borrowers'));
+
+// Loan management routes (Transaksi peminjaman)
+app.use('/api/loans', require('./routes/loans'));
+
+// Activity log routes (Admin only)
+app.use('/api/activity-logs', require('./routes/activity-logs'));
 
 // Reporting & Analytics routes
 app.use('/api/reports', require('./routes/reports'));
@@ -161,18 +173,91 @@ app.use('/api/export', require('./routes/exports'));
 // Dashboard routes
 app.use('/api/dashboard', require('./routes/dashboard'));
 
-// Stock In (Barang Masuk) routes
-app.use('/api/stockin', require('./routes/stockin'));
-
 // ============ PAGE ROUTES ============
 // Serve HTML pages
 
-// Login pages - Role selection
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+// Main login page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
 });
 
-// Login Admin Barang
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
+});
+
+// Admin Dashboard
+app.get('/dashboard-admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-admin.html'));
+});
+
+app.get('/dashboard-admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-admin.html'));
+});
+
+// Manager Dashboard
+app.get('/dashboard-manager', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-manager.html'));
+});
+
+app.get('/dashboard-manager.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-manager.html'));
+});
+
+// Cashier Dashboard
+app.get('/dashboard-cashier', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-cashier.html'));
+});
+
+app.get('/dashboard-cashier.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-cashier.html'));
+});
+
+// Supervisor Dashboard
+app.get('/dashboard-supervisor', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-supervisor.html'));
+});
+
+app.get('/dashboard-supervisor.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-supervisor.html'));
+});
+
+// Staff Dashboard
+app.get('/dashboard-staff', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-staff.html'));
+});
+
+app.get('/dashboard-staff.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-staff.html'));
+});
+
+// Borrower Dashboard
+app.get('/dashboard-borrower', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-borrower.html'));
+});
+
+app.get('/dashboard-borrower.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-borrower.html'));
+});
+
+// Cashier Dashboard (POS)
+app.get('/dashboard-cashier', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-cashier.html'));
+});
+
+app.get('/dashboard-cashier.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-cashier.html'));
+});
+
+app.get('/pos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-cashier.html'));
+});
+
+// ============ LEGACY LOGIN PAGES ============
+// Login pages - Role selection
 app.get('/login-barang', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login-barang.html'));
 });
@@ -190,46 +275,42 @@ app.get('/login-kasir.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
 });
 
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+// New unified login page
+app.get('/login-new', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-new.html'));
 });
 
-// Dashboard page routes - serve index.html dan biarkan frontend handle routing dengan JavaScript
-// Semua routes ini serve file yang sama (index.html) - SPA pattern
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/login-new.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-new.html'));
 });
 
-app.get('/products', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Legacy role-based dashboard pages
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.get('/stockin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.get('/stock', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/petugas', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'petugas.html'));
 });
 
-app.get('/pos', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/petugas.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'petugas.html'));
 });
 
-app.get('/transactions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/peminjam', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'peminjam.html'));
 });
 
-app.get('/reports', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/peminjam.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'peminjam.html'));
 });
 
-// Main dashboard (default)
+// Index page
 app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -297,7 +378,7 @@ app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║                 🚀Aplikasi Kasir Modern Berjalan!                   ║
+║            🚀 Aplikasi Peminjaman Alat Berjalan!                     ║
 ║                                                                      ║
 ║   Server     : http://localhost:${PORT}                              ║
 ║   Login      : http://localhost:${PORT}/login                        ║
@@ -313,14 +394,16 @@ app.listen(PORT, () => {
   console.log('📍 API Endpoints:');
   console.log('   GET    /api/health');
   console.log('   POST   /api/auth/login');
-  console.log('   GET    /api/products');
-  console.log('   POST   /api/products');
-  console.log('   PUT    /api/products/:id');
-  console.log('   PUT    /api/products/:id/reduce-stock');
-  console.log('   DELETE /api/products/:id');
-  console.log('   GET    /api/transactions');
-  console.log('   POST   /api/transactions');
+  console.log('   GET    /api/equipment');
+  console.log('   POST   /api/equipment');
+  console.log('   PUT    /api/equipment/:id');
+  console.log('   DELETE /api/equipment/:id');
+  console.log('   GET    /api/borrowers');
+  console.log('   POST   /api/borrowers');
+  console.log('   PUT    /api/borrowers/:id');
+  console.log('   DELETE /api/borrowers/:id');
+  console.log('   GET    /api/loans');
+  console.log('   POST   /api/loans');
+  console.log('   POST   /api/loans/:id/return');
   console.log('   GET    /api/reports');
-  console.log('   GET    /api/export/sales-excel');
-  console.log('   GET    /api/export/products-excel');
 });

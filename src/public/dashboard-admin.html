@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Aplikasi Peminjaman Alat</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-64 bg-gradient-to-b from-blue-700 to-blue-600 dark:from-blue-900 dark:to-blue-800 text-white shadow-lg flex flex-col">
+      <div class="p-6 border-b border-blue-600 dark:border-blue-700">
+        <div class="flex items-center gap-3">
+          <i class="bi bi-box-arrow-in-right text-2xl"></i>
+          <span class="text-xl font-bold">Peminjaman Alat</span>
+        </div>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+        <button onclick="showSection('dashboard')" class="nav-link active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-speedometer2 text-lg w-6"></i>
+          <span class="font-medium">Dashboard</span>
+        </button>
+        <button onclick="showSection('equipment')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-boxes text-lg w-6"></i>
+          <span class="font-medium">Alat</span>
+        </button>
+        <button onclick="showSection('borrowers')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-people text-lg w-6"></i>
+          <span class="font-medium">Peminjam</span>
+        </button>
+        <button onclick="showSection('loans')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-journal-check text-lg w-6"></i>
+          <span class="font-medium">Peminjaman</span>
+        </button>
+        <button onclick="showSection('reports')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-file-earmark-bar-graph text-lg w-6"></i>
+          <span class="font-medium">Laporan</span>
+        </button>
+        <button onclick="showSection('users')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-person-check text-lg w-6"></i>
+          <span class="font-medium">Kelola User</span>
+        </button>
+      </nav>
+
+      <div class="p-4 border-t border-blue-600 dark:border-blue-700 space-y-3">
+        <button onclick="logout()" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-900 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Header -->
+      <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="px-8 py-6 flex items-center justify-between">
+          <h1 class="text-3xl font-bold" id="pageTitle">Dashboard</h1>
+          <div class="flex items-center gap-6">
+            <!-- Dark Mode Toggle -->
+            <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <i class="bi bi-moon-stars text-xl dark:hidden"></i>
+              <i class="bi bi-sun-fill text-xl hidden dark:inline"></i>
+            </button>
+            <!-- User Profile -->
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center font-bold text-sm" id="userAvatar">A</div>
+              <div>
+                <p class="text-sm font-medium" id="userName">Admin</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="flex-1 overflow-y-auto p-8">
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="section active space-y-8">
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">TOTAL ALAT</p>
+              <p class="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-3">85</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↑ Tersedia digunakan</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">SEDANG DIPINJAM</p>
+              <p class="text-4xl font-bold text-green-600 dark:text-green-400 mt-3">23</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↓ 5% dari kemarin</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">TOTAL PEMINJAMAN</p>
+              <p class="text-4xl font-bold text-orange-600 dark:text-orange-400 mt-3">156</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↑ 8 peminjaman baru</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">PEMINJAMAN BULAN INI</p>
+              <p class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-3">42</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↑ 12% dari bulan lalu</p>
+            </div>
+          </div>
+
+          <!-- Tables -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Loans -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+              <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold">Peminjaman Terbaru</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Peminjam</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Alat</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td class="px-6 py-4">Budi Santoso</td>
+                      <td class="px-6 py-4">Kursi Roda</td>
+                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td class="px-6 py-4">Siti Rahayu</td>
+                      <td class="px-6 py-4">Tenda Camping</td>
+                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Selesai</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Equipment Status -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+              <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold">Status Alat</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Nama Alat</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Kondisi</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Stok</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td class="px-6 py-4">Kursi Roda</td>
+                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Baik</span></td>
+                      <td class="px-6 py-4">5/10</td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td class="px-6 py-4">Tenda Camping</td>
+                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">Rusak Kecil</span></td>
+                      <td class="px-6 py-4">2/3</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Equipment Section -->
+        <div id="equipmentSection" class="section hidden">
+          <h2 class="text-2xl font-bold mb-6">Manajemen Alat</h2>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="font-bold">Daftar Alat</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-3 text-left font-semibold">ID</th>
+                    <th class="px-6 py-3 text-left font-semibold">Nama</th>
+                    <th class="px-6 py-3 text-left font-semibold">Kategori</th>
+                    <th class="px-6 py-3 text-left font-semibold">Stok</th>
+                    <th class="px-6 py-3 text-left font-semibold">Kondisi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-6 py-4">#KR001</td>
+                    <td class="px-6 py-4">Kursi Roda</td>
+                    <td class="px-6 py-4">Medis</td>
+                    <td class="px-6 py-4">5</td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Baik</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Borrowers Section -->
+        <div id="borrowersSection" class="section hidden">
+          <h2 class="text-2xl font-bold mb-6">Manajemen Peminjam</h2>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="font-bold">Daftar Peminjam</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-3 text-left font-semibold">Nama</th>
+                    <th class="px-6 py-3 text-left font-semibold">Email</th>
+                    <th class="px-6 py-3 text-left font-semibold">No. HP</th>
+                    <th class="px-6 py-3 text-left font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-6 py-4">Budi Santoso</td>
+                    <td class="px-6 py-4">budi@example.com</td>
+                    <td class="px-6 py-4">08123456789</td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Aktif</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loans Section -->
+        <div id="loansSection" class="section hidden">
+          <h2 class="text-2xl font-bold mb-6">Manajemen Peminjaman</h2>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="font-bold">Daftar Peminjaman</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-3 text-left font-semibold">ID</th>
+                    <th class="px-6 py-3 text-left font-semibold">Peminjam</th>
+                    <th class="px-6 py-3 text-left font-semibold">Alat</th>
+                    <th class="px-6 py-3 text-left font-semibold">Tgl Pinjam</th>
+                    <th class="px-6 py-3 text-left font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-6 py-4">#LN001</td>
+                    <td class="px-6 py-4">Budi Santoso</td>
+                    <td class="px-6 py-4">Kursi Roda</td>
+                    <td class="px-6 py-4">05-02-2026</td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reportsSection" class="section hidden space-y-6">
+          <h2 class="text-2xl font-bold mb-6">Laporan</h2>
+          
+          <!-- Statistics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">Total Peminjaman</p>
+                  <p class="text-3xl font-bold mt-2">156</p>
+                  <p class="text-xs text-green-600 dark:text-green-400 mt-2">↑ 12% dari bulan lalu</p>
+                </div>
+                <i class="bi bi-calendar3 text-2xl text-blue-500 opacity-20"></i>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-green-500">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">Selesai</p>
+                  <p class="text-3xl font-bold mt-2">142</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">91% success rate</p>
+                </div>
+                <i class="bi bi-check-circle text-2xl text-green-500 opacity-20"></i>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-yellow-500">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">Sedang Berjalan</p>
+                  <p class="text-3xl font-bold mt-2">12</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Dalam proses</p>
+                </div>
+                <i class="bi bi-hourglass-split text-2xl text-yellow-500 opacity-20"></i>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-red-500">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">Belum Dikembalikan</p>
+                  <p class="text-3xl font-bold mt-2">2</p>
+                  <p class="text-xs text-red-600 dark:text-red-400 mt-2">Perlu follow-up</p>
+                </div>
+                <i class="bi bi-exclamation-circle text-2xl text-red-500 opacity-20"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row 1 -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Line Chart - Trend Peminjaman -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+              <h3 class="text-lg font-bold mb-4">Trend Peminjaman 30 Hari Terakhir</h3>
+              <div id="loanTrendChart" class="w-full" style="min-height: 300px;"></div>
+            </div>
+
+            <!-- Pie Chart - Status Peminjaman -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+              <h3 class="text-lg font-bold mb-4">Status Peminjaman</h3>
+              <div id="loanStatusChart" class="w-full" style="min-height: 300px;"></div>
+            </div>
+          </div>
+
+          <!-- Charts Row 2 -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Bar Chart - Top Equipment -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md lg:col-span-2">
+              <h3 class="text-lg font-bold mb-4">Alat Paling Sering Dipinjam</h3>
+              <div id="topEquipmentChart" class="w-full" style="min-height: 300px;"></div>
+            </div>
+
+            <!-- Donut Chart - Kategori -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+              <h3 class="text-lg font-bold mb-4">Distribusi Kategori</h3>
+              <div id="categoryChart" class="w-full" style="min-height: 300px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="usersSection" class="section hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add User Form -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+              <h3 class="text-lg font-bold mb-4">Tambah User Baru</h3>
+              <form id="addUserForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2">Nama Lengkap</label>
+                  <input type="text" id="userName" placeholder="John Doe" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Email</label>
+                  <input type="email" id="userEmail" placeholder="user@example.com" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Username</label>
+                  <input type="text" id="userUsername" placeholder="username" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Password</label>
+                  <input type="password" id="userPassword" placeholder="••••••••" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Role</label>
+                  <select id="userRole" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">-- Pilih Role --</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="staff">Staff</option>
+                    <option value="borrower">Borrower</option>
+                  </select>
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                  <i class="bi bi-plus-circle"></i> Tambah User
+                </button>
+              </form>
+            </div>
+
+            <!-- User Stats -->
+            <div class="space-y-4">
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total User</p>
+                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="totalUsers">0</p>
+              </div>
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">User Aktif</p>
+                <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="activeUsers">0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Users Table -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 class="font-bold text-lg">Daftar User</h3>
+              <button onclick="loadUsers()" class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-sm hover:bg-blue-200 dark:hover:bg-blue-800">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-3 text-left font-semibold">Nama</th>
+                    <th class="px-6 py-3 text-left font-semibold">Email</th>
+                    <th class="px-6 py-3 text-left font-semibold">Username</th>
+                    <th class="px-6 py-3 text-left font-semibold">Role</th>
+                    <th class="px-6 py-3 text-left font-semibold">Status</th>
+                    <th class="px-6 py-3 text-left font-semibold">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">Memuat data...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Check authentication
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      if (user.role !== 'admin') {
+        Swal.fire('Akses Ditolak', 'Anda tidak memiliki akses ke halaman ini', 'error');
+        window.location.href = '/login';
+      }
+
+      document.getElementById('userName').textContent = user.name || 'Admin';
+      if (user.name) {
+        document.getElementById('userAvatar').textContent = user.name[0].toUpperCase();
+      }
+
+      // Load dark mode preference
+      loadDarkModePreference();
+    }
+
+    // Load users from API
+    async function loadUsers() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Gagal memuat users');
+        
+        const data = await response.json();
+        const users = data.users || [];
+        
+        // Update stats
+        document.getElementById('totalUsers').textContent = users.length;
+        document.getElementById('activeUsers').textContent = users.filter(u => u.is_active).length;
+        
+        // Update table
+        const tbody = document.getElementById('usersTableBody');
+        if (users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Tidak ada user</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = users.map(user => `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="px-6 py-4 font-medium">${user.name || '-'}</td>
+            <td class="px-6 py-4">${user.email || '-'}</td>
+            <td class="px-6 py-4 font-mono text-xs">${user.username || '-'}</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                ${user.role}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${user.is_active ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'}">
+                ${user.is_active ? 'Aktif' : 'Nonaktif'}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <button onclick="deleteUser(${user.id})" class="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded text-sm hover:bg-red-200 dark:hover:bg-red-800">
+                Hapus
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Gagal memuat users: ' + error.message, 'error');
+      }
+    }
+
+    // Add user form submit
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('addUserForm');
+      if (form) {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const userData = {
+            name: document.getElementById('userName').value,
+            email: document.getElementById('userEmail').value,
+            username: document.getElementById('userUsername').value,
+            password: document.getElementById('userPassword').value,
+            role: document.getElementById('userRole').value
+          };
+          
+          try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/users', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(userData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+              Swal.fire('Sukses', 'User berhasil ditambahkan!', 'success');
+              form.reset();
+              loadUsers();
+            } else {
+              Swal.fire('Error', data.message || 'Gagal menambah user', 'error');
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Terjadi kesalahan: ' + error.message, 'error');
+          }
+        });
+      }
+    });
+
+    // Delete user
+    async function deleteUser(userId) {
+      Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: 'Apakah Anda yakin ingin menghapus user ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        deleteUserConfirmed(userId);
+      });
+    }
+
+    async function deleteUserConfirmed(userId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          Swal.fire('Sukses', 'User berhasil dihapus!', 'success');
+          loadUsers();
+        } else {
+          Swal.fire('Error', 'Gagal menghapus user', 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error', 'Terjadi kesalahan: ' + error.message, 'error');
+      }
+    }
+
+    // Initialize Charts
+    function initializeCharts() {
+      // Get chart theme colors based on dark mode
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#d1d5db' : '#374151';
+      const gridColor = isDark ? '#374151' : '#e5e7eb';
+      const bgColor = isDark ? '#1f2937' : '#ffffff';
+
+      // 1. Line Chart - Loan Trend
+      const loanTrendOptions = {
+        chart: {
+          type: 'area',
+          toolbar: { show: true },
+          background: bgColor,
+        },
+        stroke: { curve: 'smooth', width: 3 },
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0 } },
+        colors: ['#3b82f6'],
+        xaxis: {
+          categories: ['1 Feb', '5 Feb', '10 Feb', '15 Feb', '20 Feb', '25 Feb'],
+          labels: { style: { colors: textColor } }
+        },
+        yaxis: { labels: { style: { colors: textColor } } },
+        grid: { borderColor: gridColor },
+        theme: { mode: isDark ? 'dark' : 'light' }
+      };
+      const loanTrendSeries = [{ name: 'Peminjaman', data: [30, 40, 28, 52, 38, 48] }];
+      new ApexCharts(document.querySelector('#loanTrendChart'), { ...loanTrendOptions, series: loanTrendSeries }).render();
+
+      // 2. Pie Chart - Loan Status
+      const loanStatusOptions = {
+        chart: { type: 'pie' },
+        colors: ['#10b981', '#f59e0b', '#ef4444'],
+        labels: ['Selesai', 'Aktif', 'Overdue'],
+        legend: { labels: { colors: textColor } },
+        theme: { mode: isDark ? 'dark' : 'light' }
+      };
+      const loanStatusSeries = [142, 12, 2];
+      new ApexCharts(document.querySelector('#loanStatusChart'), { ...loanStatusOptions, series: loanStatusSeries }).render();
+
+      // 3. Bar Chart - Top Equipment
+      const topEquipmentOptions = {
+        chart: { type: 'bar', toolbar: { show: true } },
+        colors: ['#8b5cf6'],
+        xaxis: {
+          categories: ['Kursi Roda', 'Tenda', 'Sleeping Bag', 'Matras', 'Lampu Camping'],
+          labels: { style: { colors: textColor } }
+        },
+        yaxis: { labels: { style: { colors: textColor } } },
+        grid: { borderColor: gridColor },
+        theme: { mode: isDark ? 'dark' : 'light' }
+      };
+      const topEquipmentSeries = [{ name: 'Jumlah Peminjaman', data: [45, 38, 32, 28, 22] }];
+      new ApexCharts(document.querySelector('#topEquipmentChart'), { ...topEquipmentOptions, series: topEquipmentSeries }).render();
+
+      // 4. Donut Chart - Category Distribution
+      const categoryOptions = {
+        chart: { type: 'donut' },
+        colors: ['#06b6d4', '#6366f1', '#ec4899', '#14b8a6'],
+        labels: ['Olahraga', 'Camping', 'Perlengkapan', 'Lainnya'],
+        legend: { labels: { colors: textColor } },
+        theme: { mode: isDark ? 'dark' : 'light' }
+      };
+      const categorySeries = [35, 45, 50, 26];
+      new ApexCharts(document.querySelector('#categoryChart'), { ...categoryOptions, series: categorySeries }).render();
+    }
+
+    // Show section
+    function showSection(section) {
+      document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active', 'bg-blue-600', 'dark:bg-blue-700'));
+      
+      const sectionId = section + 'Section';
+      const sectionEl = document.getElementById(sectionId);
+      if (sectionEl) {
+        sectionEl.classList.remove('hidden');
+      }
+
+      const btn = event.target.closest('.nav-link');
+      if (btn) {
+        btn.classList.add('active', 'bg-blue-600', 'dark:bg-blue-700');
+      }
+
+      const titles = {
+        dashboard: 'Dashboard',
+        equipment: 'Manajemen Alat',
+        borrowers: 'Manajemen Peminjam',
+        loans: 'Manajemen Peminjaman',
+        reports: 'Laporan',
+        users: 'Kelola User'
+      };
+      document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
+      
+      // Load users when section is shown
+      if (section === 'users') {
+        loadUsers();
+      }
+
+      // Initialize charts when reports section is shown
+      if (section === 'reports') {
+        setTimeout(() => initializeCharts(), 100);
+      }
+    }
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      localStorage.setItem('darkMode', html.classList.contains('dark'));
+    }
+
+    // Load dark mode preference
+    function loadDarkModePreference() {
+      const darkMode = localStorage.getItem('darkMode') === 'true';
+      if (darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    // Logout
+    function logout() {
+      Swal.fire({
+        title: 'Konfirmasi Logout',
+        text: 'Apakah Anda yakin ingin logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Logout!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      });
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

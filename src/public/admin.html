@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Aplikasi Peminjaman Alat</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1>🛠️ Peminjaman Alat - Admin</h1>
+            </div>
+            <div class="navbar-menu">
+                <span id="userName">Loading...</span>
+                <span class="separator">|</span>
+                <span id="userRole" class="badge">Admin</span>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="menu">
+                <li class="menu-item active">
+                    <a href="#" onclick="switchTab('dashboard')">📊 Dashboard</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('users')">👥 Manajemen User</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('equipment')">🔧 Peralatan</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('loans')">📋 Peminjaman</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('approvals')">✅ Persetujuan</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="switchTab('reports')">📈 Laporan</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h2>📊 Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>Total User</h3>
+                            <p id="totalUsers">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔧</div>
+                        <div class="stat-info">
+                            <h3>Total Peralatan</h3>
+                            <p id="totalEquipment">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-info">
+                            <h3>Total Peminjaman</h3>
+                            <p id="totalLoans">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <h3>Menunggu Persetujuan</h3>
+                            <p id="pendingLoans">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>📋 Peminjaman Terbaru</h3>
+                    <div id="recentLoans" class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Peminjam</th>
+                                    <th>Peralatan</th>
+                                    <th>Tanggal Pinjam</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentLoansBody">
+                                <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users" class="tab-content">
+                <div class="tab-header">
+                    <h2>👥 Manajemen User</h2>
+                    <button class="btn-primary" onclick="openUserModal()">+ Tambah User</button>
+                </div>
+
+                <div class="filter-section">
+                    <input type="text" id="userSearch" placeholder="Cari user..." onkeyup="filterUsers()">
+                    <select id="roleFilter" onchange="filterUsers()">
+                        <option value="">Semua Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="petugas">Petugas</option>
+                        <option value="peminjam">Peminjam</option>
+                    </select>
+                </div>
+
+                <div id="usersList" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody">
+                            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Equipment Tab -->
+            <div id="equipment" class="tab-content">
+                <div class="tab-header">
+                    <h2>🔧 Peralatan</h2>
+                    <button class="btn-primary" onclick="openEquipmentModal()">+ Tambah Peralatan</button>
+                </div>
+
+                <div id="equipmentList" class="grid-container">
+                    <!-- Equipment cards will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Loans Tab -->
+            <div id="loans" class="tab-content">
+                <h2>📋 Daftar Peminjaman</h2>
+
+                <div class="filter-section">
+                    <select id="loanStatusFilter" onchange="filterLoans()">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu Persetujuan</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="active">Sedang Dipinjam</option>
+                        <option value="returned">Dikembalikan</option>
+                    </select>
+                </div>
+
+                <div id="loansList" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Peminjam</th>
+                                <th>Peralatan</th>
+                                <th>Tanggal Pinjam</th>
+                                <th>Tanggal Kembali</th>
+                                <th>Status</th>
+                                <th>Persetujuan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loansBody">
+                            <tr><td colspan="8" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Approvals Tab -->
+            <div id="approvals" class="tab-content">
+                <h2>✅ Persetujuan Peminjaman</h2>
+
+                <div id="approvalsList" class="approvals-container">
+                    <!-- Pending approvals will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reports" class="tab-content">
+                <h2>📈 Laporan</h2>
+
+                <div class="filter-section">
+                    <select id="reportType">
+                        <option value="monthly">Laporan Bulanan</option>
+                        <option value="quarterly">Laporan Kuartalan</option>
+                        <option value="yearly">Laporan Tahunan</option>
+                    </select>
+                    <button class="btn-secondary" onclick="generateReport()">Buat Laporan</button>
+                </div>
+
+                <div id="reportContent" class="report-container">
+                    <p class="text-center">Pilih jenis laporan dan klik "Buat Laporan"</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah/Edit User</h3>
+                <button class="btn-close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <form id="userForm" onsubmit="handleUserSubmit(event)">
+                <div class="form-group">
+                    <label>Nama</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="userPassword">
+                    <small>Kosongkan jika tidak ingin mengubah password</small>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="userRole" required>
+                        <option value="">Pilih Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="petugas">Petugas</option>
+                        <option value="peminjam">Peminjam</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="userActive" checked>
+                        Aktif
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeUserModal()">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Equipment Modal -->
+    <div id="equipmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah/Edit Peralatan</h3>
+                <button class="btn-close" onclick="closeEquipmentModal()">&times;</button>
+            </div>
+            <form id="equipmentForm" onsubmit="handleEquipmentSubmit(event)">
+                <div class="form-group">
+                    <label>Nama Peralatan</label>
+                    <input type="text" id="equipmentName" required>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="equipmentDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah</label>
+                    <input type="number" id="equipmentQuantity" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="equipmentCategory" required>
+                        <option value="">Pilih Kategori</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeEquipmentModal()">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Proses Persetujuan</h3>
+                <button class="btn-close" onclick="closeApprovalModal()">&times;</button>
+            </div>
+            <div id="approvalDetails"></div>
+            <div class="modal-footer">
+                <button class="btn-danger" onclick="rejectApproval()">Tolak</button>
+                <button class="btn-success" onclick="approveApproval()">Setujui</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!requireRole('admin')) return;
+            
+            initializeFrontend();
+            setupLogoutButton();
+            
+            // Update user display
+            const user = getUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+            }
+            
+            loadDashboardData();
+            loadUsersList();
+            loadCategories();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from menu
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Mark menu item as active
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Load data based on tab
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'users':
+                    loadUsersList();
+                    break;
+                case 'equipment':
+                    loadEquipmentList();
+                    break;
+                case 'loans':
+                    loadLoansList();
+                    break;
+                case 'approvals':
+                    loadApprovalsList();
+                    break;
+                case 'reports':
+                    break;
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const data = await getDashboardData();
+                document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                document.getElementById('totalEquipment').textContent = data.totalEquipment || 0;
+                document.getElementById('totalLoans').textContent = data.totalLoans || 0;
+                document.getElementById('pendingLoans').textContent = data.pendingApproval || 0;
+                
+                // Load recent loans
+                const loans = await getLoans();
+                displayRecentLoans(loans.slice(0, 5));
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display recent loans
+        function displayRecentLoans(loans) {
+            const tbody = document.getElementById('recentLoansBody');
+            tbody.innerHTML = '';
+            
+            if (loans.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            loans.forEach(loan => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${loan.id}</td>
+                    <td>${loan.borrowerName || 'N/A'}</td>
+                    <td>${loan.equipmentName || 'N/A'}</td>
+                    <td>${formatDate(loan.loan_date)}</td>
+                    <td><span class="badge">${getLoanStatusDisplay(loan.status)}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load users list
+        async function loadUsersList() {
+            try {
+                const users = await getUsers();
+                displayUsersList(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display users list
+        function displayUsersList(users) {
+            const tbody = document.getElementById('usersBody');
+            tbody.innerHTML = '';
+            
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge">${getRoleDisplay(user.role)}</span></td>
+                    <td>${user.is_active ? '<span class="status-active">✓ Aktif</span>' : '<span class="status-inactive">✗ Tidak Aktif</span>'}</td>
+                    <td>
+                        <button class="btn-sm btn-secondary" onclick="editUser(${user.id})">Edit</button>
+                        <button class="btn-sm btn-danger" onclick="deleteUserConfirm(${user.id})">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load equipment list
+        async function loadEquipmentList() {
+            try {
+                const equipment = await getEquipment();
+                displayEquipmentList(equipment);
+            } catch (error) {
+                console.error('Error loading equipment:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display equipment list
+        function displayEquipmentList(equipment) {
+            const container = document.getElementById('equipmentList');
+            container.innerHTML = '';
+            
+            if (!equipment.length) {
+                container.innerHTML = '<p class="text-center">Tidak ada data</p>';
+                return;
+            }
+            
+            equipment.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'equipment-card';
+                card.innerHTML = `
+                    <h4>${item.name}</h4>
+                    <p>${item.description || '-'}</p>
+                    <div class="equipment-info">
+                        <span>Jumlah: ${item.quantity}</span>
+                        <span>${item.is_available ? '✓ Tersedia' : '✗ Tidak Tersedia'}</span>
+                    </div>
+                    <div class="equipment-actions">
+                        <button class="btn-sm btn-secondary" onclick="editEquipment(${item.id})">Edit</button>
+                        <button class="btn-sm btn-danger" onclick="deleteEquipmentConfirm(${item.id})">Hapus</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Load loans list
+        async function loadLoansList() {
+            try {
+                const loans = await getLoans();
+                displayLoansList(loans);
+            } catch (error) {
+                console.error('Error loading loans:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display loans list
+        function displayLoansList(loans) {
+            const tbody = document.getElementById('loansBody');
+            tbody.innerHTML = '';
+            
+            if (!loans.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            loans.forEach(loan => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${loan.id}</td>
+                    <td>${loan.borrowerName || 'N/A'}</td>
+                    <td>${loan.equipmentName || 'N/A'}</td>
+                    <td>${formatDate(loan.loan_date)}</td>
+                    <td>${formatDate(loan.return_date)}</td>
+                    <td><span class="badge">${getLoanStatusDisplay(loan.status)}</span></td>
+                    <td><span class="badge">${getApprovalStatusDisplay(loan.approval_status)}</span></td>
+                    <td>
+                        <button class="btn-sm btn-secondary" onclick="viewLoan(${loan.id})">Lihat</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load approvals list
+        async function loadApprovalsList() {
+            try {
+                const approvals = await getPendingApprovals();
+                displayApprovalsList(approvals);
+            } catch (error) {
+                console.error('Error loading approvals:', error);
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Display approvals
+        function displayApprovalsList(approvals) {
+            const container = document.getElementById('approvalsList');
+            container.innerHTML = '';
+            
+            if (!approvals.length) {
+                container.innerHTML = '<p class="text-center">Tidak ada persetujuan yang menunggu</p>';
+                return;
+            }
+            
+            approvals.forEach(approval => {
+                const card = document.createElement('div');
+                card.className = 'approval-card';
+                card.innerHTML = `
+                    <div class="approval-header">
+                        <h4>Permohonan Peminjaman #${approval.id}</h4>
+                        <span class="badge">Menunggu</span>
+                    </div>
+                    <div class="approval-details">
+                        <p><strong>Peminjam:</strong> ${approval.borrowerName}</p>
+                        <p><strong>Peralatan:</strong> ${approval.equipmentName}</p>
+                        <p><strong>Tanggal Pinjam:</strong> ${formatDate(approval.loan_date)}</p>
+                        <p><strong>Tanggal Kembali:</strong> ${formatDate(approval.return_date)}</p>
+                        <p><strong>Catatan:</strong> ${approval.notes || '-'}</p>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn-danger" onclick="rejectLoanApproval(${approval.id})">Tolak</button>
+                        <button class="btn-success" onclick="approveLoanApproval(${approval.id})">Setujui</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // User Modal functions
+        function openUserModal() {
+            document.getElementById('userForm').reset();
+            document.getElementById('userModal').classList.add('show');
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('show');
+        }
+
+        async function handleUserSubmit(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('userName').value,
+                email: document.getElementById('userEmail').value,
+                role: document.getElementById('userRole').value
+            };
+            
+            if (document.getElementById('userPassword').value) {
+                data.password = document.getElementById('userPassword').value;
+            }
+            
+            try {
+                await createUser(data);
+                showNotification('User berhasil dibuat', 'success');
+                closeUserModal();
+                loadUsersList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Equipment Modal functions
+        function openEquipmentModal() {
+            document.getElementById('equipmentForm').reset();
+            document.getElementById('equipmentModal').classList.add('show');
+        }
+
+        function closeEquipmentModal() {
+            document.getElementById('equipmentModal').classList.remove('show');
+        }
+
+        async function handleEquipmentSubmit(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('equipmentName').value,
+                description: document.getElementById('equipmentDescription').value,
+                quantity: parseInt(document.getElementById('equipmentQuantity').value),
+                categoryId: parseInt(document.getElementById('equipmentCategory').value)
+            };
+            
+            try {
+                await createEquipment(data);
+                showNotification('Peralatan berhasil dibuat', 'success');
+                closeEquipmentModal();
+                loadEquipmentList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                // TODO: Add categories endpoint when available
+                // For now, use placeholder
+                const select = document.getElementById('equipmentCategory');
+                select.innerHTML = `
+                    <option value="">Pilih Kategori</option>
+                    <option value="1">Elektronik</option>
+                    <option value="2">Peralatan</option>
+                    <option value="3">Furniture</option>
+                `;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Filter functions
+        function filterUsers() {
+            // Implement filtering logic
+        }
+
+        function filterLoans() {
+            // Implement filtering logic
+        }
+
+        // Delete functions
+        async function deleteUserConfirm(id) {
+            if (!confirm('Anda yakin ingin menghapus user ini?')) return;
+            
+            try {
+                await deleteUser(id);
+                showNotification('User berhasil dihapus', 'success');
+                loadUsersList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function deleteEquipmentConfirm(id) {
+            if (!confirm('Anda yakin ingin menghapus peralatan ini?')) return;
+            
+            try {
+                await deleteEquipment(id);
+                showNotification('Peralatan berhasil dihapus', 'success');
+                loadEquipmentList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Approval functions
+        async function approveLoanApproval(id) {
+            try {
+                await approveLoan(id, 'Disetujui oleh admin');
+                showNotification('Peminjaman berhasil disetujui', 'success');
+                loadApprovalsList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function rejectLoanApproval(id) {
+            const reason = prompt('Alasan penolakan:');
+            if (!reason) return;
+            
+            try {
+                await rejectLoan(id, reason);
+                showNotification('Peminjaman berhasil ditolak', 'success');
+                loadApprovalsList();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Notification
+        function showNotification(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            // TODO: Implement proper notification UI
+            alert(message);
+        }
+
+        // Report generation
+        function generateReport() {
+            showNotification('Laporan sedang diproses...', 'info');
+            // TODO: Implement report generation
+        }
+    </script>
+</body>
+</html>
