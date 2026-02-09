@@ -34,9 +34,9 @@ const User = sequelize.define('User', {
     comment: 'Password terenkripsi'
   },
   role: {
-    type: DataTypes.ENUM('admin', 'manager', 'staff', 'cashier', 'supervisor', 'borrower'),
+    type: DataTypes.ENUM('admin', 'staff', 'borrower'),
     defaultValue: 'borrower',
-    comment: 'Role user - admin/manager/staff/cashier/supervisor/borrower'
+    comment: 'Role user - admin/staff/borrower'
   },
   is_active: {
     type: DataTypes.BOOLEAN,

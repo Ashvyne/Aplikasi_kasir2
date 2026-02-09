@@ -510,6 +510,8 @@ exports.submitReturn = async (req, res) => {
     const { id } = req.params;
     const { return_condition, damage_notes, damage_cost, grace_period_days = 1 } = req.body;
     
+    console.log(`📝 Submit return for loan ${id}:`, { return_condition, damage_notes, damage_cost, grace_period_days });
+    
     const loan = await Loan.findByPk(id, {
       include: [
         { model: Equipment, as: 'equipment' },
@@ -520,14 +522,19 @@ exports.submitReturn = async (req, res) => {
 
     if (!loan) {
       await transaction.rollback();
+      console.log(`❌ Loan ${id} not found`);
       return res.status(404).json({ success: false, message: 'Peminjaman tidak ditemukan' });
     }
 
+    console.log(`📊 Loan ${id} return_status: ${loan.return_status}`);
+
     if (loan.return_status !== 'Active') {
       await transaction.rollback();
+      console.log(`❌ Loan ${id} is not Active (current: ${loan.return_status})`);
       return res.status(400).json({ 
         success: false, 
-        error: 'Barang sudah dikembalikan atau sedang dalam proses verifikasi' 
+        error: 'Barang sudah dikembalikan atau sedang dalam proses verifikasi',
+        current_status: loan.return_status
       });
     }
 

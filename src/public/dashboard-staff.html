@@ -112,58 +112,158 @@
 
         <!-- Loans -->
         <div id="loansSection" class="section hidden">
-          <h2 class="text-2xl font-bold mb-6">Peminjaman</h2>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="px-6 py-3 text-left font-semibold">ID</th>
-                    <th class="px-6 py-3 text-left font-semibold">Peminjam</th>
-                    <th class="px-6 py-3 text-left font-semibold">Alat</th>
-                    <th class="px-6 py-3 text-left font-semibold">Tanggal Pinjam</th>
-                    <th class="px-6 py-3 text-left font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#LN001</td>
-                    <td class="px-6 py-4">Budi Santoso</td>
-                    <td class="px-6 py-4">Kursi Roda</td>
-                    <td class="px-6 py-4">05-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
-                  </tr>
-                </tbody>
-              </table>
+          <div class="space-y-6">
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-bold">Peminjaman</h2>
+              <button onclick="loadLoansData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+
+            <!-- Filter -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold mb-2">Status Persetujuan</label>
+                <select id="filterApprovalStatus" onchange="filterLoans()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+                  <option value="">Semua</option>
+                  <option value="Pending">Menunggu Persetujuan</option>
+                  <option value="Approved">Disetujui</option>
+                  <option value="Rejected">Ditolak</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Status Peminjaman</label>
+                <select id="filterLoanStatus" onchange="filterLoans()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+                  <option value="">Semua</option>
+                  <option value="Aktif">Aktif</option>
+                  <option value="Terlambat">Terlambat</option>
+                  <option value="Selesai">Selesai</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Cari Peminjam</label>
+                <input type="text" id="searchBorrower" onkeyup="filterLoans()" placeholder="Nama atau nomor pinjam..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <p class="text-xs text-gray-500 uppercase mb-2">Menunggu Persetujuan</p>
+                <p class="text-3xl font-bold text-yellow-600" id="stats-pending">0</p>
+              </div>
+              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <p class="text-xs text-gray-500 uppercase mb-2">Peminjaman Aktif</p>
+                <p class="text-3xl font-bold text-blue-600" id="stats-active">0</p>
+              </div>
+              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <p class="text-xs text-gray-500 uppercase mb-2">Peminjaman Terlambat</p>
+                <p class="text-3xl font-bold text-red-600" id="stats-late">0</p>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+              <div id="loansLoadingState" class="text-center py-8">
+                <p class="text-gray-500">Memuat data...</p>
+              </div>
+              <div id="loansTableState" class="hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th class="px-6 py-3 text-left font-semibold">Nomor</th>
+                        <th class="px-6 py-3 text-left font-semibold">Peminjam</th>
+                        <th class="px-6 py-3 text-left font-semibold">Alat</th>
+                        <th class="px-6 py-3 text-left font-semibold">Pinjam - Kembali</th>
+                        <th class="px-6 py-3 text-left font-semibold">Status Persetujuan</th>
+                        <th class="px-6 py-3 text-left font-semibold">Status Pinjam</th>
+                        <th class="px-6 py-3 text-center font-semibold">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="loansTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Returns -->
         <div id="returnsSection" class="section hidden">
-          <h2 class="text-2xl font-bold mb-6">Pengembalian</h2>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="px-6 py-3 text-left font-semibold">ID</th>
-                    <th class="px-6 py-3 text-left font-semibold">Peminjam</th>
-                    <th class="px-6 py-3 text-left font-semibold">Alat</th>
-                    <th class="px-6 py-3 text-left font-semibold">Tanggal Kembali</th>
-                    <th class="px-6 py-3 text-left font-semibold">Kondisi</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#RT001</td>
-                    <td class="px-6 py-4">Siti Rahayu</td>
-                    <td class="px-6 py-4">Tenda Camping</td>
-                    <td class="px-6 py-4">04-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Baik</span></td>
-                  </tr>
-                </tbody>
-              </table>
+          <div class="space-y-6">
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-bold">Pengembalian Barang</h2>
+              <button onclick="loadReturnsData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+
+            <!-- Filter -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold mb-2">Status Masa Tenggang</label>
+                <select id="filterGracePeriod" onchange="filterReturns()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+                  <option value="">Semua</option>
+                  <option value="grace">Dalam Masa Tenggang</option>
+                  <option value="expired">Masa Tenggang Berakhir</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Status Verifikasi</label>
+                <select id="filterVerifyStatus" onchange="filterReturns()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+                  <option value="">Semua</option>
+                  <option value="Returned">Menunggu Verifikasi</option>
+                  <option value="Verified">Sudah Diverifikasi</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Cari Peminjam</label>
+                <input type="text" id="searchReturnBorrower" onkeyup="filterReturns()" placeholder="Nama atau nomor pinjam..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <p class="text-xs text-gray-500 uppercase mb-2">Menunggu Verifikasi</p>
+                <p class="text-3xl font-bold text-orange-600" id="stats-return-pending">0</p>
+              </div>
+              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <p class="text-xs text-gray-500 uppercase mb-2">Masa Tenggang Berakhir</p>
+                <p class="text-3xl font-bold text-red-600" id="stats-return-expired">0</p>
+              </div>
+              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <p class="text-xs text-gray-500 uppercase mb-2">Sudah Diverifikasi</p>
+                <p class="text-3xl font-bold text-green-600" id="stats-return-verified">0</p>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+              <div id="returnsLoadingState" class="text-center py-8">
+                <p class="text-gray-500">Memuat data...</p>
+              </div>
+              <div id="returnsTableState" class="hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th class="px-6 py-3 text-left font-semibold">Nomor</th>
+                        <th class="px-6 py-3 text-left font-semibold">Peminjam</th>
+                        <th class="px-6 py-3 text-left font-semibold">Alat</th>
+                        <th class="px-6 py-3 text-left font-semibold">Kondisi (Customer)</th>
+                        <th class="px-6 py-3 text-left font-semibold">Masa Tenggang</th>
+                        <th class="px-6 py-3 text-left font-semibold">Status</th>
+                        <th class="px-6 py-3 text-center font-semibold">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="returnsTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -172,6 +272,10 @@
   </div>
 
   <script>
+    const API_BASE = '/api';
+    let allLoans = [];
+    let allReturns = [];
+
     function checkAuth() {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -183,6 +287,9 @@
       document.getElementById('userName').textContent = user.name || 'Staff';
       if (user.name) document.getElementById('userAvatar').textContent = user.name.substring(0, 2).toUpperCase();
       loadDarkModePreference();
+      
+      // Load dashboard data
+      loadDashboardData();
     }
 
     function showSection(section) {
@@ -195,6 +302,401 @@
       if (btn) btn.classList.add('active', 'bg-blue-600', 'dark:bg-blue-700');
       const titles = { dashboard: 'Dashboard', loans: 'Peminjaman', returns: 'Pengembalian' };
       document.getElementById('pageTitle').textContent = titles[section] || 'Staff';
+
+      // Load data sesuai section
+      if (section === 'loans') loadLoansData();
+      if (section === 'returns') loadReturnsData();
+    }
+
+    async function loadDashboardData() {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Load loans untuk stats
+        const loansRes = await fetch(`${API_BASE}/loans`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const loansData = await loansRes.json();
+        const loans = loansData.loans || [];
+
+        // Stats dashboard
+        const loansToday = loans.filter(l => {
+          const loanDate = new Date(l.loan_date);
+          const today = new Date();
+          return loanDate.toDateString() === today.toDateString();
+        }).length;
+
+        const returnsRes = await fetch(`${API_BASE}/loans/returns/awaiting-verification`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const returnsData = await returnsRes.json();
+        const returns = returnsData.loans || [];
+
+        const returnsToday = returns.filter(r => {
+          const returnDate = new Date(r.returned_at);
+          const today = new Date();
+          return returnDate.toDateString() === today.toDateString();
+        }).length;
+
+        const activeLoans = loans.filter(l => l.status === 'Aktif').length;
+
+        // Update stats
+        document.querySelector('[class*="text-blue-600"][class*="text-4xl"]').textContent = loansToday;
+        document.querySelector('[class*="text-green-600"][class*="text-4xl"]').textContent = returnsToday;
+        document.querySelector('[class*="text-orange-600"][class*="text-4xl"]').textContent = activeLoans;
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      }
+    }
+
+    async function loadLoansData() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/loans`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Gagal memuat data');
+
+        const data = await response.json();
+        allLoans = data.loans || [];
+
+        updateLoansStats();
+        renderLoansTable();
+
+        document.getElementById('loansLoadingState').classList.add('hidden');
+        document.getElementById('loansTableState').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error loading loans:', error);
+        document.getElementById('loansLoadingState').textContent = 'Gagal memuat data: ' + error.message;
+      }
+    }
+
+    function updateLoansStats() {
+      const pending = allLoans.filter(l => l.approval_status === 'Pending').length;
+      const active = allLoans.filter(l => l.status === 'Aktif').length;
+      const late = allLoans.filter(l => l.status === 'Terlambat').length;
+
+      document.getElementById('stats-pending').textContent = pending;
+      document.getElementById('stats-active').textContent = active;
+      document.getElementById('stats-late').textContent = late;
+    }
+
+    function renderLoansTable() {
+      const tbody = document.getElementById('loansTableBody');
+      const filtered = filterLoansArray();
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada data</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(loan => {
+        const status = loan.status === 'Terlambat' ? 'bg-red-100 text-red-800' : 
+                      loan.status === 'Aktif' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+        
+        const approvalStatus = loan.approval_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                              loan.approval_status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+
+        return `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="px-6 py-4 font-medium">${loan.loan_number}</td>
+            <td class="px-6 py-4">${loan.borrower?.name || '-'}</td>
+            <td class="px-6 py-4">${loan.equipment?.name || '-'} (${loan.quantity}x)</td>
+            <td class="px-6 py-4 text-sm">${formatDate(loan.loan_date)} - ${formatDate(loan.due_date)}</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium dark:bg-gray-700 ${approvalStatus}">
+                ${loan.approval_status}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium dark:bg-gray-700 ${status}">
+                ${loan.status}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+              ${loan.approval_status === 'Pending' ? `
+                <button onclick="approveLoans(${loan.id})" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded mr-1">Approve</button>
+                <button onclick="rejectLoans(${loan.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded">Reject</button>
+              ` : '-'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterLoansArray() {
+      const approvalStatus = document.getElementById('filterApprovalStatus').value;
+      const loanStatus = document.getElementById('filterLoanStatus').value;
+      const searchTerm = document.getElementById('searchBorrower').value.toLowerCase();
+
+      return allLoans.filter(loan => {
+        const matchApproval = !approvalStatus || loan.approval_status === approvalStatus;
+        const matchLoan = !loanStatus || loan.status === loanStatus;
+        const matchSearch = !searchTerm || 
+                          loan.loan_number.toLowerCase().includes(searchTerm) ||
+                          loan.borrower?.name?.toLowerCase().includes(searchTerm);
+        return matchApproval && matchLoan && matchSearch;
+      });
+    }
+
+    function filterLoans() {
+      renderLoansTable();
+    }
+
+    async function loadReturnsData() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/loans/returns/awaiting-verification`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Gagal memuat data');
+
+        const data = await response.json();
+        allReturns = data.loans || [];
+
+        updateReturnsStats();
+        renderReturnsTable();
+
+        document.getElementById('returnsLoadingState').classList.add('hidden');
+        document.getElementById('returnsTableState').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error loading returns:', error);
+        document.getElementById('returnsLoadingState').textContent = 'Gagal memuat data: ' + error.message;
+      }
+    }
+
+    function updateReturnsStats() {
+      const now = new Date();
+      let pending = 0, expired = 0, verified = 0;
+
+      allReturns.forEach(r => {
+        const gracePeriodEnd = new Date(r.grace_period_end);
+        if (now > gracePeriodEnd) expired++;
+        else pending++;
+      });
+
+      document.getElementById('stats-return-pending').textContent = pending;
+      document.getElementById('stats-return-expired').textContent = expired;
+      document.getElementById('stats-return-verified').textContent = verified;
+    }
+
+    function renderReturnsTable() {
+      const tbody = document.getElementById('returnsTableBody');
+      const filtered = filterReturnsArray();
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada data</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(loan => {
+        const now = new Date();
+        const gracePeriodEnd = new Date(loan.grace_period_end);
+        const isExpired = now > gracePeriodEnd;
+        const hoursRemaining = Math.max(0, (gracePeriodEnd - now) / (1000 * 60 * 60));
+
+        const conditionClass = loan.return_condition === 'Baik' ? 'bg-green-100 text-green-800' :
+                             loan.return_condition === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+
+        return `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="px-6 py-4 font-medium">${loan.loan_number}</td>
+            <td class="px-6 py-4">${loan.borrower?.name || '-'}</td>
+            <td class="px-6 py-4">${loan.equipment?.name || '-'} (${loan.quantity}x)</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium dark:bg-gray-700 ${conditionClass}">
+                ${loan.return_condition || 'Tidak diketahui'}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${isExpired ? '<span class="text-red-600 font-bold">❌ BERAKHIR</span>' : `<span class="text-green-600">⏱️ ${Math.round(hoursRemaining)}j</span>`}
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium dark:bg-gray-700 bg-orange-100 text-orange-800">
+                ${loan.return_status}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <button onclick="openVerifyModal(${loan.id})" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">Verifikasi</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterReturnsArray() {
+      const gracePeriod = document.getElementById('filterGracePeriod').value;
+      const verifyStatus = document.getElementById('filterVerifyStatus').value;
+      const searchTerm = document.getElementById('searchReturnBorrower').value.toLowerCase();
+
+      const now = new Date();
+
+      return allReturns.filter(loan => {
+        const gracePeriodEnd = new Date(loan.grace_period_end);
+        const isExpired = now > gracePeriodEnd;
+
+        const matchGrace = !gracePeriod || (gracePeriod === 'grace' && !isExpired) || (gracePeriod === 'expired' && isExpired);
+        const matchVerify = !verifyStatus || loan.return_status === verifyStatus;
+        const matchSearch = !searchTerm ||
+                          loan.loan_number.toLowerCase().includes(searchTerm) ||
+                          loan.borrower?.name?.toLowerCase().includes(searchTerm);
+
+        return matchGrace && matchVerify && matchSearch;
+      });
+    }
+
+    function filterReturns() {
+      renderReturnsTable();
+    }
+
+    async function approveLoans(loanId) {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      try {
+        const response = await fetch(`${API_BASE}/loans/${loanId}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ approved_by: user.id })
+        });
+
+        if (!response.ok) throw new Error('Gagal approve');
+        Swal.fire('Berhasil', 'Peminjaman disetujui', 'success');
+        loadLoansData();
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+      }
+    }
+
+    async function rejectLoans(loanId) {
+      const reason = await Swal.fire({
+        title: 'Tolak Peminjaman',
+        input: 'textarea',
+        inputLabel: 'Alasan penolakan',
+        inputPlaceholder: 'Masukkan alasan...',
+        showCancelButton: true
+      });
+
+      if (!reason.isConfirmed || !reason.value) return;
+
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      try {
+        const response = await fetch(`${API_BASE}/loans/${loanId}/reject`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            approved_by: user.id,
+            rejection_reason: reason.value
+          })
+        });
+
+        if (!response.ok) throw new Error('Gagal reject');
+        Swal.fire('Berhasil', 'Peminjaman ditolak', 'success');
+        loadLoansData();
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+      }
+    }
+
+    async function openVerifyModal(loanId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/loans/${loanId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Gagal memuat data');
+        
+        const data = await response.json();
+        const loan = data.loan;
+
+        // Hitung grace period
+        const now = new Date();
+        const gracePeriodEnd = new Date(loan.grace_period_end);
+        const hoursRemaining = Math.max(0, (gracePeriodEnd - now) / (1000 * 60 * 60));
+        const isExpired = now > gracePeriodEnd;
+
+        // Update modal content
+        document.getElementById('verifyLoanNumber').textContent = loan.loan_number;
+        document.getElementById('verifyBorrowerName').textContent = loan.borrower?.name || '-';
+        document.getElementById('verifyEquipmentName').textContent = `${loan.equipment?.name} (${loan.quantity}x)` || '-';
+        document.getElementById('verifyLoanDate').textContent = formatDate(loan.loan_date);
+        document.getElementById('verifyReturnDate').textContent = formatDate(loan.returned_at);
+        document.getElementById('verifyCondition').textContent = loan.return_condition || '-';
+        document.getElementById('verifyGracePeriod').textContent = isExpired ? '❌ BERAKHIR' : `⏱️ ${Math.round(hoursRemaining)}j`;
+        document.getElementById('verifyGracePeriod').className = isExpired ? 'text-red-600 font-bold' : 'text-green-600';
+        document.getElementById('verifyNotes').textContent = loan.return_notes || '-';
+
+        // Store loan ID untuk submit
+        document.getElementById('verifyForm').dataset.loanId = loanId;
+
+        // Buka modal
+        document.getElementById('verifyModal').classList.remove('hidden');
+        document.getElementById('verifyModal').classList.add('flex');
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+      }
+    }
+
+    function closeVerifyModal() {
+      document.getElementById('verifyModal').classList.add('hidden');
+      document.getElementById('verifyModal').classList.remove('flex');
+      document.getElementById('verifyForm').reset();
+    }
+
+    async function submitVerification() {
+      const loanId = document.getElementById('verifyForm').dataset.loanId;
+      const verifiedCondition = document.getElementById('verifiedCondition').value;
+      const verifiedNotes = document.getElementById('verifiedNotes').value;
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      if (!verifiedCondition) {
+        Swal.fire('Error', 'Pilih kondisi item', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/loans/${loanId}/verify-return`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            verified_condition: verifiedCondition,
+            verified_notes: verifiedNotes || '',
+            verified_by: user.id,
+            is_verified: true
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Gagal verifikasi');
+        }
+
+        Swal.fire('Berhasil', 'Pengembalian terverifikasi', 'success');
+        closeVerifyModal();
+        loadReturnsData(); // Reload data
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+      }
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 
     function toggleDarkMode() {
@@ -229,5 +731,89 @@
 
     checkAuth();
   </script>
+
+  <!-- Modal Verifikasi Pengembalian -->
+  <div id="verifyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+      <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="bi bi-check-circle text-2xl"></i>
+          <h2 class="text-xl font-bold">Verifikasi Pengembalian</h2>
+        </div>
+        <button onclick="closeVerifyModal()" class="text-white hover:text-gray-200 text-2xl">×</button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <!-- Loan Info -->
+        <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">No. Peminjaman</p>
+            <p class="font-semibold text-lg" id="verifyLoanNumber">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Peminjam</p>
+            <p class="font-semibold text-lg" id="verifyBorrowerName">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Alat</p>
+            <p class="font-semibold text-lg" id="verifyEquipmentName">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Peminjaman</p>
+            <p class="font-semibold text-lg" id="verifyLoanDate">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Dikembalikan</p>
+            <p class="font-semibold text-lg" id="verifyReturnDate">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Grace Period</p>
+            <p class="font-semibold text-lg" id="verifyGracePeriod">-</p>
+          </div>
+        </div>
+
+        <!-- Kondisi Dikembalikan -->
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Kondisi Saat Dikembalikan</p>
+          <p class="font-medium text-lg" id="verifyCondition">-</p>
+        </div>
+
+        <!-- Catatan Pengembalian -->
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Catatan Pengembalian</p>
+          <p class="text-sm italic" id="verifyNotes">-</p>
+        </div>
+
+        <!-- Form Verifikasi -->
+        <form id="verifyForm" class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div>
+            <label class="block text-sm font-semibold mb-3">Kondisi Verifikasi</label>
+            <select id="verifiedCondition" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">-- Pilih Kondisi --</option>
+              <option value="Baik">✅ Baik</option>
+              <option value="Rusak Ringan">⚠️ Rusak Ringan</option>
+              <option value="Rusak Berat">❌ Rusak Berat</option>
+              <option value="Hilang">🔴 Hilang</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold mb-2">Catatan Verifikasi (Opsional)</label>
+            <textarea id="verifiedNotes" placeholder="Masukkan catatan verifikasi..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4"></textarea>
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button type="button" onclick="closeVerifyModal()" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition">
+              Batal
+            </button>
+            <button type="button" onclick="submitVerification()" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2">
+              <i class="bi bi-check-lg"></i>
+              Terima & Verifikasi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

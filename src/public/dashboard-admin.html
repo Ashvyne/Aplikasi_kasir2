@@ -181,33 +181,27 @@
 
         <!-- Equipment Section -->
         <div id="equipmentSection" class="section hidden">
-          <h2 class="text-2xl font-bold mb-6">Manajemen Alat</h2>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 class="font-bold">Daftar Alat</h3>
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold">Manajemen Alat</h2>
+            <div class="flex gap-3">
+              <a href="/equipment-management.html" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+                <i class="bi bi-tools"></i> Kelola Equipment
+              </a>
+              <button onclick="openAddEquipmentModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+                <i class="bi bi-plus-lg"></i> Tambah Alat
+              </button>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="px-6 py-3 text-left font-semibold">ID</th>
-                    <th class="px-6 py-3 text-left font-semibold">Nama</th>
-                    <th class="px-6 py-3 text-left font-semibold">Kategori</th>
-                    <th class="px-6 py-3 text-left font-semibold">Stok</th>
-                    <th class="px-6 py-3 text-left font-semibold">Kondisi</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#KR001</td>
-                    <td class="px-6 py-4">Kursi Roda</td>
-                    <td class="px-6 py-4">Medis</td>
-                    <td class="px-6 py-4">5</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Baik</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="equipmentLoadingState" class="text-center py-12">
+            <i class="bi bi-hourglass text-4xl text-blue-600 mb-3 block"></i>
+            <p class="text-gray-600 dark:text-gray-400">Memuat data alat...</p>
+          </div>
+
+          <!-- Equipment Cards Grid -->
+          <div id="equipmentCardsContainer" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Equipment cards akan diisi di sini -->
           </div>
         </div>
 
@@ -693,6 +687,11 @@
         loadUsers();
       }
 
+      // Load equipment when section is shown
+      if (section === 'equipment') {
+        loadEquipmentAdminData();
+      }
+
       // Initialize charts when reports section is shown
       if (section === 'reports') {
         setTimeout(() => initializeCharts(), 100);
@@ -714,6 +713,187 @@
       } else {
         document.documentElement.classList.remove('dark');
       }
+    }
+
+    // Open add equipment modal
+    function openAddEquipmentModal() {
+      document.getElementById('addEquipmentModal').classList.remove('hidden');
+    }
+
+    function closeAddEquipmentModal() {
+      document.getElementById('addEquipmentModal').classList.add('hidden');
+      document.getElementById('adminAddEquipmentForm').reset();
+    }
+
+    // Load equipment data for admin view
+    async function loadEquipmentAdminData() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/equipment', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Gagal memuat data');
+
+        const data = await response.json();
+        const equipment = data.equipment || [];
+
+        renderEquipmentCards(equipment);
+        document.getElementById('equipmentLoadingState').classList.add('hidden');
+        document.getElementById('equipmentCardsContainer').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error loading equipment:', error);
+        document.getElementById('equipmentLoadingState').textContent = 'Gagal memuat data: ' + error.message;
+      }
+    }
+
+    function renderEquipmentCards(equipment) {
+      const container = document.getElementById('equipmentCardsContainer');
+      
+      if (equipment.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Tidak ada alat daftar. Klik "Tambah Alat" untuk menambahkan.</p></div>';
+        return;
+      }
+
+      container.innerHTML = equipment.map(eq => `
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
+          <!-- Image -->
+          <div class="relative h-48 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+            ${eq.image_url ? `
+              <img src="${eq.image_url}" alt="${eq.name}" class="w-full h-full object-cover">
+            ` : `
+              <i class="bi bi-box text-5xl text-gray-400"></i>
+            `}
+          </div>
+
+          <!-- Info -->
+          <div class="p-4 space-y-3">
+            <div>
+              <h3 class="font-bold text-lg">${eq.name}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${eq.code}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p class="text-gray-600 dark:text-gray-400">Kategori</p>
+                <p class="font-semibold">${eq.category || 'Umum'}</p>
+              </div>
+              <div>
+                <p class="text-gray-600 dark:text-gray-400">Tarif/hari</p>
+                <p class="font-semibold">Rp${parseInt(eq.daily_rental_rate).toLocaleString()}</p>
+              </div>
+              <div>
+                <p class="text-gray-600 dark:text-gray-400">Total Unit</p>
+                <p class="font-semibold">${eq.total_quantity}</p>
+              </div>
+              <div>
+                <p class="text-gray-600 dark:text-gray-400">Tersedia</p>
+                <p class="font-semibold">${eq.available_quantity}</p>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex gap-2">
+              <a href="/equipment-management.html" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-medium transition text-center">
+                Kelola
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Handle add equipment form submission
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('adminAddEquipmentForm');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          // Validasi input
+          const name = document.getElementById('adminEqName').value.trim();
+          const code = document.getElementById('adminEqCode').value.trim();
+          const dailyRate = document.getElementById('adminEqDailyRate').value;
+          const totalQty = document.getElementById('adminEqTotalQty').value;
+
+          if (!name || !code || !dailyRate) {
+            Swal.fire('Validasi Error', 'Nama alat, kode, dan tarif harian harus diisi', 'warning');
+            return;
+          }
+
+          if (parseInt(dailyRate) <= 0) {
+            Swal.fire('Validasi Error', 'Tarif harian harus lebih dari 0', 'warning');
+            return;
+          }
+
+          if (parseInt(totalQty) < 1) {
+            Swal.fire('Validasi Error', 'Total kuantitas minimal harus 1', 'warning');
+            return;
+          }
+
+          const equipmentData = {
+            name: name,
+            code: code,
+            category: document.getElementById('adminEqCategory').value.trim() || 'Umum',
+            daily_rental_rate: parseInt(dailyRate),
+            acquisition_cost: parseInt(document.getElementById('adminEqAcquisitionCost').value) || 0,
+            total_quantity: parseInt(totalQty),
+            location: document.getElementById('adminEqLocation').value.trim(),
+            description: document.getElementById('adminEqDescription').value.trim()
+          };
+
+          const token = localStorage.getItem('token');
+          const submitBtn = document.querySelector('#adminAddEquipmentForm button[type="submit"]');
+          const originalBtnText = submitBtn.innerHTML;
+          
+          // Loading state
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="bi bi-hourglass"></i> Menyimpan...';
+
+          try {
+            const response = await fetch('/api/equipment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(equipmentData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || data.message || 'Gagal membuat alat');
+            }
+
+            Swal.fire({
+              title: 'Berhasil!',
+              text: `Alat "${equipmentData.name}" berhasil ditambahkan`,
+              icon: 'success',
+              confirmButtonColor: '#3085d6',
+              confirmButtonText: 'OK'
+            }).then(() => {
+              closeAddEquipmentModal();
+              loadEquipmentAdminData();
+            });
+          } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+              title: 'Error',
+              text: error.message,
+              icon: 'error',
+              confirmButtonColor: '#d33'
+            });
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+          }
+        });
+      }
+    });
+
+    // Open add equipment form (for compatibility)
+    function openAddEquipmentForm() {
+      openAddEquipmentModal();
     }
 
     // Logout
@@ -738,5 +918,91 @@
 
     checkAuth();
   </script>
+
+  <!-- Modal Tambah Alat -->
+  <div id="addEquipmentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+      <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between sticky top-0">
+        <div class="flex items-center gap-3">
+          <i class="bi bi-plus-circle text-2xl"></i>
+          <h2 class="text-xl font-bold">Tambah Alat Baru</h2>
+        </div>
+        <button onclick="closeAddEquipmentModal()" class="text-white hover:text-gray-200 text-2xl">×</button>
+      </div>
+
+      <form id="adminAddEquipmentForm" class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Nama Alat -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Nama Alat <span class="text-red-600">*</span></label>
+            <input type="text" id="adminEqName" required placeholder="Contoh: Mesin Las Inverter"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <!-- Kode Alat -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Kode Alat <span class="text-red-600">*</span></label>
+            <input type="text" id="adminEqCode" required placeholder="Contoh: EQ001"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Kode harus unik</p>
+          </div>
+
+          <!-- Kategori -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Kategori</label>
+            <input type="text" id="adminEqCategory" placeholder="Contoh: Peralatan Las"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <!-- Tarif Sewa Harian -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Tarif Sewa Harian (Rp) <span class="text-red-600">*</span></label>
+            <input type="number" id="adminEqDailyRate" required placeholder="0" min="1"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Harga sewa per hari (minimum Rp 1)</p>
+          </div>
+
+          <!-- Harga Perolehan -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Harga Perolehan (Rp)</label>
+            <input type="number" id="adminEqAcquisitionCost" placeholder="0"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <!-- Total Qty -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Total Kuantitas</label>
+            <input type="number" id="adminEqTotalQty" placeholder="1" value="1"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <!-- Lokasi -->
+          <div>
+            <label class="block text-sm font-semibold mb-2">Lokasi Penyimpanan</label>
+            <input type="text" id="adminEqLocation" placeholder="Contoh: Gudang A"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <!-- Deskripsi -->
+        <div>
+          <label class="block text-sm font-semibold mb-2">Deskripsi</label>
+          <textarea id="adminEqDescription" placeholder="Spesifikasi atau catatan alat..."
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4"></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex gap-3 pt-6">
+          <button type="button" onclick="closeAddEquipmentModal()" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition">
+            Batal
+          </button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2">
+            <i class="bi bi-check-lg"></i> Simpan Alat
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>

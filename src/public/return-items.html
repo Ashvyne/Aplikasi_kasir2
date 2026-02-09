@@ -440,23 +440,30 @@
 
             try {
                 const token = localStorage.getItem('token');
+                const requestBody = {
+                    return_condition: condition,
+                    damage_notes: damageNotes || null,
+                    damage_cost: damageCost,
+                    grace_period_days: gracePeriod
+                };
+
+                console.log('📤 Sending return request:', requestBody);
+
                 const response = await fetch(`${apiBaseUrl}/loans/${selectedLoanId}/submit-return`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({
-                        return_condition: condition,
-                        damage_notes: damageNotes || null,
-                        damage_cost: damageCost,
-                        grace_period_days: gracePeriod
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
+                const data = await response.json();
+                console.log('📥 Response:', data);
+
                 if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.message || 'Gagal mengembalikan barang');
+                    const errorMsg = data.message || data.error || 'Gagal mengembalikan barang';
+                    throw new Error(errorMsg);
                 }
 
                 // Show success state
@@ -478,6 +485,10 @@
             } catch (error) {
                 document.getElementById('submit-btn').disabled = false;
                 document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('form-state').classList.remove('hidden');
+                showAlert(`❌ ${error.message}`, 'error');
+            }
+        }
                 document.getElementById('form-state').classList.remove('hidden');
                 showAlert(error.message, 'error');
             }

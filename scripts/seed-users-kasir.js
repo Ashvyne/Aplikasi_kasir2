@@ -20,7 +20,7 @@ async function seedUsers() {
       await sequelize.query('DELETE FROM users');
       console.log('✓ Cleared existing users');
       
-      await sequelize.query('ALTER TABLE users MODIFY COLUMN role ENUM("admin", "manager", "staff", "cashier", "supervisor", "borrower") DEFAULT "borrower"');
+      await sequelize.query('ALTER TABLE users MODIFY COLUMN role ENUM("admin", "staff", "borrower") DEFAULT "borrower"');
       console.log('✓ Users table schema updated');
     } catch (err) {
       console.log('ℹ️  Table schema update:', err.message.substring(0, 50));
@@ -30,7 +30,7 @@ async function seedUsers() {
     await sequelize.sync();
     console.log('✓ Database synced');
 
-    // Default users
+    // Default users - Simplified to 3 roles only
     const defaultUsers = [
       {
         name: 'Administrator',
@@ -38,30 +38,6 @@ async function seedUsers() {
         email: 'admin@example.com',
         password: 'admin123',
         role: 'admin',
-        is_active: true
-      },
-      {
-        name: 'Manajer Operasional',
-        username: 'manager',
-        email: 'manager@example.com',
-        password: 'manager123',
-        role: 'manager',
-        is_active: true
-      },
-      {
-        name: 'Kasir Utama',
-        username: 'cashier',
-        email: 'cashier@example.com',
-        password: 'cashier123',
-        role: 'cashier',
-        is_active: true
-      },
-      {
-        name: 'Supervisor Lapangan',
-        username: 'supervisor',
-        email: 'supervisor@example.com',
-        password: 'supervisor123',
-        role: 'supervisor',
         is_active: true
       },
       {
@@ -121,18 +97,17 @@ async function seedUsers() {
     console.log('  Username: admin');
     console.log('  Password: admin123');
     console.log('');
-    console.log('Manager:');
-    console.log('  Username: manager');
-    console.log('  Password: manager123');
+    console.log('Staff:');
+    console.log('  Username: staff01');
+    console.log('  Password: staff123');
     console.log('');
-    console.log('Cashier:');
-    console.log('  Username: cashier');
-    console.log('  Password: cashier123');
+    console.log('Borrower/Peminjam:');
+    console.log('  Username: budi');
+    console.log('  Password: budi123');
     console.log('');
     console.log('Supervisor:');
     console.log('  Username: supervisor');
-    console.log('  Password: supervisor123');
-    console.log('');
+console.log('');
     console.log('Staff:');
     console.log('  Username: staff01');
     console.log('  Password: staff123');

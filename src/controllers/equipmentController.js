@@ -249,3 +249,33 @@ exports.updateEquipmentCondition = async (req, res) => {
     res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 };
+// UPLOAD image untuk equipment
+exports.uploadEquipmentImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Tidak ada file yang diupload' });
+    }
+
+    const equipment = await Equipment.findByPk(id);
+    if (!equipment) {
+      return res.status(404).json({ success: false, message: 'Alat tidak ditemukan' });
+    }
+
+    // Generate path untuk image
+    const imagePath = `/uploads/equipment/${id}/${req.file.filename}`;
+
+    await equipment.update({ image_url: imagePath });
+
+    res.json({ 
+      success: true,
+      message: 'Gambar berhasil diupload',
+      image_url: imagePath,
+      equipment 
+    });
+  } catch (error) {
+    console.error('❌ Error uploading equipment image:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan saat upload' });
+  }
+};

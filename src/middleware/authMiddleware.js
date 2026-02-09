@@ -41,42 +41,6 @@ exports.requireAdmin = (req, res, next) => {
   next();
 };
 
-// Middleware untuk check role - Petugas only
-exports.requirePetugas = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  if (req.user.role !== 'petugas') {
-    return res.status(403).json({ error: 'Hanya Petugas yang dapat mengakses' });
-  }
-  next();
-};
-
-// Middleware untuk check role - Peminjam only
-exports.requirePeminjam = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  if (req.user.role !== 'peminjam') {
-    return res.status(403).json({ error: 'Hanya Peminjam yang dapat mengakses' });
-  }
-  next();
-};
-
-// Middleware untuk check role - Admin atau Petugas
-exports.requireAdminOrPetugas = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  if (req.user.role !== 'admin' && req.user.role !== 'petugas') {
-    return res.status(403).json({ error: 'Hanya Admin atau Petugas yang dapat mengakses' });
-  }
-  next();
-};
-
 // Middleware untuk check role - Staff only
 exports.requireStaff = (req, res, next) => {
   if (!req.user) {
@@ -89,7 +53,19 @@ exports.requireStaff = (req, res, next) => {
   next();
 };
 
-// Middleware untuk check role - Admin, Petugas, atau Staff
+// Middleware untuk check role - Borrower only
+exports.requireBorrower = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'borrower') {
+    return res.status(403).json({ error: 'Hanya Borrower yang dapat mengakses' });
+  }
+  next();
+};
+
+// Middleware untuk check role - Admin atau Staff
 exports.requireAdminOrStaff = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -101,7 +77,40 @@ exports.requireAdminOrStaff = (req, res, next) => {
   next();
 };
 
-// Middleware untuk check role - Admin, Petugas, Staff
+// Legacy middleware untuk backward compatibility
+exports.requirePetugas = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'petugas') {
+    return res.status(403).json({ error: 'Hanya Petugas yang dapat mengakses' });
+  }
+  next();
+};
+
+exports.requirePeminjam = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'peminjam') {
+    return res.status(403).json({ error: 'Hanya Peminjam yang dapat mengakses' });
+  }
+  next();
+};
+
+exports.requireAdminOrPetugas = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.user.role !== 'admin' && req.user.role !== 'petugas') {
+    return res.status(403).json({ error: 'Hanya Admin atau Petugas yang dapat mengakses' });
+  }
+  next();
+};
+
 exports.requireAdminOrPetugasOrStaff = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -113,7 +122,6 @@ exports.requireAdminOrPetugasOrStaff = (req, res, next) => {
   next();
 };
 
-// Legacy middleware untuk backward compatibility
 exports.requireAdminBarang = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -136,18 +144,3 @@ exports.requireAdminKasir = (req, res, next) => {
   next();
 };
 
-// Legacy middleware untuk backward compatibility
-exports.requireRole = (allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-    
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Anda tidak memiliki akses' });
-    }
-    next();
-  };
-};
