@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
-const { verifyToken, requireAdminBarang } = require('../middleware/authMiddleware');
+const { verifyToken, requireItemUser, requireAdminBarang } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const Product = require('../models/Product');
 const { Op } = require('sequelize');
 
-// GET reports dashboard - Admin Barang only
-router.get('/', verifyToken, requireAdminBarang, async (req, res) => {
+// ============ REPORTS - ITEM USER ONLY ============
+// GET reports dashboard - Item User only (for inventory/sales analytics)
+router.get('/', verifyToken, requireItemUser, async (req, res) => {
   try {
-    console.log('✓ GET /api/reports');
+    console.log(`✓ GET /api/reports (user: ${req.user.username})`);
     
     // Get today's date
     const today = new Date();

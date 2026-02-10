@@ -1,15 +1,16 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
-const { verifyToken, requireAdminKasir } = require('../middleware/authMiddleware');
+const { verifyToken, requireCashier, requireAdminKasir } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const router = express.Router();
 
 let nextInvoiceNumber = 1001;
 
-// GET all transactions - Admin Kasir only
-router.get('/', verifyToken, requireAdminKasir, async (req, res) => {
+// ============ TRANSACTION OPERATIONS - CASHIER ONLY ============
+// GET all transactions - Cashier only
+router.get('/', verifyToken, requireCashier, async (req, res) => {
   try {
-    console.log('✓ GET /api/transactions');
+    console.log(`✓ GET /api/transactions (user: ${req.user.username})`);
     const transactions = await Transaction.findAll({ 
       order: [['created_at', 'DESC']] 
     });
@@ -24,25 +25,25 @@ router.get('/', verifyToken, requireAdminKasir, async (req, res) => {
   }
 });
 
-// GET single transaction - Admin Kasir only
-router.get('/:id', verifyToken, requireAdminKasir, async (req, res) => {
+// GET single transaction - Cashier only
+router.get('/:id', verifyToken, requireCashier, async (req, res) => {
   try {
     const transaction = await Transaction.findByPk(req.params.id);
     if (!transaction) {
-      return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
+      return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan' });
     }
     res.json({ success: true, transaction });
   } catch (error) {
     console.error('❌ Error getting transaction:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan' });
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 });
 
-// DELETE transaction - Admin Kasir only
-router.delete('/:id', verifyToken, requireAdminKasir, async (req, res) => {
+// DELETE transaction - Cashier only
+router.delete('/:id', verifyToken, requireCashier, async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`🗑️  DELETE /api/transactions/${id}`);
+    console.log(`🗑️  DELETE /api/transactions/${id} (user: ${req.user.username})`);
 
     // Get transaction items first to reverse stock
     const transaction = await Transaction.findByPk(id);
@@ -71,7 +72,7 @@ router.delete('/:id', verifyToken, requireAdminKasir, async (req, res) => {
 
     // Delete transaction
     await transaction.destroy();
-    console.log(`✓ Transaction ${id} deleted successfully`);
+    console.log(`✓ Transaction ${id} deleted successfully by ${req.user.username}`);
 
     res.json({ 
       success: true, 
@@ -87,12 +88,12 @@ router.delete('/:id', verifyToken, requireAdminKasir, async (req, res) => {
   }
 });
 
-// POST create transaction - Admin Kasir only
-router.post('/', verifyToken, requireAdminKasir, async (req, res) => {
+// POST create transaction - Cashier only
+router.post('/', verifyToken, requireCashier, async (req, res) => {
   try {
     const { items, total, paymentMethod, discount } = req.body;
 
-    console.log('📝 POST /api/transactions');
+    console.log('📝 POST /api/transactions (user: ${req.user.username})');
     console.log('   Items:', items?.length);
     console.log('   Total:', total);
     console.log('   Method:', paymentMethod);

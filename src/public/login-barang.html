@@ -237,86 +237,17 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+  <script src="/js/login-barang.js"></script>
+  
+  <!-- Check if already logged in -->
   <script>
-    const ROLE = 'admin_barang';
-
-    async function handleLogin(event) {
-      event.preventDefault();
-      
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const errorMessage = document.getElementById('errorMessage');
-      
-      if (!username || !password) {
-        errorMessage.textContent = '❌ Username dan password harus diisi';
-        errorMessage.classList.add('show');
-        return;
-      }
-      
-      try {
-        errorMessage.classList.remove('show');
-        console.log('📡 Sending login request...');
-        
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            username, 
-            password,
-            deviceRole: ROLE  // Send the role from this page
-          })
-        });
-        
-        console.log('📊 Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('📦 Response data:', data);
-        
-        if (response.ok) {
-          // Verify user has admin_barang role
-          if (data.user?.role !== 'admin_barang') {
-            errorMessage.textContent = '❌ Pengguna ini bukan Admin Barang. Silakan gunakan akun Admin Barang (admin/123456).';
-            errorMessage.classList.add('show');
-            console.error('❌ Wrong role:', data.user?.role);
-            return;
-          }
-          
-          // Simpan token dan user info ke localStorage
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          
-          console.log('✓ Login successful as Admin Barang');
-          console.log('👤 User role from server:', data.user?.role);
-          
-          // Redirect ke dashboard
-          window.location.href = '/dashboard';
-        } else {
-          errorMessage.textContent = '❌ ' + (data.message || data.error || 'Login gagal. Periksa username dan password.');
-          errorMessage.classList.add('show');
-          console.error('❌ Login error:', data.message || data.error);
-        }
-      } catch (error) {
-        console.error('❌ Network error:', error);
-        errorMessage.textContent = '❌ Terjadi kesalahan koneksi. Pastikan server running.';
-        errorMessage.classList.add('show');
-      }
-    }
-
-    // Cek apakah user sudah login saat halaman dimuat
     window.addEventListener('load', () => {
       const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      console.log('🔍 Auth check - Token:', token ? '✓ Found' : '❌ Not found');
-      console.log('👤 User role:', user.role);
-      
-      // If user already logged in, redirect to dashboard
       if (token) {
-        console.log('✓ User sudah login, redirect ke dashboard');
-        window.location.href = '/dashboard';
+        window.location.href = '/';  // Redirect to dashboard/main page
       }
     });
   </script>

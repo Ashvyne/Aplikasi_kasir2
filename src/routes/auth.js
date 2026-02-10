@@ -1,43 +1,107 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, requireRole, ROLES } = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-
-// Demo users dengan role
-const DEMO_USERS = {
-  'admin': { id: 1, username: 'admin', password: '123456', role: 'admin_barang' },
-  'kasir': { id: 2, username: 'kasir', password: '123456', role: 'admin_kasir' }
-};
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 // Simple in-memory session store untuk demo (akan diganti dengan database di production)
 const demoSessions = new Map();
 
+// ============ REGISTRATION ============
 router.post('/register', authController.register);
 
-router.post('/login', (req, res) => {
+// ============ LOGIN WITH ROLE-BASED ACCESS CONTROL ============
+/**
+ * Generic login endpoint dengan role validation
+ * Validasi: username + password + requiredRole MUST match
+ * Frontend WAJIB mengirim requiredRole dari tombol yang di-klik
+ */
+router.post('/login', async (req, res) => {
   try {
-    const { username, password, deviceRole, deviceName } = req.body;
+    const { username, password, requiredRole } = req.body;
 
+    // ============ VALIDATION ============
     if (!username || !password) {
-      return res.status(400).json({ message: 'Username dan password harus diisi' });
+      return res.status(400).json({ 
+        success: false,
+        code: 'INVALID_INPUT',
+        message: 'Username dan password harus diisi' 
+      });
     }
 
-    const user = DEMO_USERS[username];
-
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: 'Username atau password salah' });
+    // WAJIB: Require role selection
+    if (!requiredRole) {
+      return res.status(400).json({ 
+        success: false,
+        code: 'ROLE_REQUIRED',
+        message: 'Role login harus dipilih. Gunakan tombol login yang sesuai.' 
+      });
     }
 
-    // Generate unique session ID
+    // Validasi role yang diizinkan
+    const VALID_ROLES = {
+      'item_user': 'item_user',
+      'cashier': 'cashier',
+      'admin_barang': 'admin_barang',  // Legacy role
+      'admin_kasir': 'admin_kasir'     // Legacy role
+    };
+
+    if (!VALID_ROLES[requiredRole]) {
+      return res.status(400).json({ 
+        success: false,
+        code: 'INVALID_ROLE',
+        message: 'Role yang dipilih tidak valid' 
+      });
+    }
+
+    // ============ FIND USER ============
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        code: 'USER_NOT_FOUND',
+        message: 'Username atau password salah' 
+      });
+    }
+
+    // ============ VALIDATE PASSWORD ============
+    const isPasswordValid = await user.validatePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ 
+        success: false,
+        code: 'INVALID_PASSWORD',
+        message: 'Username atau password salah' 
+      });
+    }
+
+    // ============ CRITICAL: VALIDATE ROLE MATCH ============
+    // User role MUST match the required role (dengan support legacy mapping)
+    const userRole = user.role;
+    const newRoleMap = {
+      'admin_barang': 'item_user',    // Map legacy to new role
+      'admin_kasir': 'cashier'         // Map legacy to new role
+    };
+    const normalizedUserRole = newRoleMap[userRole] || userRole;
+    const normalizedRequiredRole = newRoleMap[requiredRole] || requiredRole;
+
+    if (normalizedUserRole !== normalizedRequiredRole) {
+      console.warn(`❌ ROLE MISMATCH: User ${username} role=${userRole} tried to login as ${requiredRole}`);
+      return res.status(403).json({ 
+        success: false,
+        code: 'ROLE_MISMATCH',
+        message: `Akun ${username} adalah ${userRole}. Gunakan login yang sesuai dengan role Anda.`,
+        userRole: userRole,
+        requiredRole: requiredRole
+      });
+    }
+
+    // ============ CREATE SESSION & TOKEN ============
     const sessionId = uuidv4();
-    
-    // Tentukan role untuk session ini
-    // Jika deviceRole disediakan dan valid, gunakan itu
-    // Jika tidak, gunakan role default user
-    const validRoles = ['admin_kasir', 'admin_barang'];
-    const sessionRole = (deviceRole && validRoles.includes(deviceRole)) ? deviceRole : user.role;
+    const sessionRole = normalizedUserRole;  // Use normalized role
 
     const token = jwt.sign(
       { 
@@ -50,53 +114,75 @@ router.post('/login', (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Simpan session ke memory untuk demo
+    // Save session
     demoSessions.set(sessionId, {
       userId: user.id,
       username: user.username,
       role: sessionRole,
-      deviceName: deviceName || `Device-${sessionId.substring(0, 8)}`,
+      loginRole: requiredRole,
       createdAt: new Date(),
       isActive: true
     });
 
-    console.log('✓ Login success:', username, 'with role:', sessionRole, 'sessionId:', sessionId);
+    console.log(`✓ LOGIN SUCCESS: User=${username}, LoginRole=${requiredRole}, UserRole=${userRole}`);
+    
     res.json({
+      success: true,
       message: 'Login berhasil',
       token,
       sessionId,
-      user: { id: user.id, username: user.username, role: sessionRole }
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        role: sessionRole,
+        name: user.name,
+        email: user.email
+      }
     });
+
   } catch (error) {
     console.error('❌ Login error:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan' });
+    res.status(500).json({ 
+      success: false,
+      code: 'SERVER_ERROR',
+      message: 'Terjadi kesalahan pada server' 
+    });
   }
 });
 
-// Logout - hanya logout session tertentu
+// POST logout - Logout session tertentu
 router.post('/logout', (req, res) => {
   try {
     const sessionId = req.body.sessionId;
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!sessionId && !token) {
-      return res.status(400).json({ message: 'Session ID atau token diperlukan' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Session ID atau token diperlukan' 
+      });
     }
 
     // Untuk demo, cukup hapus dari memory
     if (sessionId && demoSessions.has(sessionId)) {
       demoSessions.delete(sessionId);
-      console.log('✓ Session logged out:', sessionId);
+      console.log(`✓ Session logged out: ${sessionId}`);
     }
 
-    res.json({ message: 'Logout berhasil' });
+    res.json({ 
+      success: true,
+      message: 'Logout berhasil' 
+    });
   } catch (error) {
     console.error('❌ Logout error:', error);
-    res.status(500).json({ message: 'Logout gagal' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Logout gagal' 
+    });
   }
 });
 
-// Get all active sessions untuk user tertentu
+// GET sessions - Get all active sessions untuk user tertentu
 router.get('/sessions', verifyToken, (req, res) => {
   try {
     const userId = req.user.id;
@@ -112,14 +198,20 @@ router.get('/sessions', verifyToken, (req, res) => {
         isActive: session.isActive
       }));
 
-    res.json({ sessions: userSessions });
+    res.json({ 
+      success: true,
+      sessions: userSessions 
+    });
   } catch (error) {
     console.error('❌ Get sessions error:', error);
-    res.status(500).json({ message: 'Gagal mengambil data session' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Gagal mengambil data session' 
+    });
   }
 });
 
-// Logout device tertentu
+// POST logout-device/:sessionId - Logout device tertentu
 router.post('/logout-device/:sessionId', verifyToken, (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -130,18 +222,28 @@ router.post('/logout-device/:sessionId', verifyToken, (req, res) => {
       const session = demoSessions.get(sessionId);
       if (session.userId === userId) {
         demoSessions.delete(sessionId);
-        console.log('✓ Device logged out:', sessionId);
-        return res.json({ message: 'Device berhasil logout' });
+        console.log(`✓ Device logged out: ${sessionId}`);
+        return res.json({ 
+          success: true,
+          message: 'Device berhasil logout' 
+        });
       }
     }
 
-    res.status(403).json({ message: 'Unauthorized' });
+    res.status(403).json({ 
+      success: false,
+      message: 'Unauthorized' 
+    });
   } catch (error) {
     console.error('❌ Logout device error:', error);
-    res.status(500).json({ message: 'Gagal logout device' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Gagal logout device' 
+    });
   }
 });
 
+// GET me - Get current authenticated user info
 router.get('/me', verifyToken, authController.getCurrentUser);
 
 module.exports = router;

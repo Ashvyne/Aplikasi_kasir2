@@ -74,6 +74,7 @@ async function setupDatabase() {
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT PRIMARY KEY AUTO_INCREMENT,
+        username VARCHAR(50) UNIQUE NOT NULL,
         name VARCHAR(100) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
@@ -175,14 +176,14 @@ async function setupDatabase() {
     
     // Insert default users
     await connection.query(`
-      INSERT IGNORE INTO users (id, name, email, password, role) VALUES
-      (1, 'Admin Barang', 'admin_barang@kasir.local', ?, 'admin_barang'),
-      (2, 'Admin Kasir', 'admin_kasir@kasir.local', ?, 'admin_kasir')
+      INSERT IGNORE INTO users (id, username, name, email, password, role) VALUES
+      (1, 'admin_barang', 'Admin Barang', 'admin_barang@kasir.local', ?, 'admin_barang'),
+      (2, 'admin_kasir', 'Admin Kasir', 'admin_kasir@kasir.local', ?, 'admin_kasir')
     `, [defaultPassword, defaultPassword]);
     
     console.log('  ✅ Default users created');
-    console.log('    - Email: admin_barang@kasir.local (Password: admin123)');
-    console.log('    - Email: admin_kasir@kasir.local (Password: admin123)\n');
+    console.log('    - Username: admin_barang (Password: admin123)');
+    console.log('    - Username: admin_kasir (Password: admin123)\n');
     
     // Insert sample products
     console.log('📦 Inserting sample products...\n');

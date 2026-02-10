@@ -1,6 +1,6 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
-const { verifyToken, requireAdminBarang } = require('../middleware/authMiddleware');
+const { verifyToken, requireItemUser, requireAdminBarang } = require('../middleware/authMiddleware');
 const Product = require('../models/Product');
 const router = express.Router();
 
@@ -12,21 +12,23 @@ router.setUploadMiddleware = (upload) => {
   uploadMiddleware = upload.single('image');
 };
 
-// GET all products - Both roles can READ, but only for their use cases
-// admin_barang: product management
-// admin_kasir: POS selling
+// ============ READ OPERATIONS - BOTH ROLES ============
+// GET all products - Both Item User & Cashier can READ
+// Item User: for inventory management
+// Cashier: for POS selling
 router.get('/', verifyToken, async (req, res) => {
   try {
-    console.log('✓ GET /api/products');
+    console.log(`✓ GET /api/products (user: ${req.user.username}, role: ${req.user.role})`);
     const products = await Product.findAll();
     res.json({ 
       success: true,
       products: products,
-      count: products.length 
+      count: products.length,
+      userRole: req.user.role
     });
   } catch (error) {
     console.error('❌ Error getting products:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan' });
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 });
 
@@ -35,17 +37,18 @@ router.get('/:id', verifyToken, async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) {
-      return res.status(404).json({ message: 'Produk tidak ditemukan' });
+      return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
     }
     res.json({ success: true, product });
   } catch (error) {
     console.error('❌ Error getting product:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan' });
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 });
 
-// POST create product with image upload - Admin Barang only
-router.post('/', verifyToken, requireAdminBarang, (req, res) => {
+// ============ WRITE OPERATIONS - ITEM USER ONLY ============
+// POST create product with image upload - Item User only
+router.post('/', verifyToken, requireItemUser, (req, res) => {
   // Use upload middleware
   const upload = require('multer');
   const path = require('path');
@@ -144,8 +147,8 @@ router.post('/', verifyToken, requireAdminBarang, (req, res) => {
   });
 });
 
-// PUT update product (untuk edit nama, harga, kategori dan update stok) - Admin Barang only
-router.put('/:id', verifyToken, requireAdminBarang, (req, res) => {
+// PUT update product (untuk edit nama, harga, kategori) - Item User only
+router.put('/:id', verifyToken, requireItemUser, (req, res) => {
   const upload = require('multer');
   const path = require('path');
   const fs = require('fs');
@@ -243,14 +246,23 @@ router.put('/:id', verifyToken, requireAdminBarang, (req, res) => {
   });
 });
 
-// PUT reduce stock - Admin Barang only
-// PUT reduce stock - Both Admin Barang (inventory) and Admin Kasir (sales) can reduce stock
+// PUT reduce stock - Both Item User & Cashier can reduce stock
+// Item User: for inventory management (stock adjustments)
+// Cashier: for sales (reducing stock when selling)
 router.put('/:id/reduce-stock', verifyToken, async (req, res) => {
   try {
-    // Both roles can reduce stock
-    const userRole = req.user?.role;
-    if (userRole !== 'admin_barang' && userRole !== 'admin_kasir') {
-      return res.status(403).json({ error: 'Anda tidak memiliki akses ke fitur ini.' });
+    // Both item_user and cashier can reduce stock
+    const { isItemUser, isCashier } = require('../middleware/authMiddleware');
+    const user = req.user;
+    
+    // Check if user has proper role
+    if (!isItemUser(user) && !isCashier(user)) {
+      console.warn(`❌ Unauthorized stock reduction: user ${user.username} (${user.role}) is not allowed`);
+      return res.status(403).json({ 
+        success: false,
+        error: 'Access Denied',
+        message: 'Anda tidak memiliki akses untuk mengubah stok.' 
+      });
     }
 
     const product = await Product.findByPk(req.params.id);
@@ -275,7 +287,7 @@ router.put('/:id/reduce-stock', verifyToken, async (req, res) => {
     const oldStock = product.stock;
     await product.update({ stock: product.stock - quantityToReduce });
 
-    console.log(`✓ Stock reduced: ${product.name} (${oldStock} → ${product.stock})`);
+    console.log(`✓ Stock reduced by ${user.username} (${user.role}): ${product.name} (${oldStock} → ${product.stock})`);
 
     res.json({ 
       success: true,
@@ -295,8 +307,8 @@ router.put('/:id/reduce-stock', verifyToken, async (req, res) => {
   }
 });
 
-// POST duplicate product
-router.post('/:id/duplicate', authenticateToken, async (req, res) => {
+// POST duplicate product - Item User only
+router.post('/:id/duplicate', verifyToken, requireItemUser, async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) {
@@ -350,8 +362,8 @@ router.post('/:id/duplicate', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE product - Admin Barang only
-router.delete('/:id', verifyToken, requireAdminBarang, async (req, res) => {
+// DELETE product - Item User only
+router.delete('/:id', verifyToken, requireItemUser, async (req, res) => {
   try {
     const path = require('path');
     const fs = require('fs');

@@ -48,90 +48,8 @@ let autoRefreshIntervals = {
 };
 
 // ============ ROLE-BASED MENU FILTERING ============
-
-// Function untuk filter navigation menu berdasarkan user role
-function filterNavigationByRole() {
-  try {
-    // Ambil user data dari localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRole = user.role || 'admin_barang';
-    
-    console.log('👤 Current user role:', userRole);
-    console.log('📋 Filtering navigation based on role...');
-    
-    // Ambil semua nav items
-    const navMenu = document.getElementById('navMenu');
-    if (!navMenu) {
-      console.error('❌ navMenu element not found!');
-      return;
-    }
-    
-    const navItems = navMenu.querySelectorAll('.nav-link.nav-item');
-    console.log(`📊 Total nav items found: ${navItems.length}`);
-    
-    let visibleCount = 0;
-    let firstVisibleNav = null;
-    
-    // Pertama, sembunyikan semua items
-    navItems.forEach(item => {
-      item.style.display = 'none';
-      item.classList.add('d-none');
-    });
-    
-    // Kemudian, tampilkan hanya items yang sesuai dengan role
-    navItems.forEach((item, index) => {
-      const allowedRoles = item.getAttribute('data-roles');
-      const pageName = item.getAttribute('data-page');
-      const menuText = item.textContent.trim();
-      
-      console.log(`  [${index}] ${menuText} - roles: "${allowedRoles}"`);
-      
-      if (allowedRoles) {
-        // Check apakah user role cocok dengan allowed roles
-        if (allowedRoles.includes(userRole)) {
-          // Tampilkan item jika role cocok
-          item.style.display = 'flex';
-          item.classList.remove('d-none');
-          item.classList.add('d-flex');
-          visibleCount++;
-          
-          if (!firstVisibleNav) {
-            firstVisibleNav = item;
-          }
-          
-          console.log(`✓ SHOWING: ${menuText} (allowed for ${userRole})`);
-        } else {
-          // Ensure item tetap tersembunyi
-          item.style.display = 'none !important';
-          item.classList.add('d-none');
-          console.log(`✕ HIDING: ${menuText} (NOT allowed for ${userRole})`);
-          
-          // Juga sembunyikan page-nya
-          const page = document.getElementById(`${pageName}-page`);
-          if (page) {
-            page.style.display = 'none';
-            console.log(`  └─ Hidden page: ${pageName}-page`);
-          }
-        }
-      }
-    });
-    
-    console.log(`✓ Menu filtering complete: ${visibleCount} menu(s) visible for ${userRole}`);
-    
-    // Pastikan minimal satu nav item visible dan set sebagai active
-    if (firstVisibleNav) {
-      // Check apakah ada yang active, kalau tidak set yang pertama visible sebagai active
-      const hasActiveVisible = document.querySelector('.nav-link.nav-item.active');
-      if (!hasActiveVisible) {
-        firstVisibleNav.click();
-        console.log(`📄 Set default page to: ${firstVisibleNav.getAttribute('data-page')}`);
-      }
-    }
-    
-  } catch (error) {
-    console.error('❌ Error filtering navigation:', error);
-  }
-}
+// ✓ NOTE: Role-based filtering is now handled in setupNavigation() function
+// This centralized approach ensures consistent and reliable role enforcement
 
 // ============ AUTO REFRESH SYSTEM ============
 // Menyimpan interval values (dalam milliseconds)
@@ -480,14 +398,20 @@ function initializeApp() {
   try {
     console.log('🔧 Initializing app...');
     
-    // Filter navigation menu berdasarkan user role
-    filterNavigationByRole();
+    // Initialize dark mode first
+    initializeDarkMode();
+    
+    // Update waktu saat ini
+    updateTime();
+    
+    // Update waktu setiap 1 detik
+    setInterval(updateTime, 1000);
     
     // Load saved auto refresh settings
     loadAutoRefreshSettings();
     
-    // Initialize dark mode
-    initializeDarkMode();
+    // Setup navigation menu with role-based access control
+    setupNavigation();
     
     // Check server health
     console.log('🏥 Checking server health...');
@@ -500,20 +424,6 @@ function initializeApp() {
         console.warn('⚠️ Health check failed:', err.message);
       });
     
-    // Update waktu saat ini
-    updateTime();
-    
-    // Update waktu setiap 1 detik
-    setInterval(updateTime, 1000);
-    
-    // Setup navigation menu
-    setupNavigation();
-    
-    // Filter navigation menu again after setup
-    setTimeout(() => {
-      filterNavigationByRole();
-    }, 100);
-    
     // Load semua data dengan error handling
     console.log('📦 Loading initial data...');
     
@@ -522,19 +432,30 @@ function initializeApp() {
     const userRole = user.role;
     
     // Build load promises sesuai role
-    const loadPromises = [
-      loadDashboard().catch(e => console.warn('⚠️ Dashboard load failed:', e)),
-      loadProducts().catch(e => console.warn('⚠️ Products load failed:', e)),
-      loadReports().catch(e => console.warn('⚠️ Reports load failed:', e))
-    ];
+    const loadPromises = [];
     
-    // Only load transactions untuk admin_kasir
-    if (userRole === 'admin_kasir') {
+    // Load data based on user role
+    const allowedPages = getUserAllowedPages(userRole);
+    
+    // Load data for allowed pages only
+    if (allowedPages.includes('dashboard')) {
+      loadPromises.push(loadDashboard().catch(e => console.warn('⚠️ Dashboard load failed:', e)));
+    }
+    
+    if (allowedPages.includes('products') || allowedPages.includes('pos')) {
+      loadPromises.push(loadProducts().catch(e => console.warn('⚠️ Products load failed:', e)));
+    }
+    
+    if (allowedPages.includes('transactions') || allowedPages.includes('reports')) {
+      loadPromises.push(loadReports().catch(e => console.warn('⚠️ Reports load failed:', e)));
+    }
+    
+    if (allowedPages.includes('transactions')) {
       loadPromises.push(loadTransactions().catch(e => console.warn('⚠️ Transactions load failed:', e)));
     }
     
     Promise.all(loadPromises).then(() => {
-      console.log('✓ All data loaded');
+      console.log('✓ All allowed data loaded for user role:', userRole);
     }).catch(error => {
       console.error('❌ Data loading error:', error);
     });
@@ -549,61 +470,126 @@ function initializeApp() {
 
 // ============ NAVIGATION ============
 
+// Role-based page access control
+const ROLE_ACCESS_CONTROL = {
+  // Item User - Can access inventory management pages
+  'item_user': {
+    allowed: ['dashboard', 'products', 'stockin', 'stock', 'reports'],
+    blocked: ['pos', 'transactions'],
+    displayName: 'Staff Barang'
+  },
+  'admin_barang': { // Legacy role mapping to item_user
+    allowed: ['dashboard', 'products', 'stockin', 'stock', 'reports'],
+    blocked: ['pos', 'transactions'],
+    displayName: 'Staff Barang'
+  },
+  // Cashier - Can access POS/transaction pages only
+  'cashier': {
+    allowed: ['pos', 'transactions'],
+    blocked: ['dashboard', 'products', 'stockin', 'stock', 'reports'],
+    displayName: 'Cashier'
+  },
+  'admin_kasir': { // Legacy role mapping to cashier
+    allowed: ['pos', 'transactions'],
+    blocked: ['dashboard', 'products', 'stockin', 'stock', 'reports'],
+    displayName: 'Cashier'
+  },
+  // Borrower role
+  'borrower': {
+    allowed: ['dashboard', 'reports'],
+    blocked: ['products', 'stockin', 'pos', 'transactions'],
+    displayName: 'Borrower'
+  }
+};
+
+// Check if user has access to a specific page
+function hasAccessToPage(userRole, pageName) {
+  const roleConfig = ROLE_ACCESS_CONTROL[userRole];
+  if (!roleConfig) {
+    console.warn(`⚠️ Unknown role: ${userRole}`);
+    return false;
+  }
+  return roleConfig.allowed.includes(pageName);
+}
+
+// Get user's allowed pages
+function getUserAllowedPages(userRole) {
+  const roleConfig = ROLE_ACCESS_CONTROL[userRole];
+  if (!roleConfig) {
+    console.warn(`⚠️ Unknown role: ${userRole}`);
+    return [];
+  }
+  return roleConfig.allowed;
+}
+
 // Function untuk setup event listener navigation menu
 function setupNavigation() {
   try {
     // Get current user role
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userRole = user.role || 'admin_barang'; // default to admin_barang
+    const roleConfig = ROLE_ACCESS_CONTROL[userRole];
     
-    console.log('👤 User role:', userRole);
+    console.log(`👤 User: ${user.username} | Role: ${userRole} | Display: ${roleConfig?.displayName}`);
     
     // ============ ROLE-BASED MENU FILTERING ============
-    // Define which pages each role can access
-    const roleAccess = {
-      'admin_kasir': ['pos', 'transactions'],  // Only POS and Transactions
-      'admin_barang': ['dashboard', 'products', 'stockin', 'stock', 'reports']  // All others
-    };
+    const allowedPages = getUserAllowedPages(userRole);
+    const blockedPages = roleConfig?.blocked || [];
     
-    // Get allowed pages untuk user saat ini
-    const allowedPages = roleAccess[userRole] || [];
-    console.log('✓ Allowed pages for role:', allowedPages);
+    console.log(`✓ Allowed pages for ${roleConfig?.displayName}:`, allowedPages);
+    console.log(`❌ Blocked pages for ${roleConfig?.displayName}:`, blockedPages);
     
     // Ambil semua menu item
     const navItems = document.querySelectorAll('.nav-item');
-    console.log('📍 Found', navItems.length, 'nav items');
+    console.log(`📍 Found ${navItems.length} nav items`);
+    
+    let visibleNavItems = 0;
+    let firstVisibleNav = null;
     
     // Filter menu berdasarkan role
     navItems.forEach(item => {
       const pageName = item.getAttribute('data-page');
+      const hasAccess = hasAccessToPage(userRole, pageName);
       
-      if (!allowedPages.includes(pageName)) {
+      if (!hasAccess) {
         // Hide menu item yang tidak diizinkan
         item.style.display = 'none';
-        item.classList.add('disabled');
-        console.log(`🚫 Hiding menu for role ${userRole}:`, pageName);
+        item.classList.add('d-none');
+        item.classList.remove('d-block');
+        console.log(`\n  🚫 BLOCKED for ${roleConfig?.displayName}: ${pageName}`);
       } else {
         // Show menu item yang diizinkan
         item.style.display = '';
-        item.classList.remove('disabled');
-        console.log(`✓ Showing menu for role ${userRole}:`, pageName);
+        item.classList.remove('d-none');
+        item.classList.add('d-block');
+        visibleNavItems++;
+        if (!firstVisibleNav) {
+          firstVisibleNav = item;
+        }
+        console.log(`\n  ✓ ALLOWED for ${roleConfig?.displayName}: ${pageName}`);
       }
       
-      // Add click event ke setiap menu item yang aktif
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const clickedPage = item.getAttribute('data-page');
-        
-        // Double check access permission
-        if (!allowedPages.includes(clickedPage)) {
-          showAlertModal('❌ Access Denied!', 'Anda tidak memiliki akses ke halaman ini.', 'danger');
-          return;
-        }
-        
-        console.log('🔗 Navigating to:', clickedPage);
-        navigateTo(clickedPage);
-      });
+      // Add click event ke setiap menu item
+      if (!item.__eventListenerAdded) {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const clickedPage = item.getAttribute('data-page');
+          
+          // Check access permission
+          if (!hasAccessToPage(userRole, clickedPage)) {
+            console.warn(`❌ Unauthorized access attempt: ${userRole} -> ${clickedPage}`);
+            showAccessDeniedModal(clickedPage, userRole);
+            return;
+          }
+          
+          console.log(`🔗 Navigating to: ${clickedPage}`);
+          navigateTo(clickedPage);
+        });
+        item.__eventListenerAdded = true;
+      }
     });
+    
+    console.log(`\n📊 Navigation setup: ${visibleNavItems} menu item(s) visible`);
     
     // ============ BROWSER HISTORY SUPPORT ============
     // Handle back/forward button dan page restore
@@ -611,26 +597,35 @@ function setupNavigation() {
       console.log('🔙 Popstate detected:', event.state);
       
       if (event.state && event.state.page) {
-        // Navigate tanpa push ke history (sudah ada dari back button)
-        navigateToPage(event.state.page);
+        if (hasAccessToPage(userRole, event.state.page)) {
+          navigateToPage(event.state.page);
+        } else {
+          console.warn(`⚠️ Popstate tried to navigate to unauthorized page: ${event.state.page}`);
+          if (firstVisibleNav) {
+            navigateToPage(firstVisibleNav.getAttribute('data-page'));
+          }
+        }
       }
     });
     
     // Handle initial page load - detect page dari URL
     const currentPath = window.location.pathname;
-    const pages = ['dashboard', 'products', 'stockin', 'stock', 'pos', 'transactions', 'reports'];
     
-    // Extract page dari URL (misal /dashboard -> dashboard)
-    let initialPage = allowedPages[0] || 'dashboard'; // default ke first allowed page
-    for (const page of pages) {
-      if (currentPath.includes(`/${page}`) && allowedPages.includes(page)) {
-        initialPage = page;
+    // Try to load from URL first, fallback to first allowed page
+    let initialPage = null;
+    for (const allowedPage of allowedPages) {
+      if (currentPath.includes(`/${allowedPage}`)) {
+        initialPage = allowedPage;
         break;
       }
     }
     
-    console.log('📍 Initial page from URL:', initialPage);
-    // Navigate ke page sesuai URL (jangan push state, karena sudah ada di URL)
+    // If no allowed page found in URL, use first allowed page
+    if (!initialPage) {
+      initialPage = allowedPages[0] || 'dashboard';
+    }
+    
+    console.log(`📍 Initial page: ${initialPage}`);
     navigateToPage(initialPage);
     
     console.log('✓ Navigation setup complete');
@@ -639,35 +634,50 @@ function setupNavigation() {
   }
 }
 
+// Show access denied modal
+function showAccessDeniedModal(pageName, userRole) {
+  const roleConfig = ROLE_ACCESS_CONTROL[userRole];
+  const roleDisplay = roleConfig?.displayName || userRole;
+  
+  Swal.fire({
+    icon: 'error',
+    title: '❌ Access Denied',
+    html: `
+      <div class="text-start">
+        <p><strong>You don't have permission to access this page.</strong></p>
+        <hr>
+        <p class="text-muted mb-2">
+          <i class="bi bi-person-fill"></i> <strong>Your Role:</strong> ${roleDisplay}
+        </p>
+        <p class="text-muted">
+          <i class="bi bi-lock-fill"></i> <strong>Trying to access:</strong> ${pageName}
+        </p>
+        <hr>
+        <p class="text-danger"><small>If you need access to this feature, please contact your administrator.</small></p>
+      </div>
+    `,
+    confirmButtonText: 'Understand',
+    didOpen: () => {
+      console.log(`🚫 Access denied: ${roleDisplay} tried to access ${pageName}`);
+    }
+  });
+}
+
 // Function untuk navigate tanpa push state (gunakan untuk popstate/initial load)
 function navigateToPage(pageName) {
   try {
-    console.log('📄 Navigate to page (no push state):', pageName);
-    
     // Check user role access
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userRole = user.role || 'admin_barang';
     
-    const roleAccess = {
-      'admin_kasir': ['pos', 'transactions', 'dashboard'],
-      'admin_barang': ['dashboard', 'products', 'stockin', 'stock', 'reports']
-    };
-    
-    const allowedPages = roleAccess[userRole] || [];
-    
-    // Validate access
-    if (!allowedPages.includes(pageName)) {
-      console.warn('🚫 Access denied for role', userRole, 'to page', pageName);
-      showAlertModal(
-        '❌ Access Denied!', 
-        `Role ${userRole} tidak memiliki akses ke halaman ${pageName}. Silakan gunakan akun yang tepat.`,
-        'danger'
-      );
-      // Redirect ke halaman pertama yang diizinkan
-      const defaultPage = allowedPages[0] || 'dashboard';
-      setTimeout(() => navigateToPage(defaultPage), 2000);
+    // Verify access before showing page
+    if (!hasAccessToPage(userRole, pageName)) {
+      console.error(`❌ Access Denied: ${userRole} cannot access ${pageName}`);
+      showAccessDeniedModal(pageName, userRole);
       return;
     }
+    
+    console.log(`📄 Navigate to page (no push state): ${pageName}`);
     
     // Sembunyikan semua halaman
     const allPages = document.querySelectorAll('.page');
@@ -746,7 +756,11 @@ function navigateToPage(pageName) {
     
     if (pageName === 'stock') {
       console.log('🔄 Reloading stock display...');
-      loadStockDisplay();
+      loadProducts().then(() => {
+        // Display stock information and update summary
+        updateStockSummary();
+        startAutoRefresh('products', loadProducts);
+      }).catch(e => console.warn('⚠️ Stock load failed:', e));
     }
     
     if (pageName === 'pos') {
@@ -984,7 +998,137 @@ function displayProducts() {
 
 // ============ STOCK IN WRAPPER FUNCTIONS ============
 
-/**
+// Function untuk update stock summary di stock page
+function updateStockSummary() {
+  try {
+    console.log('📊 Updating stock summary...');
+    
+    // Calculate stock statistics
+    let normalCount = 0;
+    let lowCount = 0;
+    let emptyCount = 0;
+    let totalStock = 0;
+    
+    products.forEach(product => {
+      const stock = product.stock || 0;
+      totalStock += stock;
+      
+      if (stock === 0) {
+        emptyCount++;
+      } else if (stock < 10) {
+        lowCount++;
+      } else {
+        normalCount++;
+      }
+    });
+    
+    // Update UI
+    const elements = {
+      stockNormalCount: normalCount,
+      stockLowCount: lowCount,
+      stockEmptyCount: emptyCount,
+      stockTotalCount: totalStock
+    };
+    
+    Object.keys(elements).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = elements[id];
+      }
+    });
+    
+    console.log(`✓ Stock summary updated: Normal=${normalCount}, Low=${lowCount}, Empty=${emptyCount}, Total=${totalStock}`);
+  } catch (error) {
+    console.error('❌ Update stock summary error:', error);
+  }
+}
+
+// Function untuk filter stock berdasarkan status
+function filterStockStatus(status) {
+  try {
+    console.log('🔍 Filtering stock by status:', status);
+    
+    // Update active button
+    const buttons = document.querySelectorAll('.stock-filter-btn');
+    buttons.forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.getAttribute('data-filter') === status) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Filter products
+    if (status === 'all') {
+      // Show all, no filter needed
+      displayStockTable(products);
+    } else {
+      const filteredProducts = products.filter(product => {
+        const stock = product.stock || 0;
+        if (status === 'empty') return stock === 0;
+        if (status === 'low') return stock > 0 && stock < 10;
+        if (status === 'normal') return stock >= 10;
+        return true;
+      });
+      displayStockTable(filteredProducts);
+    }
+    
+    console.log('✓ Stock filter applied');
+  } catch (error) {
+    console.error('❌ Filter stock status error:', error);
+  }
+}
+
+// Function untuk display stock dalam table format
+function displayStockTable(productsToDisplay) {
+  try {
+    const tbody = document.querySelector('#stock-page table tbody');
+    if (!tbody) {
+      console.warn('⚠️ Stock table tbody not found');
+      return;
+    }
+    
+    // Clear existing rows
+    tbody.innerHTML = '';
+    
+    if (productsToDisplay.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada produk</td></tr>';
+      return;
+    }
+    
+    // Create rows for each product
+    productsToDisplay.forEach(product => {
+      const stock = product.stock || 0;
+      let stockBadge = '';
+      
+      if (stock === 0) {
+        stockBadge = '<span class="badge bg-danger">Habis</span>';
+      } else if (stock < 10) {
+        stockBadge = '<span class="badge bg-warning text-dark">Kurang</span>';
+      } else {
+        stockBadge = '<span class="badge bg-success">Normal</span>';
+      }
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${escapeHtml(product.sku || 'N/A')}</td>
+        <td>${escapeHtml(product.name)}</td>
+        <td>${stock}</td>
+        <td>Rp ${formatPrice(product.sell_price || product.price || 0)}</td>
+        <td>${stockBadge}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-secondary" onclick="editProduct(${product.id})">
+            <i class="bi bi-pencil"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+    
+    console.log(`✓ Stock table displayed with ${productsToDisplay.length} products`);
+  } catch (error) {
+    console.error('❌ Display stock table error:', error);
+  }
+}/**
  * Wrapper function untuk load stock in form
  */
 function loadStockInForm() {

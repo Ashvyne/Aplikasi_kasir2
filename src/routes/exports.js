@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const exportController = require('../controllers/exportController');
-const authenticateToken = require('../middleware/auth');
+const { verifyToken, requireItemUser } = require('../middleware/authMiddleware');
 
-// Export sales to Excel
-router.get('/sales-excel', authenticateToken, exportController.exportSalesExcel);
+// ============ EXPORT OPERATIONS - ITEM USER ONLY ============
+// Export sales to Excel - Item User only
+router.get('/sales-excel', verifyToken, requireItemUser, exportController.exportSalesExcel);
 
-// Export products to Excel
-router.get('/products-excel', authenticateToken, exportController.exportProductsExcel);
+// Export products to Excel - Item User only
+router.get('/products-excel', verifyToken, requireItemUser, exportController.exportProductsExcel);
 
-// Export reports to Excel
-router.get('/reports-excel', authenticateToken, exportController.exportReportsExcel);
+// Export reports to Excel - Item User only
+router.get('/reports-excel', verifyToken, requireItemUser, exportController.exportReportsExcel);
 
 module.exports = router;
