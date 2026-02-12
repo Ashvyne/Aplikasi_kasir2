@@ -224,7 +224,7 @@ exports.updateEquipmentCondition = async (req, res) => {
     if (!equipment) {
       return res.status(404).json({ success: false, message: 'Alat tidak ditemukan' });
     }
-
+    
     // Validasi kondisi
     const validConditions = ['Baik', 'Rusak Ringan', 'Rusak Sedang', 'Rusak Berat', 'Tidak Layak'];
     if (condition && !validConditions.includes(condition)) {
@@ -233,12 +233,12 @@ exports.updateEquipmentCondition = async (req, res) => {
         error: `Kondisi tidak valid. Pilihan: ${validConditions.join(', ')}` 
       });
     }
-
+    
     await equipment.update({
       condition: condition || equipment.condition,
       notes: notes || equipment.notes
     });
-
+    
     res.json({ 
       success: true,
       message: 'Kondisi alat berhasil diperbarui',
@@ -249,6 +249,7 @@ exports.updateEquipmentCondition = async (req, res) => {
     res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 };
+
 // UPLOAD image untuk equipment
 exports.uploadEquipmentImage = async (req, res) => {
   try {
@@ -271,8 +272,6 @@ exports.uploadEquipmentImage = async (req, res) => {
     res.json({ 
       success: true,
       message: 'Gambar berhasil diupload',
-      image_url: imagePath,
-      equipment 
     });
   } catch (error) {
     console.error('❌ Error uploading equipment image:', error);

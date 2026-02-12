@@ -29,17 +29,27 @@ const authController = {
         });
       }
 
-      // Validate role if specified
-      const validRoles = ['admin', 'petugas', 'peminjam'];
+      // Validate role if specified - Map peminjam/customer to borrower for database compatibility
+      const validRoles = ['admin', 'petugas', 'peminjam', 'staff', 'borrower', 'customer'];
       let userRole = role;
       if (!validRoles.includes(userRole)) {
-        userRole = 'peminjam';
+        userRole = 'borrower'; // Default to borrower
+      }
+      
+      // Map roles to database-compatible values
+      const roleMapping = {
+        'peminjam': 'borrower',
+        'customer': 'borrower',
+        'petugas': 'staff'
+      };
+      if (roleMapping[userRole]) {
+        userRole = roleMapping[userRole];
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // For peminjam role, user starts as inactive (needs admin approval)
-      const isActive = userRole !== 'peminjam';
+      // For borrower role, user starts as active
+      const isActive = userRole !== 'staff'; // Only staff needs approval, others active
 
       const user = await User.create({
         name,
@@ -49,8 +59,8 @@ const authController = {
         is_active: isActive
       });
 
-      // If registering as peminjam, create borrower record
-      if (userRole === 'peminjam' && phone) {
+      // If registering as borrower, create borrower record
+      if ((userRole === 'borrower' || role === 'peminjam') && phone) {
         await Borrower.create({
           name,
           email,

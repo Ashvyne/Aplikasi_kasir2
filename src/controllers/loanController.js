@@ -526,14 +526,26 @@ exports.submitReturn = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Peminjaman tidak ditemukan' });
     }
 
-    console.log(`📊 Loan ${id} return_status: ${loan.return_status}`);
+    console.log(`📊 Loan ${id} status: ${loan.status}, return_status: ${loan.return_status}`);
 
-    if (loan.return_status !== 'Active') {
+    // Check if loan can be returned
+    if (loan.status === 'Selesai' || loan.return_status === 'Verified') {
       await transaction.rollback();
-      console.log(`❌ Loan ${id} is not Active (current: ${loan.return_status})`);
+      console.log(`❌ Loan ${id} is already completed (status: ${loan.status}, return_status: ${loan.return_status})`);
       return res.status(400).json({ 
         success: false, 
-        error: 'Barang sudah dikembalikan atau sedang dalam proses verifikasi',
+        error: 'Pinjaman sudah selesai dan tidak dapat dikembalikan lagi',
+        current_status: loan.status,
+        return_status: loan.return_status
+      });
+    }
+
+    if (loan.return_status === 'Returned') {
+      await transaction.rollback();
+      console.log(`❌ Loan ${id} is already being processed (return_status: ${loan.return_status})`);
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Barang sudah dikembalikan dan sedang menunggu verifikasi',
         current_status: loan.return_status
       });
     }
@@ -749,6 +761,125 @@ exports.getVerifiedReturns = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error getting verified returns:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
+  }
+};
+
+// GET loan details with cost breakdown for return process
+exports.getLoanDetailsForReturn = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const loan = await Loan.findByPk(id, {
+      include: [
+        { model: Equipment, as: 'equipment' },
+        { model: Borrower, as: 'borrower' }
+      ]
+    });
+    
+    if (!loan) {
+      return res.status(404).json({ success: false, message: 'Peminjaman tidak ditemukan' });
+    }
+    
+    // Calculate current costs
+    const today = new Date();
+    const loanDate = new Date(loan.loan_date);
+    const dueDate = new Date(loan.due_date);
+    const daysBorrowed = Math.ceil((today - loanDate) / (1000 * 60 * 60 * 24));
+    const daysLate = Math.max(0, Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)));
+    
+    const dailyRate = loan.equipment?.daily_rental_rate || 0;
+    const rentalCost = daysBorrowed * dailyRate * loan.quantity;
+    const lateFeePerDay = Math.ceil(dailyRate * 0.1); // 10% of daily rate as late fee
+    const totalLateFee = daysLate * lateFeePerDay;
+    
+    // Calculate damage cost estimates
+    const damageCostEstimates = {
+      'Baik': 0,
+      'Rusak Ringan': 50000,
+      'Rusak Sedang': 150000,
+      'Rusak Berat': 500000,
+      'Hilang': 1000000 // Full replacement cost
+    };
+    
+    const currentDamageCost = loan.damage_cost || 0;
+    const estimatedDamageCosts = Object.entries(damageCostEstimates).map(([condition, cost]) => ({
+      condition,
+      estimated_cost: cost,
+      is_current: loan.return_condition === condition
+    }));
+    
+    // Calculate total cost
+    const subtotalCost = rentalCost + currentDamageCost + totalLateFee;
+    const adminFee = Math.ceil(subtotalCost * 0.05); // 5% admin fee
+    const totalCost = subtotalCost + adminFee;
+    
+    res.json({
+      success: true,
+      loan: {
+        ...loan.toJSON(),
+        cost_breakdown: {
+          rental_cost: rentalCost,
+          damage_cost: currentDamageCost,
+          late_fee: totalLateFee,
+          admin_fee: adminFee,
+          subtotal: subtotalCost,
+          total: totalCost
+        },
+        borrowing_details: {
+          days_borrowed: daysBorrowed,
+          days_late: daysLate,
+          daily_rate: dailyRate,
+          quantity: loan.quantity
+        },
+        damage_cost_estimates: estimatedDamageCosts,
+        return_summary: {
+          current_condition: loan.return_condition,
+          current_damage_cost: currentDamageCost,
+          estimated_damage_cost: damageCostEstimates[loan.return_condition] || 0
+        },
+        payment_summary: {
+          rental_fee: `Rp ${rentalCost.toLocaleString('id-ID')}`,
+          damage_fee: `Rp ${currentDamageCost.toLocaleString('id-ID')}`,
+          late_fee: `Rp ${totalLateFee.toLocaleString('id-ID')}`,
+          admin_fee: `Rp ${adminFee.toLocaleString('id-ID')}`,
+          subtotal: `Rp ${subtotalCost.toLocaleString('id-ID')}`,
+          total_payment: `Rp ${totalCost.toLocaleString('id-ID')}`,
+          total_payment_class: 'p-6 overflow-y-auto max-h-[calc(90vh-200px)]',
+          breakdown: [
+            {
+              item: 'Biaya Sewa',
+              days: daysBorrowed,
+              rate: `Rp ${dailyRate.toLocaleString('id-ID')}/hari`,
+              amount: `Rp ${rentalCost.toLocaleString('id-ID')}`
+            },
+            {
+              item: 'Biaya Kerusakan',
+              condition: loan.return_condition || 'Baik',
+              amount: `Rp ${currentDamageCost.toLocaleString('id-ID')}`
+            },
+            {
+              item: 'Denda Keterlambatan',
+              days_late: daysLate,
+              rate: `Rp ${lateFeePerDay.toLocaleString('id-ID')}/hari`,
+              amount: `Rp ${totalLateFee.toLocaleString('id-ID')}`
+            },
+            {
+              item: 'Biaya Admin (5%)',
+              amount: `Rp ${adminFee.toLocaleString('id-ID')}`
+            },
+            {
+              item: 'TOTAL PEMBAYARAN',
+              amount: `Rp ${totalCost.toLocaleString('id-ID')}`,
+              is_total: true,
+              css_class: 'p-6 overflow-y-auto max-h-[calc(90vh-200px)]'
+            }
+          ]
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error getting loan details:', error);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
   }
 };

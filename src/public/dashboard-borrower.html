@@ -8,6 +8,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>tailwind.config = { darkMode: 'class' }</script>
+  <style>
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+  </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
   <div class="flex h-screen">
@@ -100,31 +109,8 @@
                     <th class="px-6 py-3 text-center font-semibold">Aksi</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">Kursi Roda</td>
-                    <td class="px-6 py-4">05-02-2026</td>
-                    <td class="px-6 py-4">08-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
-                    <td class="px-6 py-4 text-center">
-                      <button onclick="returnItem(1)" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-xs">
-                        <i class="bi bi-box-arrow-up"></i>
-                        Kembalikan
-                      </button>
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">Tenda Camping</td>
-                    <td class="px-6 py-4">04-02-2026</td>
-                    <td class="px-6 py-4">07-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Hampir Jatuh Tempo</span></td>
-                    <td class="px-6 py-4 text-center">
-                      <button onclick="returnItem(2)" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-xs">
-                        <i class="bi bi-box-arrow-up"></i>
-                        Kembalikan
-                      </button>
-                    </td>
-                  </tr>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="loansTableBody">
+                  <!-- Loan cards akan diisi di sini oleh JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -148,7 +134,27 @@
         <!-- My Loans -->
         <div id="myloansSection" class="section hidden">
           <h2 class="text-2xl font-bold mb-6">Peminjaman Saya</h2>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          
+          <div id="loansLoadingState" class="text-center py-12">
+            <i class="bi bi-hourglass text-4xl text-blue-600 mb-3 block"></i>
+            <p class="text-gray-600 dark:text-gray-400">Memuat data pinjaman...</p>
+          </div>
+
+          <div id="loansContainer" class="hidden space-y-4">
+            <!-- Loan cards akan diisi di sini -->
+          </div>
+        </div>
+
+        <!-- History -->
+        <div id="historySection" class="section hidden">
+          <h2 class="text-2xl font-bold mb-6">Riwayat Peminjaman</h2>
+          
+          <div id="historyLoadingState" class="text-center py-12">
+            <i class="bi bi-hourglass text-4xl text-blue-600 mb-3 block"></i>
+            <p class="text-gray-600 dark:text-gray-400">Memuat riwayat pinjaman...</p>
+          </div>
+
+          <div id="historyContainer" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead class="bg-gray-50 dark:bg-gray-700">
@@ -156,74 +162,13 @@
                     <th class="px-6 py-3 text-left font-semibold">ID</th>
                     <th class="px-6 py-3 text-left font-semibold">Alat</th>
                     <th class="px-6 py-3 text-left font-semibold">Tanggal Pinjam</th>
-                    <th class="px-6 py-3 text-left font-semibold">Jatuh Tempo</th>
-                    <th class="px-6 py-3 text-left font-semibold">Status</th>
-                    <th class="px-6 py-3 text-center font-semibold">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#LN001</td>
-                    <td class="px-6 py-4">Kursi Roda</td>
-                    <td class="px-6 py-4">05-02-2026</td>
-                    <td class="px-6 py-4">08-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
-                    <td class="px-6 py-4 text-center">
-                      <button onclick="returnItem(1)" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-xs">
-                        <i class="bi bi-box-arrow-up"></i>
-                        Kembalikan
-                      </button>
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#LN002</td>
-                    <td class="px-6 py-4">Tenda Camping</td>
-                    <td class="px-6 py-4">04-02-2026</td>
-                    <td class="px-6 py-4">07-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">Hampir Jatuh Tempo</span></td>
-                    <td class="px-6 py-4 text-center">
-                      <button onclick="returnItem(2)" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-xs">
-                        <i class="bi bi-box-arrow-up"></i>
-                        Kembalikan
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- History -->
-        <div id="historySection" class="section hidden">
-          <h2 class="text-2xl font-bold mb-6">Riwayat Peminjaman</h2>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="px-6 py-3 text-left font-semibold">ID</th>
-                    <th class="px-6 py-3 text-left font-semibold">Alat</th>
                     <th class="px-6 py-3 text-left font-semibold">Tanggal Kembali</th>
                     <th class="px-6 py-3 text-left font-semibold">Denda</th>
-                    <th class="px-6 py-3 text-left font-semibold">Rating</th>
+                    <th class="px-6 py-3 text-left font-semibold">Status</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#LN003</td>
-                    <td class="px-6 py-4">Kursi Roda</td>
-                    <td class="px-6 py-4">30-01-2026</td>
-                    <td class="px-6 py-4">-</td>
-                    <td class="px-6 py-4">⭐ 5/5</td>
-                  </tr>
-                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4">#LN004</td>
-                    <td class="px-6 py-4">Tenda Camping</td>
-                    <td class="px-6 py-4">28-01-2026</td>
-                    <td class="px-6 py-4">-</td>
-                    <td class="px-6 py-4">⭐ 5/5</td>
-                  </tr>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="historyTableBody">
+                  <!-- History data akan diisi di sini oleh JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -233,12 +178,110 @@
     </div>
   </div>
 
+  <!-- Return Item Modal -->
+  <div id="returnModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">📦 Kembalikan Barang</h3>
+        <button onclick="closeReturnModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none">&times;</button>
+      </div>
+      
+      <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div id="returnAlertContainer"></div>
+        
+        <!-- Payment Breakdown Container -->
+        <div id="paymentBreakdownContainer"></div>
+        
+        <div id="returnFormState">
+          <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 mb-6">
+            <p class="text-sm text-blue-800 dark:text-blue-200">
+              ℹ️ Barang akan masuk <strong>masa tenggang selama 1 hari</strong> untuk pemeriksaan oleh staff.
+            </p>
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Kondisi Barang</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <label class="cursor-pointer">
+                <input type="radio" name="returnCondition" value="Baik" checked class="sr-only peer">
+                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+                  <span class="text-2xl">✓</span>
+                  <p class="text-sm mt-1 font-medium">Baik</p>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="returnCondition" value="Rusak Ringan" class="sr-only peer">
+                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+                  <span class="text-2xl">⚠️</span>
+                  <p class="text-sm mt-1 font-medium">Rusak Ringan</p>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="returnCondition" value="Rusak Berat" class="sr-only peer">
+                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+                  <span class="text-2xl">❌</span>
+                  <p class="text-sm mt-1 font-medium">Rusak Berat</p>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="returnCondition" value="Hilang" class="sr-only peer">
+                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-gray-500 peer-checked:bg-gray-50 dark:peer-checked:bg-gray-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+                  <span class="text-2xl">🔴</span>
+                  <p class="text-sm mt-1 font-medium">Hilang</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <label for="damageNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catatan Kerusakan (Opsional)</label>
+            <textarea id="damageNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" placeholder="Deskripsikan kondisi barang..."></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label for="damageCost" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estimasi Biaya (Rp)</label>
+              <input type="text" id="damageCost" min="0" step="1000" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" placeholder="0" value="Rp 0" oninput="formatRupiah(this)">
+            </div>
+            <div>
+              <label for="gracePeriod" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Masa Tenggang (Hari)</label>
+              <input type="number" id="gracePeriod" value="1" min="1" max="7" readonly class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 dark:text-gray-300">
+            </div>
+          </div>
+        </div>
+
+        <div id="returnLoadingState" class="hidden text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">Memproses pengembalian...</p>
+        </div>
+
+        <div id="returnSuccessState" class="hidden text-center py-8">
+          <div class="text-6xl mb-4">✅</div>
+          <h4 class="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Pengembalian Berhasil!</h4>
+          <p class="text-gray-600 dark:text-gray-400 mb-4">Barang masuk masa tenggang 1 hari untuk pemeriksaan.</p>
+          <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2" id="returnCountdown">5</div>
+          <p class="text-sm text-gray-500 dark:text-gray-500">Modal akan ditutup otomatis...</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700" id="returnFooterActions">
+        <button onclick="closeReturnModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Batal
+        </button>
+        <button onclick="submitReturn()" id="returnSubmitBtn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+          Kirim Pengembalian
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     function checkAuth() {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (!token) { window.location.href = '/login'; return; }
-      if (user.role !== 'borrower') {
+      // Accept both 'peminjam' and 'borrower' roles
+      if (!['borrower', 'peminjam', 'customer'].includes(user.role)) {
         Swal.fire('Akses Ditolak', 'Anda tidak memiliki akses', 'error');
         window.location.href = '/login';
       }
@@ -259,6 +302,8 @@
       document.getElementById('pageTitle').textContent = titles[section] || 'Borrower';
       
       if (section === 'available') loadAvailableEquipment();
+      if (section === 'myloans') loadLoans();
+      if (section === 'history') loadHistory();
     }
 
     async function loadAvailableEquipment() {
@@ -312,20 +357,269 @@
       }
     }
 
+    async function loadLoans() {
+      try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const response = await fetch('/api/loans', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Gagal memuat data pinjaman');
+
+        const data = await response.json();
+        const loans = data.loans || [];
+
+        const container = document.getElementById('loansContainer');
+        
+        if (loans.length === 0) {
+          container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Tidak ada pinjaman</p></div>';
+          container.classList.remove('hidden');
+          document.getElementById('loansLoadingState').classList.add('hidden');
+          return;
+        }
+
+        // Filter loans for current user
+        const userLoans = loans.filter(loan => loan.borrower && loan.borrower.email === user.email);
+
+        if (userLoans.length === 0) {
+          container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Anda belum memiliki pinjaman</p></div>';
+          container.classList.remove('hidden');
+          document.getElementById('loansLoadingState').classList.add('hidden');
+          return;
+        }
+
+        container.innerHTML = userLoans.map(loan => {
+          const loanDate = new Date(loan.loan_date).toLocaleDateString('id-ID');
+          const dueDate = new Date(loan.due_date).toLocaleDateString('id-ID');
+          const today = new Date();
+          const dueDateObj = new Date(loan.due_date);
+          const isOverdue = dueDateObj < today && loan.status === 'Aktif';
+          const isAlmostDue = dueDateObj - today <= 3 * 24 * 60 * 60 * 1000 && loan.status === 'Aktif';
+          
+          let statusClass = 'bg-green-100 text-green-800';
+          let statusText = loan.status;
+          
+          if (isOverdue) {
+            statusClass = 'bg-red-100 text-red-800';
+            statusText = 'Terlambat';
+          } else if (isAlmostDue) {
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            statusText = 'Hampir Jatuh Tempo';
+          }
+
+          return `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${loan.loan_number}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">${loan.equipment ? loan.equipment.name : 'Alat tidak diketahui'}</p>
+                  </div>
+                  <span class="px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                    ${statusText}
+                  </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Tanggal Pinjam:</span>
+                    <p class="font-medium text-gray-900 dark:text-gray-100">${loanDate}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Jatuh Tempo:</span>
+                    <p class="font-medium text-gray-900 dark:text-gray-100">${dueDate}</p>
+                  </div>
+                </div>
+                
+                <div class="mt-4 flex justify-end">
+                  ${loan.status === 'Aktif' ? 
+                    `<button onclick="returnItem(${loan.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                      Kembalikan
+                    </button>` : 
+                    `<span class="text-gray-500 text-sm">Pinjaman selesai</span>`
+                  }
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        container.classList.remove('hidden');
+        document.getElementById('loansLoadingState').classList.add('hidden');
+      } catch (error) {
+        console.error('Error loading loans:', error);
+        document.getElementById('loansLoadingState').textContent = 'Gagal memuat data: ' + error.message;
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const response = await fetch('/api/loans', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Gagal memuat riwayat pinjaman');
+
+        const data = await response.json();
+        const loans = data.loans || [];
+
+        const container = document.getElementById('historyContainer');
+        const tableBody = document.getElementById('historyTableBody');
+        
+        // Filter completed loans for current user
+        const userHistory = loans.filter(loan => 
+          loan.borrower && loan.borrower.email === user.email && 
+          (loan.status === 'Selesai' || loan.return_status === 'Verified')
+        );
+
+        if (userHistory.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-500">Tidak ada riwayat pinjaman</td></tr>';
+          container.classList.remove('hidden');
+          document.getElementById('historyLoadingState').classList.add('hidden');
+          return;
+        }
+
+        tableBody.innerHTML = userHistory.map(loan => {
+          const loanDate = new Date(loan.loan_date).toLocaleDateString('id-ID');
+          const returnDate = loan.return_date ? new Date(loan.return_date).toLocaleDateString('id-ID') : '-';
+          const lateFee = loan.late_fee || 0;
+          
+          let statusClass = 'bg-green-100 text-green-800';
+          let statusText = 'Selesai';
+          
+          if (loan.return_status === 'Verified') {
+            statusClass = 'bg-blue-100 text-blue-800';
+            statusText = 'Terverifikasi';
+          }
+
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="px-6 py-4 font-medium">${loan.loan_number}</td>
+              <td class="px-6 py-4">${loan.equipment ? loan.equipment.name : 'Alat tidak diketahui'}</td>
+              <td class="px-6 py-4">${loanDate}</td>
+              <td class="px-6 py-4">${returnDate}</td>
+              <td class="px-6 py-4">
+                ${lateFee > 0 ? 
+                  `<span class="text-red-600 font-medium">Rp ${lateFee.toLocaleString('id-ID')}</span>` : 
+                  '<span class="text-gray-500">-</span>'
+                }
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                  ${statusText}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        container.classList.remove('hidden');
+        document.getElementById('historyLoadingState').classList.add('hidden');
+      } catch (error) {
+        console.error('Error loading history:', error);
+        document.getElementById('historyLoadingState').textContent = 'Gagal memuat data: ' + error.message;
+      }
+    }
+
     function requestLoan(equipmentId, equipmentName) {
+      // Show confirmation dialog first
       Swal.fire({
-        title: 'Ajukan Peminjaman',
-        text: `Anda ingin meminjam ${equipmentName}?`,
+        title: 'Konfirmasi Peminjaman',
+        html: `
+          <div style="text-align: left;">
+            <p><strong>Alat:</strong> ${equipmentName}</p>
+            <p><strong>Tanggal Pinjam:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
+            <p><strong>Jatuh Tempo:</strong> ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('id-ID')} (3 hari)</p>
+            <p><strong>Biaya Sewa:</strong> Rp 50.000 per hari</p>
+            <hr style="margin: 10px 0; border: none; border-top: 1px solid #eee;">
+            <p style="color: #666; font-size: 14px;">Apakah Anda yakin ingin meminjam alat ini?</p>
+          </div>
+        `,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#28a745',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Lanjutkan!',
+        confirmButtonText: 'Ya, Pinjam Sekarang!',
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          window.location.href = `/new-loan.html?equipment=${equipmentId}`;
+          proceedWithLoan(equipmentId, equipmentName);
         }
+      });
+    }
+
+    function proceedWithLoan(equipmentId, equipmentName) {
+      const loan_date = new Date().toISOString().split('T')[0];
+      const due_date = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // default 3 hari
+
+      // Show loading state
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="bi bi-hourglass-split animate-spin"></i> Memproses...';
+
+      fetch(window.location.origin + '/api/loans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          equipment_id: equipmentId,
+          quantity: 1,
+          loan_date,
+          due_date
+        })
+      })
+      .then(async res => {
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (e) { data = { message: text }; }
+        
+        // Reset button
+        button.disabled = false;
+        button.innerHTML = originalText;
+        
+        if (!res.ok) {
+          const errorMsg = data.error || data.message || 'Terjadi kesalahan';
+          Swal.fire('Gagal', errorMsg, 'error');
+          return;
+        }
+        if (data.success) {
+          Swal.fire({
+            title: 'Peminjaman Berhasil!',
+            html: `
+              <div style="text-align: left;">
+                <p><strong>✅ ${equipmentName}</strong> berhasil dipinjam!</p>
+                <p><strong>No. Pinjaman:</strong> ${data.loan?.loan_number || 'PJM-XXX'}</p>
+                <p><strong>Tanggal Kembali:</strong> ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('id-ID')}</p>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">Silakan kembalikan alat tepat waktu untuk menghindari denda.</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonColor: '#28a745',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            // Sembunyikan section alat tersedia dan tampilkan peminjaman saya
+            document.getElementById('availableSection').classList.add('hidden');
+            showSection('myloans');
+            // Reload loans list to reflect the new loan
+            if (typeof loadLoans === 'function') loadLoans();
+          });
+        } else {
+          Swal.fire('Gagal', data.error || data.message || 'Terjadi kesalahan', 'error');
+        }
+      }).catch(err => {
+        console.error('Request failed:', err);
+        // Reset button
+        button.disabled = false;
+        button.innerHTML = originalText;
+        Swal.fire('Gagal', 'Tidak dapat menghubungi server', 'error');
       });
     }
 
@@ -361,22 +655,203 @@
     }
 
     function returnItem(loanId) {
-      Swal.fire({
-        title: 'Kembalikan Barang',
-        text: 'Apakah Anda ingin melanjutkan ke formulir pengembalian barang?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Lanjutkan!',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirect ke halaman return items dengan parameter loan ID
-          window.location.href = '/return-items.html?id=' + loanId;
-        }
-      });
+      selectedReturnLoanId = loanId;
+      showReturnModal();
     }
+
+    let selectedReturnLoanId = null;
+
+    // Format Rupiah function
+    function formatRupiah(input) {
+      // Remove all non-numeric characters
+      let value = input.value.replace(/[^\d]/g, '');
+      
+      // Format with thousand separators
+      if (value) {
+        value = parseInt(value).toLocaleString('id-ID');
+      }
+      
+      // Update input value with Rp prefix
+      input.value = value ? 'Rp ' + value : '';
+    }
+
+    async function fetchLoanDetailsForReturn(loanId) {
+      if (!loanId) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/loans/${loanId}/return-details`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.loan.payment_summary) {
+          displayPaymentBreakdown(data.loan.payment_summary);
+        }
+      } catch (error) {
+        console.error('Error fetching loan details:', error);
+      }
+    }
+
+    function displayPaymentBreakdown(paymentSummary) {
+      const breakdownContainer = document.getElementById('paymentBreakdownContainer');
+      if (!breakdownContainer) return;
+      
+      const breakdownHtml = `
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+          <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">💰 Rincian Pembayaran</h3>
+          
+          <div class="${paymentSummary.total_payment_class || 'space-y-3'}">
+            ${paymentSummary.breakdown.map(item => `
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                <div>
+                  <span class="font-medium text-gray-700 dark:text-gray-300">${item.item}</span>
+                  ${item.days ? `<span class="text-sm text-gray-500 ml-2">(${item.days} hari)</span>` : ''}
+                  ${item.rate ? `<span class="text-sm text-gray-500 ml-2">${item.rate}</span>` : ''}
+                </div>
+                <div class="text-right">
+                  <span class="${item.is_total ? 'font-bold text-lg text-green-600 dark:text-green-400' : 'font-semibold text-gray-900 dark:text-white'}">
+                    ${item.amount}
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="mt-4 pt-4 border-t-2 border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center">
+              <span class="text-lg font-bold text-gray-900 dark:text-white">Total Pembayaran:</span>
+              <span class="text-xl font-bold text-green-600 dark:text-green-400">${paymentSummary.total_payment}</span>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      breakdownContainer.innerHTML = breakdownHtml;
+    }
+
+    function showReturnModal() {
+      const modal = document.getElementById('returnModal');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      
+      // Fetch loan details with payment breakdown
+      fetchLoanDetailsForReturn(selectedReturnLoanId);
+      
+      // Reset form
+      document.getElementById('returnFormState').classList.remove('hidden');
+      document.getElementById('returnLoadingState').classList.add('hidden');
+      document.getElementById('returnSuccessState').classList.add('hidden');
+      document.getElementById('returnFooterActions').classList.remove('hidden');
+      document.getElementById('returnAlertContainer').innerHTML = '';
+      
+      // Reset form fields
+      document.querySelector('input[name="returnCondition"][value="Baik"]').checked = true;
+      document.getElementById('damageNotes').value = '';
+      document.getElementById('damageCost').value = 'Rp 0';
+      document.getElementById('gracePeriod').value = '1';
+      document.getElementById('returnSubmitBtn').disabled = false;
+    }
+
+    function closeReturnModal() {
+      const modal = document.getElementById('returnModal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      selectedReturnLoanId = null;
+    }
+
+    async function submitReturn() {
+      if (!selectedReturnLoanId) {
+        showReturnAlert('ID pinjaman tidak ditemukan', 'error');
+        return;
+      }
+
+      const condition = document.querySelector('input[name="returnCondition"]:checked')?.value || 'Baik';
+      const damageNotes = document.getElementById('damageNotes').value;
+      const damageCostValue = document.getElementById('damageCost').value;
+      const damageCost = parseInt(damageCostValue.replace(/[^\d]/g, '')) || 0;
+      const gracePeriod = parseInt(document.getElementById('gracePeriod').value) || 1;
+
+      // Show loading state
+      document.getElementById('returnSubmitBtn').disabled = true;
+      document.getElementById('returnFormState').classList.add('hidden');
+      document.getElementById('returnLoadingState').classList.remove('hidden');
+
+      try {
+        const token = localStorage.getItem('token');
+        const requestBody = {
+          return_condition: condition,
+          damage_notes: damageNotes || null,
+          damage_cost: damageCost,
+          grace_period_days: gracePeriod
+        };
+
+        const response = await fetch(`/api/loans/${selectedReturnLoanId}/submit-return`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errorMsg = data.message || data.error || 'Gagal mengembalikan barang';
+          throw new Error(errorMsg);
+        }
+
+        // Show success state
+        document.getElementById('returnLoadingState').classList.add('hidden');
+        document.getElementById('returnSuccessState').classList.remove('hidden');
+        document.getElementById('returnFooterActions').classList.add('hidden');
+
+        // Countdown 5 seconds
+        let countdown = 5;
+        const countdownEl = document.getElementById('returnCountdown');
+        const interval = setInterval(() => {
+          countdown--;
+          countdownEl.textContent = countdown;
+          if (countdown <= 0) {
+            clearInterval(interval);
+            closeReturnModal();
+            // Refresh loans list
+            if (typeof loadLoans === 'function') loadLoans();
+          }
+        }, 1000);
+
+      } catch (error) {
+        document.getElementById('returnSubmitBtn').disabled = false;
+        document.getElementById('returnLoadingState').classList.add('hidden');
+        document.getElementById('returnFormState').classList.remove('hidden');
+        showReturnAlert(`❌ ${error.message}`, 'error');
+      }
+    }
+
+    function showReturnAlert(message, type = 'info') {
+      const container = document.getElementById('returnAlertContainer');
+      const alertClass = type === 'error' ? 'bg-red-100 border-red-500 text-red-700 dark:bg-red-900/20 dark:text-red-400' : 
+                         type === 'success' ? 'bg-green-100 border-green-500 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 
+                         'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400';
+      
+      container.innerHTML = `
+        <div class="${alertClass} border-l-4 p-4 rounded">
+          <p class="text-sm">${message}</p>
+        </div>
+      `;
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('returnModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeReturnModal();
+      }
+    });
 
     checkAuth();
   </script>

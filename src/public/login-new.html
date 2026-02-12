@@ -287,10 +287,10 @@
                     const user = data.user;
                     if (user.role === 'admin') {
                         window.location.href = '/admin';
-                    } else if (user.role === 'petugas') {
+                    } else if (user.role === 'staff' || user.role === 'petugas') {
                         window.location.href = '/petugas';
-                    } else if (user.role === 'peminjam') {
-                        window.location.href = '/peminjam';
+                    } else if (user.role === 'borrower' || user.role === 'peminjam') {
+                        window.location.href = '/dashboard-borrower';
                     }
                 }, 500);
 
@@ -323,10 +323,10 @@
             const user = JSON.parse(localStorage.getItem('user'));
             if (user.role === 'admin') {
                 window.location.href = '/admin';
-            } else if (user.role === 'petugas') {
+            } else if (user.role === 'staff' || user.role === 'petugas') {
                 window.location.href = '/petugas';
-            } else if (user.role === 'peminjam') {
-                window.location.href = '/peminjam';
+            } else if (user.role === 'borrower' || user.role === 'peminjam') {
+                window.location.href = '/dashboard-borrower';
             }
         }
     </script>

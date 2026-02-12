@@ -34,8 +34,20 @@ router.get('/equipment/:equipment_id', verifyToken, loanController.getLoansByEqu
 // GET loan by ID
 router.get('/:id', verifyToken, loanController.getLoanById);
 
+// GET loan details for return process
+router.get('/:id/return-details', verifyToken, loanController.getLoanDetailsForReturn);
+
 // CREATE loan (Admin, Petugas only - creates Pending)
-router.post('/', verifyToken, requireAdminOrPetugasOrStaff, loanController.createLoan);
+// Only import once at the top
+// Allow Admin, Petugas, Staff, and Borrower
+router.post('/', verifyToken, (req, res, next) => {
+	// Allow if role is admin, petugas/staff, staff, or borrower
+	const allowedRoles = ['admin', 'petugas', 'staff', 'borrower', 'customer', 'peminjam'];
+	if (!req.user || !allowedRoles.includes(req.user.role)) {
+		return res.status(403).json({ error: 'Hanya Admin, Petugas, Staff, atau Borrower yang dapat mengakses' });
+	}
+	next();
+}, loanController.createLoan);
 
 // SUBMIT RETURN - Customer/Peminjam mengembalikan barang (masuk grace period)
 router.post('/:id/submit-return', verifyToken, loanController.submitReturn);

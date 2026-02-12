@@ -45,6 +45,9 @@ router.get('/', verifyToken, equipmentController.getAllEquipment);
 // GET equipment by ID (Admin, Staff)
 router.get('/:id', verifyToken, equipmentController.getEquipmentById);
 
+// UPDATE equipment (Admin only)
+router.put('/:id', verifyToken, requireAdmin, equipmentController.updateEquipment);
+
 // GET equipment availability (Admin, Staff)
 router.get('/availability/status', verifyToken, equipmentController.getEquipmentAvailability);
 
@@ -62,5 +65,11 @@ router.patch('/:id/condition', verifyToken, requireAdminOrStaff, equipmentContro
 
 // DELETE equipment (Admin only)
 router.delete('/:id', verifyToken, requireAdmin, equipmentController.deleteEquipment);
+
+// Temporarily disabled stock management routes
+// router.get('/low-stock', verifyToken, requireAdmin, equipmentController.getLowStockItems);
+// router.post('/:id/add-stock', verifyToken, requireAdmin, equipmentController.addStock);
+// router.post('/:id/reduce-stock', verifyToken, requireAdmin, equipmentController.reduceStock);
+// router.get('/:id/stock-history', verifyToken, requireAdmin, equipmentController.getStockHistory);
 
 module.exports = router;

@@ -17,13 +17,15 @@ async function seedUsers() {
     console.log('🔄 Updating users table schema...');
     try {
       // First, truncate/delete existing users to avoid constraint issues
+      await sequelize.query('SET FOREIGN_KEY_CHECKS=0');
       await sequelize.query('DELETE FROM users');
+      await sequelize.query('SET FOREIGN_KEY_CHECKS=1');
       console.log('✓ Cleared existing users');
       
-      await sequelize.query('ALTER TABLE users MODIFY COLUMN role ENUM("admin", "staff", "borrower") DEFAULT "borrower"');
+      await sequelize.query(`ALTER TABLE users MODIFY COLUMN role ENUM("admin", "staff", "borrower") DEFAULT "borrower" NOT NULL`);
       console.log('✓ Users table schema updated');
     } catch (err) {
-      console.log('ℹ️  Table schema update:', err.message.substring(0, 50));
+      console.log('ℹ️  Table schema update:', err.message.substring(0, 100));
     }
 
     // Sync database
@@ -97,17 +99,6 @@ async function seedUsers() {
     console.log('  Username: admin');
     console.log('  Password: admin123');
     console.log('');
-    console.log('Staff:');
-    console.log('  Username: staff01');
-    console.log('  Password: staff123');
-    console.log('');
-    console.log('Borrower/Peminjam:');
-    console.log('  Username: budi');
-    console.log('  Password: budi123');
-    console.log('');
-    console.log('Supervisor:');
-    console.log('  Username: supervisor');
-console.log('');
     console.log('Staff:');
     console.log('  Username: staff01');
     console.log('  Password: staff123');

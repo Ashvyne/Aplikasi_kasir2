@@ -155,10 +155,28 @@ app.use('/api/equipment', require('./routes/equipment'));
 // Category management routes (Kategori alat)
 app.use('/api/categories', require('./routes/categories'));
 
+// Product management routes (Produk untuk dijual - Stock In)
+app.use('/api/products', require('./routes/products'));
+
+// Stock In routes (Input stok produk)
+app.use('/api/stockin', require('./routes/stockin'));
+
+// Transaction routes (Transaksi penjualan)
+app.use('/api/transactions', require('./routes/transactions'));
+
 // Borrower management routes (Data peminjam)
 app.use('/api/borrowers', require('./routes/borrowers'));
 
 // Loan management routes (Transaksi peminjaman)
+// Log incoming requests to /api/loans for debugging
+app.use('/api/loans', (req, res, next) => {
+  console.log(`→ Incoming request to /api/loans: ${req.method} ${req.originalUrl} - Authorization: ${!!req.headers['authorization']}`);
+  next();
+});
+
+// Ensure OPTIONS preflight is handled for /api/loans
+app.options('/api/loans', cors());
+
 app.use('/api/loans', require('./routes/loans'));
 
 // Activity log routes (Admin only)
@@ -398,12 +416,19 @@ app.listen(PORT, () => {
   console.log('   POST   /api/equipment');
   console.log('   PUT    /api/equipment/:id');
   console.log('   DELETE /api/equipment/:id');
+  console.log('   GET    /api/equipment/:id/stock-history');
+  console.log('   POST   /api/equipment/:id/add-stock');
+  console.log('   POST   /api/equipment/:id/reduce-stock');
+  console.log('   GET    /api/equipment/low-stock');
   console.log('   GET    /api/borrowers');
   console.log('   POST   /api/borrowers');
   console.log('   PUT    /api/borrowers/:id');
   console.log('   DELETE /api/borrowers/:id');
   console.log('   GET    /api/loans');
   console.log('   POST   /api/loans');
+  console.log('   POST   /api/loans/:id/submit-return');
   console.log('   POST   /api/loans/:id/return');
-  console.log('   GET    /api/reports');
+  console.log('   POST   /api/loans/:id/verify-return');
+  console.log('   GET    /api/loans/:id/return-details');
+  console.log('   GET    /api/loans/:id/details');
 });
