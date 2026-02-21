@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,20 +8,29 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/notification-bell.js"></script>
   <script>tailwind.config = { darkMode: 'class' }</script>
   <style>
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
     }
+
     .animate-spin {
       animation: spin 1s linear infinite;
     }
   </style>
 </head>
+
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
   <div class="flex h-screen">
-    <div class="w-64 bg-gradient-to-b from-blue-700 to-blue-600 dark:from-blue-900 dark:to-blue-800 text-white shadow-lg flex flex-col">
+    <div
+      class="w-64 bg-gradient-to-b from-blue-700 to-blue-600 dark:from-blue-900 dark:to-blue-800 text-white shadow-lg flex flex-col">
       <div class="p-6 border-b border-blue-600 dark:border-blue-700">
         <div class="flex items-center gap-3">
           <i class="bi bi-person text-2xl"></i>
@@ -28,25 +38,30 @@
         </div>
       </div>
       <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-        <button onclick="showSection('dashboard')" class="nav-link active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('dashboard')"
+          class="nav-link active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-speedometer2 text-lg w-6"></i>
           <span class="font-medium">Dashboard</span>
         </button>
-        <button onclick="showSection('available')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('available')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-boxes text-lg w-6"></i>
           <span class="font-medium">Alat Tersedia</span>
         </button>
-        <button onclick="showSection('myloans')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('myloans')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-journal text-lg w-6"></i>
           <span class="font-medium">Peminjaman Saya</span>
         </button>
-        <button onclick="showSection('history')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('history')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-clock-history text-lg w-6"></i>
           <span class="font-medium">Riwayat</span>
         </button>
       </nav>
       <div class="p-4 border-t border-blue-600 dark:border-blue-700">
-        <button onclick="logout()" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 rounded-lg font-medium flex items-center justify-center gap-2">
+        <button onclick="logout()"
+          class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 rounded-lg font-medium flex items-center justify-center gap-2">
           <i class="bi bi-box-arrow-right"></i>
           <span>Logout</span>
         </button>
@@ -58,12 +73,20 @@
         <div class="px-8 py-6 flex items-center justify-between">
           <h1 class="text-3xl font-bold" id="pageTitle">Dashboard</h1>
           <div class="flex items-center gap-6">
+            <button onclick="toggleHelpModal()"
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 relative group" title="Pusat Bantuan">
+              <i class="bi bi-question-circle text-xl text-gray-600 dark:text-gray-300"></i>
+            </button>
+            <!-- Notification Bell -->
+            <div id="notif-bell-mount"></div>
             <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
               <i class="bi bi-moon-stars text-xl dark:hidden"></i>
               <i class="bi bi-sun-fill text-xl hidden dark:inline"></i>
             </button>
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center font-bold text-sm" id="userAvatar">B</div>
+              <div
+                class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center font-bold text-sm"
+                id="userAvatar">B</div>
               <div>
                 <p class="text-sm font-medium" id="userName">Peminjam</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Peminjam</p>
@@ -120,7 +143,7 @@
         <!-- Available Equipment -->
         <div id="availableSection" class="section hidden">
           <h2 class="text-2xl font-bold mb-6">Alat Tersedia untuk Dipinjam</h2>
-          
+
           <div id="equipmentLoadingState" class="text-center py-12">
             <i class="bi bi-hourglass text-4xl text-blue-600 mb-3 block"></i>
             <p class="text-gray-600 dark:text-gray-400">Memuat daftar alat...</p>
@@ -134,7 +157,7 @@
         <!-- My Loans -->
         <div id="myloansSection" class="section hidden">
           <h2 class="text-2xl font-bold mb-6">Peminjaman Saya</h2>
-          
+
           <div id="loansLoadingState" class="text-center py-12">
             <i class="bi bi-hourglass text-4xl text-blue-600 mb-3 block"></i>
             <p class="text-gray-600 dark:text-gray-400">Memuat data pinjaman...</p>
@@ -148,7 +171,7 @@
         <!-- History -->
         <div id="historySection" class="section hidden">
           <h2 class="text-2xl font-bold mb-6">Riwayat Peminjaman</h2>
-          
+
           <div id="historyLoadingState" class="text-center py-12">
             <i class="bi bi-hourglass text-4xl text-blue-600 mb-3 block"></i>
             <p class="text-gray-600 dark:text-gray-400">Memuat riwayat pinjaman...</p>
@@ -179,98 +202,169 @@
   </div>
 
   <!-- Return Item Modal -->
-  <div id="returnModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">📦 Kembalikan Barang</h3>
-        <button onclick="closeReturnModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none">&times;</button>
+  <div id="returnModal"
+    class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div
+      class="bg-gray-900 text-gray-100 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700 overflow-hidden transform transition-all scale-100">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-900">
+        <h3 class="text-lg font-bold flex items-center gap-2 text-white">
+          <span>📦</span> <span id="returnModalTitle">Return Item</span>
+        </h3>
+        <button onclick="closeReturnModal()"
+          class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors text-xl leading-none">&times;</button>
       </div>
-      
-      <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-6 bg-gray-900 relative">
+        <!-- Alert -->
         <div id="returnAlertContainer"></div>
-        
-        <!-- Payment Breakdown Container -->
-        <div id="paymentBreakdownContainer"></div>
-        
-        <div id="returnFormState">
-          <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 mb-6">
-            <p class="text-sm text-blue-800 dark:text-blue-200">
-              ℹ️ Barang akan masuk <strong>masa tenggang selama 1 hari</strong> untuk pemeriksaan oleh staff.
-            </p>
-          </div>
 
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Kondisi Barang</label>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <label class="cursor-pointer">
-                <input type="radio" name="returnCondition" value="Baik" checked class="sr-only peer">
-                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
-                  <span class="text-2xl">✓</span>
-                  <p class="text-sm mt-1 font-medium">Baik</p>
-                </div>
-              </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="returnCondition" value="Rusak Ringan" class="sr-only peer">
-                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
-                  <span class="text-2xl">⚠️</span>
-                  <p class="text-sm mt-1 font-medium">Rusak Ringan</p>
-                </div>
-              </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="returnCondition" value="Rusak Berat" class="sr-only peer">
-                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
-                  <span class="text-2xl">❌</span>
-                  <p class="text-sm mt-1 font-medium">Rusak Berat</p>
-                </div>
-              </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="returnCondition" value="Hilang" class="sr-only peer">
-                <div class="p-3 text-center border-2 rounded-lg peer-checked:border-gray-500 peer-checked:bg-gray-50 dark:peer-checked:bg-gray-900/20 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
-                  <span class="text-2xl">🔴</span>
-                  <p class="text-sm mt-1 font-medium">Hilang</p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div class="mb-6">
-            <label for="damageNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catatan Kerusakan (Opsional)</label>
-            <textarea id="damageNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" placeholder="Deskripsikan kondisi barang..."></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label for="damageCost" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estimasi Biaya (Rp)</label>
-              <input type="text" id="damageCost" min="0" step="1000" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" placeholder="0" value="Rp 0" oninput="formatRupiah(this)">
-            </div>
-            <div>
-              <label for="gracePeriod" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Masa Tenggang (Hari)</label>
-              <input type="number" id="gracePeriod" value="1" min="1" max="7" readonly class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 dark:text-gray-300">
-            </div>
-          </div>
+        <!-- Loading Overlay -->
+        <div id="returnLoadingState"
+          class="hidden absolute inset-0 bg-gray-900/90 z-20 flex flex-col items-center justify-center backdrop-blur-sm transition-all">
+          <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p class="text-blue-400 font-medium animate-pulse">Processing Return...</p>
         </div>
 
-        <div id="returnLoadingState" class="hidden text-center py-8">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p class="mt-2 text-gray-600 dark:text-gray-400">Memproses pengembalian...</p>
+        <!-- Success Overlay -->
+        <div id="returnSuccessState"
+          class="hidden absolute inset-0 bg-gray-900/95 z-20 flex flex-col items-center justify-center text-center p-8 backdrop-blur-sm transition-all">
+          <div class="text-6xl mb-4 animate-bounce">✅</div>
+          <h3 class="text-2xl font-bold text-green-400 mb-2">Return Submitted!</h3>
+          <p class="text-gray-400 mb-6 max-w-md">Item successfully returned and entered inspection grace period.</p>
+          <div class="text-4xl font-mono font-bold text-blue-400" id="returnCountdown">3</div>
         </div>
 
-        <div id="returnSuccessState" class="hidden text-center py-8">
-          <div class="text-6xl mb-4">✅</div>
-          <h4 class="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Pengembalian Berhasil!</h4>
-          <p class="text-gray-600 dark:text-gray-400 mb-4">Barang masuk masa tenggang 1 hari untuk pemeriksaan.</p>
-          <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2" id="returnCountdown">5</div>
-          <p class="text-sm text-gray-500 dark:text-gray-500">Modal akan ditutup otomatis...</p>
+        <!-- Default Form State -->
+        <div id="returnFormState" class="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <!-- Left Column: Condition (7 cols) -->
+          <div class="md:col-span-7 space-y-6">
+            <!-- Info -->
+            <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 flex gap-3 text-blue-300 text-sm">
+              <i class="bi bi-info-circle text-lg shrink-0"></i>
+              <div>Item will enter a <strong>1-day grace period</strong> for inspection by staff.</div>
+            </div>
+
+            <!-- Condition -->
+            <div>
+              <label class="block text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">Item Condition</label>
+              <div class="grid grid-cols-2 gap-3">
+                <!-- Good -->
+                <label class="relative cursor-pointer group">
+                  <input type="radio" name="returnCondition" value="Baik" checked onchange="toggleDamageInputs(this)"
+                    class="peer sr-only">
+                  <div
+                    class="p-3 md:p-4 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 hover:border-blue-500/50 peer-checked:bg-blue-600/10 peer-checked:border-blue-500 transition-all text-center h-full flex flex-col items-center justify-center">
+                    <div class="text-2xl mb-1">✅</div>
+                    <div class="text-sm font-medium text-gray-300 peer-checked:text-blue-400">Good</div>
+                  </div>
+                </label>
+                <!-- Minor -->
+                <label class="relative cursor-pointer group">
+                  <input type="radio" name="returnCondition" value="Rusak Ringan" onchange="toggleDamageInputs(this)"
+                    class="peer sr-only">
+                  <div
+                    class="p-3 md:p-4 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 hover:border-yellow-500/50 peer-checked:bg-yellow-600/10 peer-checked:border-yellow-500 transition-all text-center h-full flex flex-col items-center justify-center">
+                    <div class="text-2xl mb-1">⚠️</div>
+                    <div class="text-sm font-medium text-gray-300 peer-checked:text-yellow-400">Minor Damage</div>
+                  </div>
+                </label>
+                <!-- Major -->
+                <label class="relative cursor-pointer group">
+                  <input type="radio" name="returnCondition" value="Rusak Berat" onchange="toggleDamageInputs(this)"
+                    class="peer sr-only">
+                  <div
+                    class="p-3 md:p-4 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 hover:border-red-500/50 peer-checked:bg-red-600/10 peer-checked:border-red-500 transition-all text-center h-full flex flex-col items-center justify-center">
+                    <div class="text-2xl mb-1">❌</div>
+                    <div class="text-sm font-medium text-gray-300 peer-checked:text-red-400">Major Damage</div>
+                  </div>
+                </label>
+                <!-- Lost -->
+                <label class="relative cursor-pointer group">
+                  <input type="radio" name="returnCondition" value="Hilang" onchange="toggleDamageInputs(this)"
+                    class="peer sr-only">
+                  <div
+                    class="p-3 md:p-4 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 hover:border-gray-500/50 peer-checked:bg-gray-600/10 peer-checked:border-gray-500 transition-all text-center h-full flex flex-col items-center justify-center">
+                    <div class="text-2xl mb-1">🔴</div>
+                    <div class="text-sm font-medium text-gray-300 peer-checked:text-gray-400">Lost</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Damage Inputs (Conditional) -->
+            <div id="damageInputSection"
+              class="hidden space-y-4 bg-red-900/10 border border-red-500/20 rounded-xl p-4 animate-fade-in-down">
+              <div>
+                <label class="block text-xs uppercase text-gray-400 font-bold mb-2">Estimated Damage Cost (Rp)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                  <input type="text" id="damageCost"
+                    class="w-full bg-gray-800 border border-gray-600 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-gray-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                    placeholder="0" oninput="formatRupiah(this); updatePaymentTotal()">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs uppercase text-gray-400 font-bold mb-2">Damage Notes</label>
+                <textarea id="damageNotes" rows="2"
+                  class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                  placeholder="Describe the damage details..."></textarea>
+              </div>
+            </div>
+
+            <!-- Hidden Grace Period Input (for logic) -->
+            <input type="hidden" id="gracePeriod" value="1">
+          </div>
+
+          <!-- Right Column: Summary (5 cols) -->
+          <div class="md:col-span-12 lg:col-span-5">
+            <div
+              class="sticky top-0 bg-gray-800/50 rounded-xl border border-gray-700 p-5 space-y-4 shadow-lg backdrop-blur-sm">
+              <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-gray-700 pb-2">
+                Payment Summary</h4>
+
+              <div id="paymentBreakdownContainer" class="space-y-3 text-sm">
+                <!-- Content injected via JS -->
+                <div class="space-y-3 opacity-50">
+                  <div class="flex justify-between">
+                    <div class="h-4 bg-gray-700 rounded w-24"></div>
+                    <div class="h-4 bg-gray-700 rounded w-16"></div>
+                  </div>
+                  <div class="flex justify-between">
+                    <div class="h-4 bg-gray-700 rounded w-32"></div>
+                    <div class="h-4 bg-gray-700 rounded w-12"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional Dynamic Costs (Damage) -->
+              <div id="summaryDamageRow"
+                class="hidden flex justify-between items-center py-2 border-t border-dashed border-gray-700 text-red-400 text-sm">
+                <span>Damage Cost <span
+                    class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded ml-1 border border-red-500/20">EST</span></span>
+                <span class="font-bold font-mono" id="summaryDamageCost">Rp 0</span>
+              </div>
+
+              <div class="pt-4 border-t-2 border-gray-700 mt-2">
+                <div class="flex justify-between items-end">
+                  <span class="text-gray-400 text-xs font-bold uppercase">TOTAL PAYMENT</span>
+                  <span class="text-2xl font-bold text-green-400" id="summaryTotalPayment">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700" id="returnFooterActions">
-        <button onclick="closeReturnModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          Batal
-        </button>
-        <button onclick="submitReturn()" id="returnSubmitBtn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-          Kirim Pengembalian
-        </button>
+      <!-- Footer -->
+      <div class="p-5 border-t border-gray-800 bg-gray-900/80 rounded-b-2xl flex justify-end gap-3"
+        id="returnFooterActions">
+        <button onclick="closeReturnModal()"
+          class="px-5 py-2.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors font-medium text-sm">Cancel</button>
+        <button onclick="submitReturn()" id="returnSubmitBtn"
+          class="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-0.5 text-sm">Submit
+          Return</button>
       </div>
     </div>
   </div>
@@ -300,7 +394,7 @@
       if (btn) btn.classList.add('active', 'bg-blue-600', 'dark:bg-blue-700');
       const titles = { dashboard: 'Dashboard', available: 'Alat Tersedia', myloans: 'Peminjaman Saya', history: 'Riwayat' };
       document.getElementById('pageTitle').textContent = titles[section] || 'Borrower';
-      
+
       if (section === 'available') loadAvailableEquipment();
       if (section === 'myloans') loadLoans();
       if (section === 'history') loadHistory();
@@ -319,7 +413,7 @@
         const equipment = data.equipment || [];
 
         const container = document.getElementById('equipmentCardsContainer');
-        
+
         if (equipment.length === 0) {
           container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Tidak ada alat tersedia</p></div>';
           container.classList.remove('hidden');
@@ -361,7 +455,7 @@
       try {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        
+
         const response = await fetch('/api/loans', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -372,7 +466,7 @@
         const loans = data.loans || [];
 
         const container = document.getElementById('loansContainer');
-        
+
         if (loans.length === 0) {
           container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Tidak ada pinjaman</p></div>';
           container.classList.remove('hidden');
@@ -397,10 +491,10 @@
           const dueDateObj = new Date(loan.due_date);
           const isOverdue = dueDateObj < today && loan.status === 'Aktif';
           const isAlmostDue = dueDateObj - today <= 3 * 24 * 60 * 60 * 1000 && loan.status === 'Aktif';
-          
+
           let statusClass = 'bg-green-100 text-green-800';
           let statusText = loan.status;
-          
+
           if (isOverdue) {
             statusClass = 'bg-red-100 text-red-800';
             statusText = 'Terlambat';
@@ -409,37 +503,55 @@
             statusText = 'Hampir Jatuh Tempo';
           }
 
+          let threadBadge = '';
+          if (loan.thread && loan.thread.status !== 'Closed') {
+            const statusMap = {
+              'Open': 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
+              'Awaiting Staff Response': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
+              'Awaiting Customer Response': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+              'Resolved': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
+            };
+            const badgeClass = statusMap[loan.thread.status] || 'bg-gray-100 text-gray-600';
+            threadBadge = `<div class="mt-1 px-2 py-0.5 inline-block rounded text-[10px] font-medium ${badgeClass} border border-transparent shadow-sm">${loan.thread.status}</div>`;
+          }
+
           return `
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100 dark:border-gray-700">
               <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                   <div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${loan.loan_number}</h3>
-                    <p class="text-gray-600 dark:text-gray-400">${loan.equipment ? loan.equipment.name : 'Alat tidak diketahui'}</p>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 tracking-tight">${loan.loan_number}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 font-medium">${loan.equipment ? loan.equipment.name : 'Alat tidak diketahui'}</p>
+                    ${threadBadge}
                   </div>
-                  <span class="px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${statusClass}">
                     ${statusText}
                   </span>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="grid grid-cols-2 gap-4 text-sm mt-4 bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg">
                   <div>
-                    <span class="text-gray-500 dark:text-gray-400">Tanggal Pinjam:</span>
-                    <p class="font-medium text-gray-900 dark:text-gray-100">${loanDate}</p>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Tanggal Pinjam</span>
+                    <p class="font-medium text-gray-900 dark:text-gray-100 mt-0.5">${loanDate}</p>
                   </div>
                   <div>
-                    <span class="text-gray-500 dark:text-gray-400">Jatuh Tempo:</span>
-                    <p class="font-medium text-gray-900 dark:text-gray-100">${dueDate}</p>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Jatuh Tempo</span>
+                    <p class="font-medium text-gray-900 dark:text-gray-100 mt-0.5">${dueDate}</p>
                   </div>
                 </div>
                 
-                <div class="mt-4 flex justify-end">
-                  ${loan.status === 'Aktif' ? 
-                    `<button onclick="returnItem(${loan.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <div class="mt-5 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <button onclick="openChat(${loan.id})" class="relative group bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 shadow-sm">
+                      <i class="bi bi-chat-text-fill text-blue-500 group-hover:scale-110 transition-transform"></i> 
+                      <span>Support</span>
+                      ${(loan.thread && loan.thread.status === 'Awaiting Customer Response') ? '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>' : ''}
+                  </button>
+                  ${loan.status === 'Aktif' ?
+              `<button onclick="returnItem(${loan.id})" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-all hover:shadow-lg transform hover:-translate-y-0.5">
                       Kembalikan
-                    </button>` : 
-                    `<span class="text-gray-500 text-sm">Pinjaman selesai</span>`
-                  }
+                    </button>` :
+              `<span class="text-gray-400 text-sm font-medium flex items-center bg-gray-100 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg"><i class="bi bi-check-circle-fill mr-1.5 status-success"></i> Selesai</span>`
+            }
                 </div>
               </div>
             </div>
@@ -458,7 +570,7 @@
       try {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        
+
         const response = await fetch('/api/loans', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -470,10 +582,10 @@
 
         const container = document.getElementById('historyContainer');
         const tableBody = document.getElementById('historyTableBody');
-        
+
         // Filter completed loans for current user
-        const userHistory = loans.filter(loan => 
-          loan.borrower && loan.borrower.email === user.email && 
+        const userHistory = loans.filter(loan =>
+          loan.borrower && loan.borrower.email === user.email &&
           (loan.status === 'Selesai' || loan.return_status === 'Verified')
         );
 
@@ -488,10 +600,10 @@
           const loanDate = new Date(loan.loan_date).toLocaleDateString('id-ID');
           const returnDate = loan.return_date ? new Date(loan.return_date).toLocaleDateString('id-ID') : '-';
           const lateFee = loan.late_fee || 0;
-          
+
           let statusClass = 'bg-green-100 text-green-800';
           let statusText = 'Selesai';
-          
+
           if (loan.return_status === 'Verified') {
             statusClass = 'bg-blue-100 text-blue-800';
             statusText = 'Terverifikasi';
@@ -504,10 +616,10 @@
               <td class="px-6 py-4">${loanDate}</td>
               <td class="px-6 py-4">${returnDate}</td>
               <td class="px-6 py-4">
-                ${lateFee > 0 ? 
-                  `<span class="text-red-600 font-medium">Rp ${lateFee.toLocaleString('id-ID')}</span>` : 
-                  '<span class="text-gray-500">-</span>'
-                }
+                ${lateFee > 0 ?
+              `<span class="text-red-600 font-medium">Rp ${lateFee.toLocaleString('id-ID')}</span>` :
+              '<span class="text-gray-500">-</span>'
+            }
               </td>
               <td class="px-6 py-4">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
@@ -576,24 +688,24 @@
           due_date
         })
       })
-      .then(async res => {
-        const text = await res.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch (e) { data = { message: text }; }
-        
-        // Reset button
-        button.disabled = false;
-        button.innerHTML = originalText;
-        
-        if (!res.ok) {
-          const errorMsg = data.error || data.message || 'Terjadi kesalahan';
-          Swal.fire('Gagal', errorMsg, 'error');
-          return;
-        }
-        if (data.success) {
-          Swal.fire({
-            title: 'Peminjaman Berhasil!',
-            html: `
+        .then(async res => {
+          const text = await res.text();
+          let data = {};
+          try { data = JSON.parse(text); } catch (e) { data = { message: text }; }
+
+          // Reset button
+          button.disabled = false;
+          button.innerHTML = originalText;
+
+          if (!res.ok) {
+            const errorMsg = data.error || data.message || 'Terjadi kesalahan';
+            Swal.fire('Gagal', errorMsg, 'error');
+            return;
+          }
+          if (data.success) {
+            Swal.fire({
+              title: 'Peminjaman Berhasil!',
+              html: `
               <div style="text-align: left;">
                 <p><strong>✅ ${equipmentName}</strong> berhasil dipinjam!</p>
                 <p><strong>No. Pinjaman:</strong> ${data.loan?.loan_number || 'PJM-XXX'}</p>
@@ -601,26 +713,26 @@
                 <p style="color: #666; font-size: 14px; margin-top: 10px;">Silakan kembalikan alat tepat waktu untuk menghindari denda.</p>
               </div>
             `,
-            icon: 'success',
-            confirmButtonColor: '#28a745',
-            confirmButtonText: 'OK'
-          }).then(() => {
-            // Sembunyikan section alat tersedia dan tampilkan peminjaman saya
-            document.getElementById('availableSection').classList.add('hidden');
-            showSection('myloans');
-            // Reload loans list to reflect the new loan
-            if (typeof loadLoans === 'function') loadLoans();
-          });
-        } else {
-          Swal.fire('Gagal', data.error || data.message || 'Terjadi kesalahan', 'error');
-        }
-      }).catch(err => {
-        console.error('Request failed:', err);
-        // Reset button
-        button.disabled = false;
-        button.innerHTML = originalText;
-        Swal.fire('Gagal', 'Tidak dapat menghubungi server', 'error');
-      });
+              icon: 'success',
+              confirmButtonColor: '#28a745',
+              confirmButtonText: 'OK'
+            }).then(() => {
+              // Sembunyikan section alat tersedia dan tampilkan peminjaman saya
+              document.getElementById('availableSection').classList.add('hidden');
+              showSection('myloans');
+              // Reload loans list to reflect the new loan
+              if (typeof loadLoans === 'function') loadLoans();
+            });
+          } else {
+            Swal.fire('Gagal', data.error || data.message || 'Terjadi kesalahan', 'error');
+          }
+        }).catch(err => {
+          console.error('Request failed:', err);
+          // Reset button
+          button.disabled = false;
+          button.innerHTML = originalText;
+          Swal.fire('Gagal', 'Tidak dapat menghubungi server', 'error');
+        });
     }
 
 
@@ -665,19 +777,19 @@
     function formatRupiah(input) {
       // Remove all non-numeric characters
       let value = input.value.replace(/[^\d]/g, '');
-      
+
       // Format with thousand separators
       if (value) {
         value = parseInt(value).toLocaleString('id-ID');
       }
-      
+
       // Update input value with Rp prefix
       input.value = value ? 'Rp ' + value : '';
     }
 
     async function fetchLoanDetailsForReturn(loanId) {
       if (!loanId) return;
-      
+
       try {
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/loans/${loanId}/return-details`, {
@@ -686,9 +798,9 @@
             'Content-Type': 'application/json'
           }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.loan.payment_summary) {
           displayPaymentBreakdown(data.loan.payment_summary);
         }
@@ -697,64 +809,292 @@
       }
     }
 
+    let currentBaseTotal = 0;
+
+    function toggleDamageInputs(input) {
+      const section = document.getElementById('damageInputSection');
+      const damageCost = document.getElementById('damageCost');
+      if (input.value === 'Baik') {
+        section.classList.add('hidden');
+        damageCost.value = 'Rp 0';
+        updatePaymentTotal();
+      } else {
+        section.classList.remove('hidden');
+      }
+    }
+
+  </script>
+
+  <!-- Chat Panel -->
+  <div id="chatPanel"
+    class="fixed inset-y-0 right-0 w-full md:w-[420px] bg-gray-900 border-l border-gray-800 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur flex justify-between items-center">
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 class="text-white font-bold text-lg">Loan Support</h3>
+          <span id="chatStatusBadge"
+            class="px-2 py-0.5 rounded text-[10px] bg-blue-900/30 text-blue-400 border border-blue-500/30">Open</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-0.5" id="chatLoanContext">Loading...</p>
+      </div>
+      <button onclick="toggleChatPanel()" class="text-gray-400 hover:text-white transition-colors">
+        <i class="bi bi-x-lg text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Messages -->
+    <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-black/20 custom-scrollbar relative">
+      <!-- Dynamic Content -->
+      <div class="flex justify-center items-center h-full text-gray-500 text-sm">
+        <div class="text-center">
+          <div
+            class="spinner-border animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-2">
+          </div>
+          <p>Loading conversation...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 border-t border-gray-800 bg-gray-900">
+      <form id="chatForm" class="flex gap-2 relative">
+        <input type="hidden" id="activeThreadId">
+        <button type="button"
+          class="p-3 rounded-xl bg-gray-800 text-gray-400 hover:text-white transition-colors flex-shrink-0">
+          <i class="bi bi-paperclip"></i>
+        </button>
+        <input type="text" id="chatInput" autocomplete="off"
+          class="flex-1 bg-gray-800 border border-gray-700/50 rounded-xl px-4 text-white placeholder-gray-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-gray-800 transition-all outline-none"
+          placeholder="Type a message...">
+        <button type="submit"
+          class="p-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </form>
+      <p class="text-[10px] text-gray-600 text-center mt-2">
+        Messages are monitored for quality assurance.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // --- CHAT SYSTEM LOGIC ---
+    let activeChatLoanId = null;
+    let chatPollInterval = null;
+
+    async function openChat(loanId) {
+      activeChatLoanId = loanId;
+      const panel = document.getElementById('chatPanel');
+      panel.classList.remove('translate-x-full');
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+      // Reset View
+      document.getElementById('chatMessages').innerHTML = `
+            <div class="flex justify-center items-center h-full text-gray-500 text-sm">
+               <div class="text-center">
+                   <div class="animate-spin inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+                   <p>Connecting...</p>
+               </div>
+           </div>`;
+      document.getElementById('chatLoanContext').textContent = `Loan #${loanId}`;
+
+      await loadChatThread();
+
+      // Start polling
+      if (chatPollInterval) clearInterval(chatPollInterval);
+      chatPollInterval = setInterval(loadChatMessages, 3000);
+    }
+
+    function toggleChatPanel() {
+      const panel = document.getElementById('chatPanel');
+      if (panel.classList.contains('translate-x-full')) {
+        // Opening is handled by openChat usually, but if toggled open:
+      } else {
+        // Closing
+        panel.classList.add('translate-x-full');
+        document.body.style.overflow = 'auto';
+        if (chatPollInterval) clearInterval(chatPollInterval);
+        activeChatLoanId = null;
+      }
+    }
+
+    async function loadChatThread() {
+      if (!activeChatLoanId) return;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/chat/loan/${activeChatLoanId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          const thread = data.thread;
+          document.getElementById('activeThreadId').value = thread.id;
+          document.getElementById('chatLoanContext').textContent = `${thread.loan.equipment.name} (${thread.loan.loan_number})`;
+          document.getElementById('chatStatusBadge').textContent = thread.status;
+
+          await loadChatMessages();
+        } else {
+          Swal.fire('Error', 'Could not load chat', 'error');
+          toggleChatPanel();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadChatMessages() {
+      const threadId = document.getElementById('activeThreadId').value;
+      if (!threadId) return;
+
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/chat/${threadId}/messages`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          renderChatMessages(data.messages);
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function renderChatMessages(messages) {
+      const container = document.getElementById('chatMessages');
+      if (messages.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-600 mt-10 text-sm">No messages yet.<br>Ask a question to support staff.</div>`;
+        return;
+      }
+
+      const html = messages.map(msg => {
+        const isMe = msg.sender_role === 'customer'; // Assuming I am customer view
+        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (msg.message_type === 'internal_note') return ''; // Don't show internal notes
+
+        return `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-fade-in-up">
+                    <div class="max-w-[85%] ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-800 text-gray-200 rounded-tl-sm'} px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed relative group">
+                        ${msg.message}
+                    </div>
+                    <span class="text-[10px] text-gray-500 mt-1 px-1 font-medium">
+                        ${isMe ? 'You' : 'Support'} • ${time}
+                    </span>
+                </div>
+            `;
+      }).join('');
+
+      // Only update if changed to avoid jitter (simple check)
+      // ideally diffing, but for now replace
+      if (container.querySelector('.items-end') || container.innerHTML.length < 500 || messages.length > 0) {
+        // For smooth scrolling, stick to bottom if already at bottom
+        const isAtBottom = container.scrollHeight - container.scrollTop === container.clientHeight;
+        if (container.innerHTML !== html) {
+          container.innerHTML = html;
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      const threadId = document.getElementById('activeThreadId').value;
+
+      if (!text || !threadId) return;
+
+      try {
+        const token = localStorage.getItem('token');
+        input.value = ''; // Optimistic clear
+
+        await fetch(`/api/chat/${threadId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: text })
+        });
+
+        loadChatMessages();
+      } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Failed to send', 'error');
+      }
+    });
+
+    // End of Chat Logic
+
+    function updatePaymentTotal() {
+      const damageInput = document.getElementById('damageCost').value;
+      const damageVal = parseInt(damageInput.replace(/[^\d]/g, '')) || 0;
+
+      const damageRow = document.getElementById('summaryDamageRow');
+      const damageDisplay = document.getElementById('summaryDamageCost');
+
+      if (damageVal > 0) {
+        damageRow.classList.remove('hidden');
+        damageDisplay.textContent = 'Rp ' + damageVal.toLocaleString('id-ID');
+      } else {
+        damageRow.classList.add('hidden');
+      }
+
+      const total = currentBaseTotal + damageVal;
+      document.getElementById('summaryTotalPayment').textContent = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    // ... (rest of existing functions: displayPaymentBreakdown, showReturnModal, etc.) ...
     function displayPaymentBreakdown(paymentSummary) {
       const breakdownContainer = document.getElementById('paymentBreakdownContainer');
       if (!breakdownContainer) return;
-      
-      const breakdownHtml = `
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
-          <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">💰 Rincian Pembayaran</h3>
-          
-          <div class="${paymentSummary.total_payment_class || 'space-y-3'}">
-            ${paymentSummary.breakdown.map(item => `
-              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                <div>
-                  <span class="font-medium text-gray-700 dark:text-gray-300">${item.item}</span>
-                  ${item.days ? `<span class="text-sm text-gray-500 ml-2">(${item.days} hari)</span>` : ''}
-                  ${item.rate ? `<span class="text-sm text-gray-500 ml-2">${item.rate}</span>` : ''}
-                </div>
-                <div class="text-right">
-                  <span class="${item.is_total ? 'font-bold text-lg text-green-600 dark:text-green-400' : 'font-semibold text-gray-900 dark:text-white'}">
-                    ${item.amount}
-                  </span>
-                </div>
-              </div>
-            `).join('')}
+
+      const totalStr = paymentSummary.total_payment || "0";
+      currentBaseTotal = parseInt(totalStr.replace(/[^\d]/g, '')) || 0;
+
+      const breakdownHtml = paymentSummary.breakdown.map(item => `
+        <div class="flex justify-between items-center py-2 border-b border-gray-700/50 last:border-0">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-400 font-medium ${item.is_total ? 'hidden' : ''}">${item.item}</span>
+            ${item.days ? `<span class="text-xs bg-gray-700/50 text-gray-500 px-1.5 py-0.5 rounded">${item.days}d</span>` : ''}
           </div>
-          
-          <div class="mt-4 pt-4 border-t-2 border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center">
-              <span class="text-lg font-bold text-gray-900 dark:text-white">Total Pembayaran:</span>
-              <span class="text-xl font-bold text-green-600 dark:text-green-400">${paymentSummary.total_payment}</span>
-            </div>
-          </div>
+          <span class="${item.is_total ? 'hidden' : 'text-gray-200 font-mono'}">${item.amount}</span>
         </div>
-      `;
-      
+      `).join('');
+
       breakdownContainer.innerHTML = breakdownHtml;
+      updatePaymentTotal();
     }
 
     function showReturnModal() {
       const modal = document.getElementById('returnModal');
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
-      
-      // Fetch loan details with payment breakdown
+
       fetchLoanDetailsForReturn(selectedReturnLoanId);
-      
-      // Reset form
+
       document.getElementById('returnFormState').classList.remove('hidden');
       document.getElementById('returnLoadingState').classList.add('hidden');
       document.getElementById('returnSuccessState').classList.add('hidden');
       document.getElementById('returnFooterActions').classList.remove('hidden');
       document.getElementById('returnAlertContainer').innerHTML = '';
-      
-      // Reset form fields
-      document.querySelector('input[name="returnCondition"][value="Baik"]').checked = true;
+
+      const goodRadio = document.querySelector('input[name="returnCondition"][value="Baik"]');
+      if (goodRadio) {
+        goodRadio.checked = true;
+        // Manually trigger toggle
+        toggleDamageInputs(goodRadio);
+      }
+
       document.getElementById('damageNotes').value = '';
       document.getElementById('damageCost').value = 'Rp 0';
       document.getElementById('gracePeriod').value = '1';
       document.getElementById('returnSubmitBtn').disabled = false;
+
+      currentBaseTotal = 0;
+      updatePaymentTotal();
     }
 
     function closeReturnModal() {
@@ -820,8 +1160,14 @@
           if (countdown <= 0) {
             clearInterval(interval);
             closeReturnModal();
-            // Refresh loans list
-            if (typeof loadLoans === 'function') loadLoans();
+
+            // If condition is damaged, redirect to review page
+            if (data.loan && data.loan.return_condition !== 'Baik') {
+              window.location.href = `/damage-review?loan_id=${data.loan.id}`;
+            } else {
+              // Refresh loans list normally
+              if (typeof loadLoans === 'function') loadLoans();
+            }
           }
         }, 1000);
 
@@ -835,10 +1181,10 @@
 
     function showReturnAlert(message, type = 'info') {
       const container = document.getElementById('returnAlertContainer');
-      const alertClass = type === 'error' ? 'bg-red-100 border-red-500 text-red-700 dark:bg-red-900/20 dark:text-red-400' : 
-                         type === 'success' ? 'bg-green-100 border-green-500 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 
-                         'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400';
-      
+      const alertClass = type === 'error' ? 'bg-red-100 border-red-500 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+        type === 'success' ? 'bg-green-100 border-green-500 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+          'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400';
+
       container.innerHTML = `
         <div class="${alertClass} border-l-4 p-4 rounded">
           <p class="text-sm">${message}</p>
@@ -847,13 +1193,159 @@
     }
 
     // Close modal when clicking outside
-    document.getElementById('returnModal').addEventListener('click', function(e) {
+    document.getElementById('returnModal').addEventListener('click', function (e) {
       if (e.target === this) {
         closeReturnModal();
       }
     });
 
+    function toggleHelpModal() {
+      const modal = document.getElementById('helpModal');
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          document.getElementById('helpModalContent').classList.remove('scale-95');
+          document.getElementById('helpModalContent').classList.add('scale-100');
+        }, 10);
+      } else {
+        document.getElementById('helpModalContent').classList.remove('scale-100');
+        document.getElementById('helpModalContent').classList.add('scale-95');
+        setTimeout(() => {
+          modal.classList.add('hidden');
+        }, 300);
+      }
+    }
+
     checkAuth();
+
+    // Initialize notification bell after auth
+    // We wait for the auth flow to set the token in sessionStorage/localStorage
+    (function initNotifBell() {
+      const token = sessionStorage.getItem('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (token) {
+        NotificationBell.init('#notif-bell-mount', token);
+      } else {
+        // Retry after a short delay in case auth is async
+        setTimeout(() => {
+          const t = sessionStorage.getItem('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+          if (t) NotificationBell.init('#notif-bell-mount', t);
+        }, 1500);
+      }
+    })();
   </script>
+  <!-- Help Center Modal -->
+  <div id="helpModal"
+    class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+    <div
+      class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden transform scale-95 transition-transform duration-300"
+      id="helpModalContent">
+      <div
+        class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          <i class="bi bi-life-preserver"></i> Pusat Bantuan
+        </h2>
+        <button onclick="toggleHelpModal()" class="text-white/80 hover:text-white transition-colors">
+          <i class="bi bi-x-lg text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-2 gap-4">
+          <a href="#" onclick="toggleHelpModal(); showSection('available');"
+            class="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors text-center group">
+            <div
+              class="w-10 h-10 mx-auto bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <i class="bi bi-box-seam text-blue-600 dark:text-blue-300 text-lg"></i>
+            </div>
+            <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200">Pinjam Alat</h3>
+          </a>
+          <a href="#" onclick="toggleHelpModal(); showSection('myloans');"
+            class="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors text-center group">
+            <div
+              class="w-10 h-10 mx-auto bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <i class="bi bi-arrow-return-left text-green-600 dark:text-green-300 text-lg"></i>
+            </div>
+            <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200">Kembalikan</h3>
+          </a>
+        </div>
+
+        <!-- FAQ -->
+        <div>
+          <h3 class="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+            <i class="bi bi-question-circle-fill text-yellow-500"></i> FAQ
+          </h3>
+          <div class="space-y-2">
+            <details
+              class="group bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+              <summary
+                class="flex justify-between items-center font-medium cursor-pointer list-none p-4 text-sm text-gray-800 dark:text-gray-200">
+                <span>Bagaimana cara meminjam alat?</span>
+                <span class="transition group-open:rotate-180">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
+              </summary>
+              <div
+                class="text-gray-600 dark:text-gray-400 text-sm p-4 pt-0 leading-relaxed border-t border-gray-100 dark:border-gray-700/50 mt-2">
+                Pilih menu "Alat Tersedia", cari alat yang diinginkan, lalu klik tombol "Pinjam Sekarang". Isi formulir
+                peminjaman dengan tanggal pinjam dan durasi yang diinginkan.
+              </div>
+            </details>
+            <details
+              class="group bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+              <summary
+                class="flex justify-between items-center font-medium cursor-pointer list-none p-4 text-sm text-gray-800 dark:text-gray-200">
+                <span>Berapa lama batas waktu peminjaman?</span>
+                <span class="transition group-open:rotate-180">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
+              </summary>
+              <div
+                class="text-gray-600 dark:text-gray-400 text-sm p-4 pt-0 leading-relaxed border-t border-gray-100 dark:border-gray-700/50 mt-2">
+                Batas waktu standar adalah 3 hari. Perpanjangan dapat diajukan melalui admin sebelum masa pinjam habis.
+              </div>
+            </details>
+            <details
+              class="group bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+              <summary
+                class="flex justify-between items-center font-medium cursor-pointer list-none p-4 text-sm text-gray-800 dark:text-gray-200">
+                <span>Apa yang terjadi jika terlambat?</span>
+                <span class="transition group-open:rotate-180">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
+              </summary>
+              <div
+                class="text-gray-600 dark:text-gray-400 text-sm p-4 pt-0 leading-relaxed border-t border-gray-100 dark:border-gray-700/50 mt-2">
+                Keterlambatan akan dikenakan denda sesuai kebijakan. Status peminjaman Anda akan berubah menjadi
+                "Terlambat" di dashboard.
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-100 dark:border-blue-800/30">
+          <h3 class="font-bold text-blue-800 dark:text-blue-300 mb-2 text-sm">Butuh bantuan langsung?</h3>
+          <p class="text-xs text-blue-600 dark:text-blue-400 mb-3">Tim support kami siap membantu Anda pada jam kerja
+            (08:00 - 17:00).</p>
+          <div class="flex gap-2">
+            <a href="mailto:support@lab.com"
+              class="flex-1 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 py-2 rounded-lg text-xs font-medium text-center shadow-sm border border-blue-100 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+              <i class="bi bi-envelope-fill mr-1"></i> Email Support
+            </a>
+            <button onclick="toggleHelpModal(); showSection('myloans');"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-medium text-center shadow-md transition-colors">
+              <i class="bi bi-chat-text-fill mr-1"></i> Live Chat
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-center">
+        <p class="text-[10px] text-gray-400">Versi Aplikasi v1.2.0 • &copy; 2024 Inventory Lab</p>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>

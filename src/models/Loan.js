@@ -59,7 +59,24 @@ const Loan = sequelize.define('Loan', {
     comment: 'Tanggal pengembalian aktual'
   },
   status: {
-    type: DataTypes.ENUM('Pending', 'Disetujui', 'Ditolak', 'Aktif', 'Terlambat', 'Selesai', 'Dibatalkan'),
+    type: DataTypes.ENUM(
+      'Pending',          // Waiting for approval
+      'Approved',         // Approved, ready for pickup
+      'Active',           // Item with borrower
+      'Overdue',          // Past due date
+      'Returning',        // Returned by user, waiting for staff inspection
+      'Inspecting',       // Staff is reviewing condition
+      'Penalty_Pending',  // Damage found, waiting for fee settlement
+      'Completed',        // Finished, returned, no more dues
+      'Rejected',         // Application denied
+      'Cancelled',        // Cancelled before active
+      'Disetujui',        // Legacy alias for Approved
+      'Ditolak',          // Legacy alias for Rejected
+      'Selesai',          // Legacy alias for Completed
+      'Aktif',            // Legacy alias for Active
+      'Terlambat',        // Legacy alias for Overdue
+      'Dibatalkan'        // Legacy alias for Cancelled
+    ),
     defaultValue: 'Pending',
     comment: 'Status peminjaman'
   },

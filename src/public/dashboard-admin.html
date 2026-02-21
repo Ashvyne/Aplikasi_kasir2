@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,16 +9,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/notification-bell.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class'
     }
   </script>
 </head>
+
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
   <div class="flex h-screen">
     <!-- Sidebar -->
-    <div class="w-64 bg-gradient-to-b from-blue-700 to-blue-600 dark:from-blue-900 dark:to-blue-800 text-white shadow-lg flex flex-col">
+    <div
+      class="w-64 bg-gradient-to-b from-blue-700 to-blue-600 dark:from-blue-900 dark:to-blue-800 text-white shadow-lg flex flex-col">
       <div class="p-6 border-b border-blue-600 dark:border-blue-700">
         <div class="flex items-center gap-3">
           <i class="bi bi-box-arrow-in-right text-2xl"></i>
@@ -26,34 +30,46 @@
       </div>
 
       <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-        <button onclick="showSection('dashboard')" class="nav-link active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('dashboard')"
+          class="nav-link active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-speedometer2 text-lg w-6"></i>
           <span class="font-medium">Dashboard</span>
         </button>
-        <button onclick="showSection('equipment')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('equipment')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-boxes text-lg w-6"></i>
           <span class="font-medium">Alat</span>
         </button>
-        <button onclick="showSection('borrowers')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('borrowers')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-people text-lg w-6"></i>
           <span class="font-medium">Peminjam</span>
         </button>
-        <button onclick="showSection('loans')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('loans')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-journal-check text-lg w-6"></i>
           <span class="font-medium">Peminjaman</span>
         </button>
-        <button onclick="showSection('reports')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('reports')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-file-earmark-bar-graph text-lg w-6"></i>
           <span class="font-medium">Laporan</span>
         </button>
-        <button onclick="showSection('users')" class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+        <button onclick="showSection('users')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
           <i class="bi bi-person-check text-lg w-6"></i>
           <span class="font-medium">Kelola User</span>
+        </button>
+        <button onclick="showSection('auditlogs')"
+          class="nav-link w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+          <i class="bi bi-shield-check text-lg w-6"></i>
+          <span class="font-medium">Audit Log</span>
         </button>
       </nav>
 
       <div class="p-4 border-t border-blue-600 dark:border-blue-700 space-y-3">
-        <button onclick="logout()" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-900 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+        <button onclick="logout()"
+          class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-900 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
           <i class="bi bi-box-arrow-right"></i>
           <span>Logout</span>
         </button>
@@ -67,14 +83,19 @@
         <div class="px-8 py-6 flex items-center justify-between">
           <h1 class="text-3xl font-bold" id="pageTitle">Dashboard</h1>
           <div class="flex items-center gap-6">
+            <!-- Notification Bell -->
+            <div id="notif-bell-mount"></div>
             <!-- Dark Mode Toggle -->
-            <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <button onclick="toggleDarkMode()"
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <i class="bi bi-moon-stars text-xl dark:hidden"></i>
               <i class="bi bi-sun-fill text-xl hidden dark:inline"></i>
             </button>
             <!-- User Profile -->
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center font-bold text-sm" id="userAvatar">A</div>
+              <div
+                class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center font-bold text-sm"
+                id="userAvatar">A</div>
               <div>
                 <p class="text-sm font-medium" id="userName">Admin</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
@@ -92,26 +113,29 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">TOTAL ALAT</p>
-              <p class="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-3">85</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↑ Tersedia digunakan</p>
+              <p class="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-3" id="statTotalEquipment">0</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Alat terdaftar aktif</p>
             </div>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">SEDANG DIPINJAM</p>
-              <p class="text-4xl font-bold text-green-600 dark:text-green-400 mt-3">23</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↓ 5% dari kemarin</p>
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">SEDANG DIPINJAM
+              </p>
+              <p class="text-4xl font-bold text-green-600 dark:text-green-400 mt-3" id="statActiveLoans">0</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Sedang digunakan</p>
             </div>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">TOTAL PEMINJAMAN</p>
-              <p class="text-4xl font-bold text-orange-600 dark:text-orange-400 mt-3">156</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↑ 8 peminjaman baru</p>
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">TOTAL PEMINJAMAN
+              </p>
+              <p class="text-4xl font-bold text-orange-600 dark:text-orange-400 mt-3" id="statTotalLoans">0</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Transaksi keseluruhan</p>
             </div>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">PEMINJAMAN BULAN INI</p>
-              <p class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-3">42</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">↑ 12% dari bulan lalu</p>
+              <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">PEMINJAMAN
+                TERLAMBAT</p>
+              <p class="text-4xl font-bold text-red-600 dark:text-red-400 mt-3" id="statOverdueLoans">0</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Melebihi tenggat waktu</p>
             </div>
           </div>
 
@@ -135,12 +159,16 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td class="px-6 py-4">Budi Santoso</td>
                       <td class="px-6 py-4">Kursi Roda</td>
-                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
+                      <td class="px-6 py-4"><span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span>
+                      </td>
                     </tr>
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td class="px-6 py-4">Siti Rahayu</td>
                       <td class="px-6 py-4">Tenda Camping</td>
-                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Selesai</span></td>
+                      <td class="px-6 py-4"><span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Selesai</span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -164,12 +192,16 @@
                   <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td class="px-6 py-4">Kursi Roda</td>
-                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Baik</span></td>
+                      <td class="px-6 py-4"><span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Baik</span>
+                      </td>
                       <td class="px-6 py-4">5/10</td>
                     </tr>
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td class="px-6 py-4">Tenda Camping</td>
-                      <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">Rusak Kecil</span></td>
+                      <td class="px-6 py-4"><span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">Rusak
+                          Kecil</span></td>
                       <td class="px-6 py-4">2/3</td>
                     </tr>
                   </tbody>
@@ -184,10 +216,12 @@
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-bold">Manajemen Alat</h2>
             <div class="flex gap-3">
-              <a href="/equipment-management.html" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+              <a href="/equipment-management.html"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
                 <i class="bi bi-tools"></i> Kelola Equipment
               </a>
-              <button onclick="openAddEquipmentModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+              <button onclick="openAddEquipmentModal()"
+                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
                 <i class="bi bi-plus-lg"></i> Tambah Alat
               </button>
             </div>
@@ -227,7 +261,9 @@
                     <td class="px-6 py-4">Budi Santoso</td>
                     <td class="px-6 py-4">budi@example.com</td>
                     <td class="px-6 py-4">08123456789</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Aktif</span></td>
+                    <td class="px-6 py-4"><span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Aktif</span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -259,7 +295,9 @@
                     <td class="px-6 py-4">Budi Santoso</td>
                     <td class="px-6 py-4">Kursi Roda</td>
                     <td class="px-6 py-4">05-02-2026</td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span></td>
+                    <td class="px-6 py-4"><span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Aktif</span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -270,7 +308,7 @@
         <!-- Reports Section -->
         <div id="reportsSection" class="section hidden space-y-6">
           <h2 class="text-2xl font-bold mb-6">Laporan</h2>
-          
+
           <!-- Statistics Cards -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-blue-500">
@@ -355,23 +393,33 @@
               <form id="addUserForm" class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium mb-2">Nama Lengkap</label>
-                  <input type="text" id="userName" placeholder="John Doe" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                  <input type="text" id="userName" placeholder="John Doe"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-2">Email</label>
-                  <input type="email" id="userEmail" placeholder="user@example.com" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                  <input type="email" id="userEmail" placeholder="user@example.com"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-2">Username</label>
-                  <input type="text" id="userUsername" placeholder="username" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                  <input type="text" id="userUsername" placeholder="username"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-2">Password</label>
-                  <input type="password" id="userPassword" placeholder="••••••••" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                  <input type="password" id="userPassword" placeholder="••••••••"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-2">Role</label>
-                  <select id="userRole" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                  <select id="userRole"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
                     <option value="">-- Pilih Role --</option>
                     <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
@@ -381,7 +429,8 @@
                     <option value="borrower">Borrower</option>
                   </select>
                 </div>
-                <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                <button type="submit"
+                  class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                   <i class="bi bi-plus-circle"></i> Tambah User
                 </button>
               </form>
@@ -404,7 +453,8 @@
           <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 class="font-bold text-lg">Daftar User</h3>
-              <button onclick="loadUsers()" class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-sm hover:bg-blue-200 dark:hover:bg-blue-800">
+              <button onclick="loadUsers()"
+                class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-sm hover:bg-blue-200 dark:hover:bg-blue-800">
                 <i class="bi bi-arrow-clockwise"></i> Refresh
               </button>
             </div>
@@ -423,6 +473,58 @@
                 <tbody id="usersTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
                   <tr>
                     <td colspan="6" class="px-6 py-4 text-center text-gray-500">Memuat data...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit Log Section -->
+        <div id="auditlogsSection" class="section hidden space-y-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold">Audit Log</h2>
+            <button onclick="loadAuditLogs()"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex flex-wrap gap-4">
+            <input type="text" id="auditFilterAction" placeholder="Filter by action..."
+              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="auditFilterEntity"
+              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">All Entities</option>
+              <option value="Loan">Loan</option>
+              <option value="DamageReview">DamageReview</option>
+              <option value="User">User</option>
+              <option value="Equipment">Equipment</option>
+            </select>
+            <button onclick="loadAuditLogs()"
+              class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors">
+              <i class="bi bi-search"></i> Filter
+            </button>
+          </div>
+
+          <!-- Audit Log Table -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Waktu</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Aktor</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Role</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Aksi</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Entity</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Deskripsi</th>
+                  </tr>
+                </thead>
+                <tbody id="auditLogsTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">Klik Refresh untuk memuat data...</td>
                   </tr>
                 </tbody>
               </table>
@@ -465,23 +567,23 @@
         const response = await fetch('/api/users', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!response.ok) throw new Error('Gagal memuat users');
-        
+
         const data = await response.json();
         const users = data.users || [];
-        
+
         // Update stats
         document.getElementById('totalUsers').textContent = users.length;
         document.getElementById('activeUsers').textContent = users.filter(u => u.is_active).length;
-        
+
         // Update table
         const tbody = document.getElementById('usersTableBody');
         if (users.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Tidak ada user</td></tr>';
           return;
         }
-        
+
         tbody.innerHTML = users.map(user => `
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
             <td class="px-6 py-4 font-medium">${user.name || '-'}</td>
@@ -511,12 +613,12 @@
     }
 
     // Add user form submit
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const form = document.getElementById('addUserForm');
       if (form) {
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async function (e) {
           e.preventDefault();
-          
+
           const userData = {
             name: document.getElementById('userName').value,
             email: document.getElementById('userEmail').value,
@@ -524,7 +626,7 @@
             password: document.getElementById('userPassword').value,
             role: document.getElementById('userRole').value
           };
-          
+
           try {
             const token = localStorage.getItem('token');
             const response = await fetch('/api/users', {
@@ -535,9 +637,9 @@
               },
               body: JSON.stringify(userData)
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok) {
               Swal.fire('Sukses', 'User berhasil ditambahkan!', 'success');
               form.reset();
@@ -577,7 +679,7 @@
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (response.ok) {
           Swal.fire('Sukses', 'User berhasil dihapus!', 'success');
           loadUsers();
@@ -589,78 +691,64 @@
       }
     }
 
-    // Initialize Charts
-    function initializeCharts() {
-      // Get chart theme colors based on dark mode
+    // Initialize Charts with dynamic data
+    function initializeCharts(data = {}) {
       const isDark = document.documentElement.classList.contains('dark');
       const textColor = isDark ? '#d1d5db' : '#374151';
       const gridColor = isDark ? '#374151' : '#e5e7eb';
-      const bgColor = isDark ? '#1f2937' : '#ffffff';
+      const bgColor = 'transparent';
 
       // 1. Line Chart - Loan Trend
+      const trendData = data.trend || [];
       const loanTrendOptions = {
-        chart: {
-          type: 'area',
-          toolbar: { show: true },
-          background: bgColor,
-        },
-        stroke: { curve: 'smooth', width: 3 },
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0 } },
+        chart: { type: 'area', height: 350, toolbar: { show: false }, background: bgColor },
+        stroke: { curve: 'smooth', width: 2 },
         colors: ['#3b82f6'],
         xaxis: {
-          categories: ['1 Feb', '5 Feb', '10 Feb', '15 Feb', '20 Feb', '25 Feb'],
+          categories: trendData.map(t => new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })),
           labels: { style: { colors: textColor } }
         },
         yaxis: { labels: { style: { colors: textColor } } },
         grid: { borderColor: gridColor },
         theme: { mode: isDark ? 'dark' : 'light' }
       };
-      const loanTrendSeries = [{ name: 'Peminjaman', data: [30, 40, 28, 52, 38, 48] }];
+      const loanTrendSeries = [{ name: 'Peminjaman', data: trendData.map(t => parseInt(t.count)) }];
       new ApexCharts(document.querySelector('#loanTrendChart'), { ...loanTrendOptions, series: loanTrendSeries }).render();
 
-      // 2. Pie Chart - Loan Status
-      const loanStatusOptions = {
-        chart: { type: 'pie' },
-        colors: ['#10b981', '#f59e0b', '#ef4444'],
-        labels: ['Selesai', 'Aktif', 'Overdue'],
-        legend: { labels: { colors: textColor } },
+      // 2. Pie Chart - Loan Status Dist
+      const statusData = data.status_distribution || [];
+      const statusLabels = statusData.map(s => s.status);
+      const statusSeries = statusData.map(s => parseInt(s.count));
+      new ApexCharts(document.querySelector('#loanStatusChart'), {
+        chart: { type: 'donut', height: 300 },
+        labels: statusLabels,
+        series: statusSeries,
+        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+        legend: { position: 'bottom', labels: { colors: textColor } },
         theme: { mode: isDark ? 'dark' : 'light' }
-      };
-      const loanStatusSeries = [142, 12, 2];
-      new ApexCharts(document.querySelector('#loanStatusChart'), { ...loanStatusOptions, series: loanStatusSeries }).render();
+      }).render();
 
-      // 3. Bar Chart - Top Equipment
-      const topEquipmentOptions = {
-        chart: { type: 'bar', toolbar: { show: true } },
-        colors: ['#8b5cf6'],
+      // 3. Bar Chart - Category Dist
+      const catData = data.category_distribution || [];
+      new ApexCharts(document.querySelector('#categoryChart'), {
+        chart: { type: 'bar', height: 300, toolbar: { show: false } },
+        plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+        colors: ['#ec4899'],
         xaxis: {
-          categories: ['Kursi Roda', 'Tenda', 'Sleeping Bag', 'Matras', 'Lampu Camping'],
+          categories: catData.map(c => c.category),
           labels: { style: { colors: textColor } }
         },
         yaxis: { labels: { style: { colors: textColor } } },
-        grid: { borderColor: gridColor },
+        series: [{ name: 'Alat', data: catData.map(c => parseInt(c.count)) }],
         theme: { mode: isDark ? 'dark' : 'light' }
-      };
-      const topEquipmentSeries = [{ name: 'Jumlah Peminjaman', data: [45, 38, 32, 28, 22] }];
-      new ApexCharts(document.querySelector('#topEquipmentChart'), { ...topEquipmentOptions, series: topEquipmentSeries }).render();
-
-      // 4. Donut Chart - Category Distribution
-      const categoryOptions = {
-        chart: { type: 'donut' },
-        colors: ['#06b6d4', '#6366f1', '#ec4899', '#14b8a6'],
-        labels: ['Olahraga', 'Camping', 'Perlengkapan', 'Lainnya'],
-        legend: { labels: { colors: textColor } },
-        theme: { mode: isDark ? 'dark' : 'light' }
-      };
-      const categorySeries = [35, 45, 50, 26];
-      new ApexCharts(document.querySelector('#categoryChart'), { ...categoryOptions, series: categorySeries }).render();
+      }).render();
     }
 
     // Show section
     function showSection(section) {
       document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active', 'bg-blue-600', 'dark:bg-blue-700'));
-      
+
       const sectionId = section + 'Section';
       const sectionEl = document.getElementById(sectionId);
       if (sectionEl) {
@@ -681,7 +769,7 @@
         users: 'Kelola User'
       };
       document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
-      
+
       // Load users when section is shown
       if (section === 'users') {
         loadUsers();
@@ -695,6 +783,11 @@
       // Initialize charts when reports section is shown
       if (section === 'reports') {
         setTimeout(() => initializeCharts(), 100);
+      }
+
+      // Load audit logs when section is shown
+      if (section === 'auditlogs') {
+        loadAuditLogs();
       }
     }
 
@@ -714,6 +807,82 @@
         document.documentElement.classList.remove('dark');
       }
     }
+
+    // Load Audit Logs
+    async function loadAuditLogs() {
+      const token = localStorage.getItem('token');
+      const action = document.getElementById('auditFilterAction')?.value || '';
+      const entity = document.getElementById('auditFilterEntity')?.value || '';
+      const params = new URLSearchParams({ limit: 50 });
+      if (action) params.append('action', action);
+      if (entity) params.append('entity_type', entity);
+
+      const tbody = document.getElementById('auditLogsTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Memuat...</td></tr>';
+
+      try {
+        const res = await fetch(`/api/audit-logs?${params}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success || data.logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Tidak ada data audit log</td></tr>';
+          return;
+        }
+        const actionColors = {
+          LOAN_APPROVED: 'bg-green-100 text-green-800',
+          LOAN_REJECTED: 'bg-red-100 text-red-800',
+          PENALTY_ISSUED: 'bg-yellow-100 text-yellow-800',
+          STATUS_CHANGED: 'bg-blue-100 text-blue-800'
+        };
+        tbody.innerHTML = data.logs.map(log => {
+          const dt = new Date(log.created_at).toLocaleString('id-ID');
+          const colorClass = actionColors[log.action] || 'bg-gray-100 text-gray-800';
+          return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">${dt}</td>
+            <td class="px-4 py-3 font-medium">${log.actor_name || '-'}</td>
+            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">${log.actor_role || '-'}</span></td>
+            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs font-medium ${colorClass}">${log.action}</span></td>
+            <td class="px-4 py-3 text-xs">${log.entity_type}${log.entity_id ? ' #' + log.entity_id : ''}</td>
+            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-xs truncate">${log.description || '-'}</td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Gagal memuat audit log: ' + e.message + '</td></tr>';
+      }
+    }
+
+    // Load Analytics Data
+    async function loadAnalytics() {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/analytics/admin', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Update Stats
+          document.getElementById('statTotalEquipment').textContent = data.overview.total_equipment;
+          document.getElementById('statActiveLoans').textContent = data.overview.active_loans;
+          document.getElementById('statTotalLoans').textContent = data.overview.total_loans;
+          document.getElementById('statOverdueLoans').textContent = data.overview.overdue_loans;
+
+          // Update Charts
+          initializeCharts(data);
+        }
+      } catch (e) {
+        console.error('Failed to load analytics:', e);
+      }
+    }
+
+    // Initialize notification bell
+    document.addEventListener('DOMContentLoaded', function () {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+      if (token) {
+        NotificationBell.init('#notif-bell-mount', token);
+        loadAnalytics();
+      }
+    });
 
     // Open add equipment modal
     function openAddEquipmentModal() {
@@ -749,7 +918,7 @@
 
     function renderEquipmentCards(equipment) {
       const container = document.getElementById('equipmentCardsContainer');
-      
+
       if (equipment.length === 0) {
         container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Tidak ada alat daftar. Klik "Tambah Alat" untuk menambahkan.</p></div>';
         return;
@@ -803,7 +972,7 @@
     }
 
     // Handle add equipment form submission
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const form = document.getElementById('adminAddEquipmentForm');
       if (form) {
         form.addEventListener('submit', async (e) => {
@@ -844,7 +1013,7 @@
           const token = localStorage.getItem('token');
           const submitBtn = document.querySelector('#adminAddEquipmentForm button[type="submit"]');
           const originalBtnText = submitBtn.innerHTML;
-          
+
           // Loading state
           submitBtn.disabled = true;
           submitBtn.innerHTML = '<i class="bi bi-hourglass"></i> Menyimpan...';
@@ -920,9 +1089,11 @@
   </script>
 
   <!-- Modal Tambah Alat -->
-  <div id="addEquipmentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div id="addEquipmentModal"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
-      <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between sticky top-0">
+      <div
+        class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between sticky top-0">
         <div class="flex items-center gap-3">
           <i class="bi bi-plus-circle text-2xl"></i>
           <h2 class="text-xl font-bold">Tambah Alat Baru</h2>
@@ -956,7 +1127,8 @@
 
           <!-- Tarif Sewa Harian -->
           <div>
-            <label class="block text-sm font-semibold mb-2">Tarif Sewa Harian (Rp) <span class="text-red-600">*</span></label>
+            <label class="block text-sm font-semibold mb-2">Tarif Sewa Harian (Rp) <span
+                class="text-red-600">*</span></label>
             <input type="number" id="adminEqDailyRate" required placeholder="0" min="1"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Harga sewa per hari (minimum Rp 1)</p>
@@ -988,15 +1160,18 @@
         <div>
           <label class="block text-sm font-semibold mb-2">Deskripsi</label>
           <textarea id="adminEqDescription" placeholder="Spesifikasi atau catatan alat..."
-            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4"></textarea>
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows="4"></textarea>
         </div>
 
         <!-- Buttons -->
         <div class="flex gap-3 pt-6">
-          <button type="button" onclick="closeAddEquipmentModal()" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition">
+          <button type="button" onclick="closeAddEquipmentModal()"
+            class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition">
             Batal
           </button>
-          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2">
+          <button type="submit"
+            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2">
             <i class="bi bi-check-lg"></i> Simpan Alat
           </button>
         </div>
@@ -1005,4 +1180,5 @@
   </div>
 
 </body>
+
 </html>

@@ -4,7 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kembalikan Barang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-body: #121212;
+            --bg-modal: #1e1e2e;
+            --bg-card: #252538;
+            --bg-input: #2a2a3e;
+            --border-color: #3f3f55;
+            --primary: #667eea;
+            --primary-hover: #5a6fd1;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0b0;
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --success: #2ecc71;
+            --radius: 8px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,138 +29,117 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: transparent;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
         }
 
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            padding: 20px;
+            padding: 16px;
         }
 
         .modal {
-            background: white;
+            background: var(--bg-modal);
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
+            max-width: 850px;
+            max-height: 85vh;
             display: flex;
             flex-direction: column;
+            border: 1px solid var(--border-color);
+            position: relative;
+            animation: modalFadeIn 0.3s ease-out;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
+        /* Header */
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #e0e0e0;
-            background: white;
-            flex-shrink: 0;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(30, 30, 46, 0.95);
         }
 
         .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .close-btn {
             background: none;
             border: none;
-            font-size: 28px;
+            color: var(--text-muted);
+            font-size: 24px;
             cursor: pointer;
-            color: #999;
-            padding: 0;
             width: 32px;
             height: 32px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
         }
 
         .close-btn:hover {
-            color: #333;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .modal-content {
-            padding: 30px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .grace-period-info {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            font-size: 14px;
-            color: #1565c0;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .condition-options {
+        /* Body Layout */
+        .modal-body {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Left Column: Condition & Details */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Condition Buttons */
+        .condition-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
 
         .condition-option input[type="radio"] {
@@ -151,159 +147,259 @@
         }
 
         .condition-label {
-            display: block;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            color: #666;
-        }
-
-        .condition-option input[type="radio"]:checked + .condition-label {
-            border-color: #667eea;
-            background: #f5f7ff;
-            color: #667eea;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .modal-footer {
             display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            gap: 8px;
+        }
+
+        .condition-label:hover {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .condition-option input:checked + .condition-label {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.15);
+            color: #fff;
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        /* Dynamic coloring for conditions */
+        .condition-option input[value="Good"]:checked + .condition-label { border-color: var(--success); box-shadow: 0 0 0 1px var(--success); background: rgba(46, 204, 113, 0.15); }
+        .condition-option input[value="Minor Damage"]:checked + .condition-label { border-color: var(--warning); box-shadow: 0 0 0 1px var(--warning); background: rgba(255, 165, 2, 0.15); }
+        .condition-option input[value="Major Damage"]:checked + .condition-label { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); background: rgba(255, 71, 87, 0.15); }
+        .condition-option input[value="Lost"]:checked + .condition-label { border-color: #7f8c8d; box-shadow: 0 0 0 1px #7f8c8d; background: rgba(127, 140, 141, 0.15); }
+
+        /* Conditional Inputs */
+        .damage-inputs {
+            display: none; /* Hidden by default */
+            flex-direction: column;
             gap: 15px;
+            animation: slideDown 0.3s ease;
+            background: rgba(255, 71, 87, 0.05);
+            padding: 15px;
+            border-radius: var(--radius);
+            border: 1px dashed var(--border-color);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px 10px 35px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-input.no-prefix {
+            padding-left: 12px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        textarea.form-input {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Right Column: Payment Summary */
+        .payment-card {
+            background: var(--bg-card);
+            border-radius: 12px;
             padding: 20px;
-            border-top: 1px solid #e0e0e0;
-            background: #f9f9f9;
-            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 0;
+        }
+
+        .payment-header {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toggle-details {
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+        }
+
+        .payment-row span:last-child {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .payment-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 16px 0;
+        }
+
+        .payment-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .badge-late {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--danger);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 5px;
+        }
+
+        /* Footer */
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-modal);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
         }
 
         .btn {
-            padding: 12px 24px;
-            border: none;
+            padding: 10px 20px;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            flex: 1;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+            border: none;
+            transition: all 0.2s;
         }
 
         .btn-cancel {
-            background: #e0e0e0;
-            color: #333;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
         }
 
         .btn-cancel:hover {
-            background: #d0d0d0;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
         }
 
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Alert & States */
         .alert {
             padding: 12px;
             border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            border-left: 4px solid;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+        .alert-error { background: rgba(255, 71, 87, 0.1); color: var(--danger); border: 1px solid rgba(255, 71, 87, 0.2); }
+        .alert-info { background: rgba(102, 126, 234, 0.1); color: var(--primary); border: 1px solid rgba(102, 126, 234, 0.2); }
 
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left-color: #721c24;
+        .hidden { display: none !important; }
+
+        /* Loading & Success */
+        .state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            width: 100%;
+            height: 100%;
         }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left-color: #155724;
-        }
-
+        
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
             width: 40px;
             height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin-bottom: 15px;
         }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .success-state {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .success-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-
-        .success-message {
-            font-size: 18px;
-            font-weight: 600;
-            color: #155724;
-            margin-bottom: 10px;
-        }
-
-        .success-subtitle {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .countdown {
-            font-size: 32px;
-            font-weight: 700;
-            color: #667eea;
-            margin: 15px 0;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 600px) {
-            .modal {
-                max-height: 100vh;
-                max-width: 100%;
-                border-radius: 0;
-            }
-
-            .form-row {
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .modal-body {
                 grid-template-columns: 1fr;
             }
-
-            .modal-footer {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
+            .payment-card {
+                position: static;
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -311,212 +407,357 @@
 <body>
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
+            <!-- Header -->
             <div class="modal-header">
-                <h2>📦 Kembalikan Barang</h2>
-                <button class="close-btn" onclick="closeModal()" title="Tutup">×</button>
+                <h2>📦 <span id="item-name">Loading...</span></h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
             </div>
 
-            <div class="modal-content">
-                <div id="alert-container"></div>
+            <div class="modal-content" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                <!-- Content Body -->
+                <div class="modal-body" id="main-content">
+                    <!-- Left Panel: Conditions -->
+                    <div class="left-panel">
+                        <div id="alert-container"></div>
+                        
+                        <!-- Grace Period Info -->
+                        <div class="alert alert-info">
+                            ℹ️ Item will enter a <strong>1-day grace period</strong> for inspection.
+                        </div>
 
-                <!-- Form State -->
-                <div id="form-state">
-                    <div class="grace-period-info">
-                        ℹ️ Barang akan masuk <strong>masa tenggang selama 1 hari</strong> untuk pemeriksaan oleh staff.
-                    </div>
+                        <div>
+                            <div class="section-title">Item Condition</div>
+                            <div class="condition-grid">
+                                <div class="condition-option">
+                                    <input type="radio" name="condition" value="Good" id="c-good" checked onchange="toggleDamageInput()">
+                                    <label for="c-good" class="condition-label">✅ Good</label>
+                                </div>
+                                <div class="condition-option">
+                                    <input type="radio" name="condition" value="Minor Damage" id="c-minor" onchange="toggleDamageInput()">
+                                    <label for="c-minor" class="condition-label">⚠️ Minor Damage</label>
+                                </div>
+                                <div class="condition-option">
+                                    <input type="radio" name="condition" value="Major Damage" id="c-major" onchange="toggleDamageInput()">
+                                    <label for="c-major" class="condition-label">❌ Major Damage</label>
+                                </div>
+                                <div class="condition-option">
+                                    <input type="radio" name="condition" value="Lost" id="c-lost" onchange="toggleDamageInput()">
+                                    <label for="c-lost" class="condition-label">🔍 Lost</label>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label>Kondisi Barang</label>
-                        <div class="condition-options">
-                            <div class="condition-option">
-                                <input type="radio" name="condition" value="Baik" id="cond-baik" checked>
-                                <label for="cond-baik" class="condition-label">✓ Baik</label>
+                        <!-- Damage Inputs (Conditional) -->
+                        <div id="damage-section" class="damage-inputs">
+                            <div class="input-group">
+                                <label>Estimated Damage Cost</label>
+                                <div class="input-wrapper">
+                                    <span class="input-prefix">Rp</span>
+                                    <input type="number" id="damage-cost" class="form-input" placeholder="0" min="0" oninput="updateTotalPayment()">
+                                </div>
                             </div>
-                            <div class="condition-option">
-                                <input type="radio" name="condition" value="Rusak Ringan" id="cond-ringan">
-                                <label for="cond-ringan" class="condition-label">⚠️ Rusak Ringan</label>
-                            </div>
-                            <div class="condition-option">
-                                <input type="radio" name="condition" value="Rusak Berat" id="cond-berat">
-                                <label for="cond-berat" class="condition-label">❌ Rusak Berat</label>
-                            </div>
-                            <div class="condition-option">
-                                <input type="radio" name="condition" value="Hilang" id="cond-hilang">
-                                <label for="cond-hilang" class="condition-label">🔴 Hilang</label>
+                            <div class="input-group">
+                                <label>Damage Notes</label>
+                                <textarea id="damage-notes" class="form-input no-prefix" placeholder="Describe the damage details here..."></textarea>
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="damage-notes">Catatan Kerusakan (Opsional)</label>
-                        <textarea id="damage-notes" placeholder="Deskripsikan kondisi barang..."></textarea>
-                    </div>
+                    <!-- Right Panel: Payment Summary -->
+                    <div class="right-panel">
+                        <div class="payment-card">
+                            <div class="payment-header">
+                                Payment Summary
+                                <button class="toggle-details" onclick="toggleDetails()">View Details</button>
+                            </div>
+                            
+                            <div id="payment-details">
+                                <div class="payment-row">
+                                    <span>Rental Fee</span>
+                                    <span id="summary-rental">Rp 0</span>
+                                </div>
+                                
+                                <!-- Late Penalty Row (Hidden if 0) -->
+                                <div class="payment-row" id="row-late" style="display: none;">
+                                    <span>Late Penalty <span class="badge-late" id="late-days">0 DAYS</span></span>
+                                    <span id="summary-late" style="color: var(--danger);">Rp 0</span>
+                                </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="damage-cost">Estimasi Biaya (Rp)</label>
-                            <input type="number" id="damage-cost" placeholder="0" min="0" step="1000">
-                        </div>
-                        <div class="form-group">
-                            <label for="grace-period">Masa Tenggang (Hari)</label>
-                            <input type="number" id="grace-period" value="1" min="1" max="7" readonly>
-                        </div>
-                    </div>
-                </div>
+                                <!-- Damage Cost Row (Hidden if 0) -->
+                                <div class="payment-row" id="row-damage" style="display: none;">
+                                    <span>Damage Cost</span>
+                                    <span id="summary-damage" style="color: var(--warning);">Rp 0</span>
+                                </div>
 
-                <!-- Success State -->
-                <div id="success-state" class="hidden">
-                    <div class="success-state">
-                        <div class="success-icon">✅</div>
-                        <div class="success-message">Pengembalian Berhasil!</div>
-                        <div class="success-subtitle">Barang masuk masa tenggang 1 hari untuk pemeriksaan.</div>
-                        <div class="countdown" id="countdown">5</div>
-                        <p style="font-size: 12px; color: #999;">Halaman akan ditutup otomatis...</p>
+                                <div class="payment-row">
+                                    <span>Admin Fee</span>
+                                    <span id="summary-admin">Rp 2.000</span>
+                                </div>
+
+                                <div class="payment-divider"></div>
+                            </div>
+
+                            <div class="payment-total">
+                                <span>TOTAL PAYMENT</span>
+                                <span id="summary-total">Rp 0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Loading State -->
-                <div id="loading-state" class="hidden">
+                <div id="loading-state" class="state-container hidden">
                     <div class="spinner"></div>
-                    <p style="text-align: center; color: #666;">Memproses pengembalian...</p>
+                    <p>Processing Return...</p>
+                </div>
+
+                <!-- Success State -->
+                <div id="success-state" class="state-container hidden">
+                    <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
+                    <h3 style="color: var(--success); margin-bottom: 10px;">Return Successful!</h3>
+                    <p style="color: var(--text-muted);">Redirecting in <span id="countdown">3</span>s...</p>
                 </div>
             </div>
 
-            <div class="modal-footer" id="footer-actions">
-                <button class="btn btn-cancel" onclick="closeModal()">Batal</button>
-                <button class="btn btn-submit" onclick="submitReturn()" id="submit-btn">Kirim Pengembalian</button>
+            <!-- Footer -->
+            <div class="modal-footer" id="modal-footer">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-submit" onclick="submitReturn()" id="submit-btn">Submit Return</button>
             </div>
         </div>
     </div>
 
     <script>
         const apiBaseUrl = '/api';
-        let selectedLoanId = null;
+        let currentLoan = null;
+        const ADMIN_FEE = 2000;
+
+        document.addEventListener('DOMContentLoaded', () => {
+             loadLoanData();
+        });
 
         function getLoanIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            return parseInt(urlParams.get('id'));
+            return urlParams.get('id');
         }
 
         async function loadLoanData() {
-            selectedLoanId = getLoanIdFromUrl();
-            if (!selectedLoanId) {
-                showAlert('ID barang tidak ditemukan', 'error');
+            const id = getLoanIdFromUrl();
+            if (!id) {
+                showAlert('No Loan ID found.', 'error');
                 return;
             }
 
             const token = localStorage.getItem('token');
             if (!token) {
-                showAlert('Anda harus login terlebih dahulu', 'error');
-                setTimeout(() => closeModal(), 2000);
+                window.location.href = '/login-new.html';
                 return;
             }
 
             try {
-                const response = await fetch(`${apiBaseUrl}/loans/${selectedLoanId}`, {
+                const response = await fetch(`${apiBaseUrl}/loans/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) throw new Error('Gagal memuat data');
+                if (!response.ok) throw new Error('Failed to fetch loan data');
+                
                 const data = await response.json();
-                const loan = data.loan;
+                currentLoan = data.loan || data; // Handle wrapper or direct
+                
+                // Fallback for mock/test if API structure is different
+                if (!currentLoan.equipment) {
+                     // Try to adapt or just show error
+                     console.warn('Unexpected data structure', data);
+                }
 
-                const header = document.querySelector('.modal-header h2');
-                header.textContent = `📦 Kembalikan: ${loan.equipment.name} (${loan.quantity} unit)`;
+                document.getElementById('item-name').textContent = `${currentLoan.equipment?.name || 'Unknown Item'} (${currentLoan.quantity} Unit)`;
+                
+                updateTotalPayment();
+
             } catch (error) {
-                showAlert(`❌ ${error.message}`, 'error');
+                console.error(error);
+                showAlert(error.message, 'error');
             }
         }
 
+        function toggleDamageInput() {
+            const condition = document.querySelector('input[name="condition"]:checked').value;
+            const damageSection = document.getElementById('damage-section');
+            const damageCostInput = document.getElementById('damage-cost');
+            
+            if (condition === 'Good') {
+                damageSection.style.display = 'none';
+                damageCostInput.value = 0;
+            } else {
+                damageSection.style.display = 'flex';
+                // Focus on input if opening
+                setTimeout(() => damageCostInput.focus(), 100);
+            }
+            updateTotalPayment();
+        }
+        
+        function toggleDetails() {
+            const details = document.getElementById('payment-details');
+            const btn = document.querySelector('.toggle-details');
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                btn.textContent = 'Hide Details';
+            } else {
+                details.style.display = 'none';
+                btn.textContent = 'View Details';
+            }
+        }
+
+        function calculateDaysLate(dueDateStr) {
+            if (!dueDateStr) return 0;
+            const due = new Date(dueDateStr);
+            const now = new Date();
+            // Reset hours to compare dates only
+            due.setHours(0,0,0,0);
+            now.setHours(0,0,0,0);
+            
+            const diffTime = now - due;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            return diffDays > 0 ? diffDays : 0;
+        }
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
+
+        function updateTotalPayment() {
+            if (!currentLoan) return;
+
+            // 1. Rental Fee
+            // Assuming loan.total_price is the initial agreed rental fee
+            // If we need to recalculate based on actual duration, we'd need rate * days
+            // Let's use total_price as base
+            let rentalFee = currentLoan.total_price || 0;
+            // Ensure integer
+            rentalFee = parseInt(rentalFee);
+
+            // 2. Late Penalty
+            // 50% of daily rate per day late
+            // daily rate = rental_price (per day unit)
+            const dailyRate = parseInt(currentLoan.equipment?.rental_price || 0);
+            const daysLate = calculateDaysLate(currentLoan.return_date);
+            const penaltyRate = dailyRate * 0.5;
+            const latePenalty = Math.floor(daysLate * penaltyRate * (currentLoan.quantity || 1));
+
+            // 3. Damage Cost
+            const damageCost = parseInt(document.getElementById('damage-cost').value) || 0;
+
+            // Update UI
+            document.getElementById('summary-rental').textContent = formatRupiah(rentalFee);
+            document.getElementById('summary-admin').textContent = formatRupiah(ADMIN_FEE);
+
+            // Late Row
+            const rowLate = document.getElementById('row-late');
+            if (latePenalty > 0) {
+                rowLate.style.display = 'flex';
+                document.getElementById('late-days').textContent = `+${daysLate} DAYS`;
+                document.getElementById('summary-late').textContent = formatRupiah(latePenalty);
+            } else {
+                rowLate.style.display = 'none';
+            }
+
+            // Damage Row
+            const rowDamage = document.getElementById('row-damage');
+            if (damageCost > 0) {
+                rowDamage.style.display = 'flex';
+                document.getElementById('summary-damage').textContent = formatRupiah(damageCost);
+            } else {
+                rowDamage.style.display = 'none';
+            }
+
+            // Total
+            const total = rentalFee + latePenalty + damageCost + ADMIN_FEE;
+            document.getElementById('summary-total').textContent = formatRupiah(total);
+        }
+
         async function submitReturn() {
-            const condition = document.querySelector('input[name="condition"]:checked')?.value || 'Baik';
+            const condition = document.querySelector('input[name="condition"]:checked').value;
             const damageNotes = document.getElementById('damage-notes').value;
             const damageCost = parseInt(document.getElementById('damage-cost').value) || 0;
-            const gracePeriod = parseInt(document.getElementById('grace-period').value) || 1;
 
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('form-state').classList.add('hidden');
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin:0 8px 0 0;"></span> Submitting...';
+
+            // Show loading overlay
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('modal-footer').classList.add('hidden');
             document.getElementById('loading-state').classList.remove('hidden');
 
             try {
                 const token = localStorage.getItem('token');
-                const requestBody = {
-                    return_condition: condition,
-                    damage_notes: damageNotes || null,
-                    damage_cost: damageCost,
-                    grace_period_days: gracePeriod
-                };
+                if(!token) throw new Error('Authentication expired. <br>Please login again.');
 
-                console.log('📤 Sending return request:', requestBody);
-
-                const response = await fetch(`${apiBaseUrl}/loans/${selectedLoanId}/submit-return`, {
+                const response = await fetch(`${apiBaseUrl}/loans/${currentLoan.id}/submit-return`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify({
+                        return_condition: condition,
+                        damage_notes: damageNotes,
+                        damage_cost: damageCost,
+                        grace_period_days: 1 // Default
+                    })
                 });
 
                 const data = await response.json();
-                console.log('📥 Response:', data);
+                if (!response.ok) throw new Error(data.message || 'Return failed');
 
-                if (!response.ok) {
-                    const errorMsg = data.message || data.error || 'Gagal mengembalikan barang';
-                    throw new Error(errorMsg);
-                }
-
-                // Show success state
+                // Success
                 document.getElementById('loading-state').classList.add('hidden');
                 document.getElementById('success-state').classList.remove('hidden');
-                document.getElementById('footer-actions').classList.add('hidden');
 
-                // Countdown 5 seconds
-                let countdown = 5;
-                const countdownEl = document.getElementById('countdown');
-                const interval = setInterval(() => {
-                    countdown--;
-                    countdownEl.textContent = countdown;
-                    if (countdown <= 0) {
-                        clearInterval(interval);
+                let count = 3;
+                const timer = setInterval(() => {
+                    count--;
+                    const cd = document.getElementById('countdown');
+                    if (cd) cd.textContent = count;
+                    if (count <= 0) {
+                        clearInterval(timer);
                         closeModal();
                     }
                 }, 1000);
+
             } catch (error) {
-                document.getElementById('submit-btn').disabled = false;
-                document.getElementById('loading-state').classList.add('hidden');
-                document.getElementById('form-state').classList.remove('hidden');
-                showAlert(`❌ ${error.message}`, 'error');
-            }
-        }
-                document.getElementById('form-state').classList.remove('hidden');
+                console.error(error);
                 showAlert(error.message, 'error');
+                
+                // Reset UI
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                document.getElementById('modal-footer').classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Return';
             }
         }
 
         function closeModal() {
-            const referrer = document.referrer;
-            if (referrer && referrer.includes('localhost') && referrer.includes('dashboard')) {
-                window.location.href = referrer;
+            // Check for previous page
+            if (document.referrer && document.referrer.includes(window.location.host) && !document.referrer.includes('login')) {
+                window.location.href = document.referrer;
             } else {
-                window.location.href = '/dashboard-borrower.html';
+                // Fallback to dashboard
+                const role = localStorage.getItem('role') || 'staff'; 
+                // Simple role check, though usually stored in token. 
+                // We'll default to staff dashboard if unsure.
+                 window.location.href = '/dashboard-staff.html';
             }
         }
 
-        function showAlert(message, type = 'info') {
+        function showAlert(msg, type) {
             const container = document.getElementById('alert-container');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            container.innerHTML = '';
-            container.appendChild(alert);
+            container.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+            // Scroll to top of modal body
+            document.getElementById('main-content').scrollTop = 0;
+            setTimeout(() => container.innerHTML = '', 6000);
         }
-
-        document.getElementById('modalOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
-        loadLoanData();
     </script>
 </body>
 </html>

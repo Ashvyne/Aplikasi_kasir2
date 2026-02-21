@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damage Review & Billing</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 10px;
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans selection:bg-blue-500 selection:text-white">
+
+    <!-- Top Navigation -->
+    <nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-md fixed top-0 w-full z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="/dashboard-borrower"
+                        class="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
+                        <i class="bi bi-arrow-left text-xl"></i>
+                    </a>
+                    <h1
+                        class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                        Damage Review Case #<span id="caseId">...</span>
+                    </h1>
+                </div>
+                <div>
+                    <span id="statusBadge"
+                        class="px-3 py-1 rounded-full text-sm font-medium bg-gray-800 text-gray-400 animate-pulse">
+                        Loading...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-24 pb-12 px-4 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Column: Incident Details (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Item Card -->
+                <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-xl">
+                    <h3
+                        class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-gray-800 pb-2">
+                        Item Information</h3>
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-20 h-20 bg-gray-800 rounded-xl flex items-center justify-center text-4xl shadow-inner">
+                            📦
+                        </div>
+                        <div class="flex-1">
+                            <h2 class="text-xl font-bold text-white mb-1" id="itemName">Loading...</h2>
+                            <div class="flex gap-4 text-sm text-gray-400 mt-2">
+                                <div>
+                                    <span class="block text-xs uppercase text-gray-500">Loan Date</span>
+                                    <span class="font-mono text-gray-300" id="loanDate">-</span>
+                                </div>
+                                <div>
+                                    <span class="block text-xs uppercase text-gray-500">Return Date</span>
+                                    <span class="font-mono text-gray-300" id="returnDate">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Report -->
+                <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-xl">
+                    <h3
+                        class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-gray-800 pb-2">
+                        Your Report</h3>
+
+                    <div class="space-y-4">
+                        <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+                            <span class="text-xs text-gray-500 block mb-1 uppercase">Condition</span>
+                            <div class="text-lg font-medium flex items-center gap-2" id="userCondition">
+                                <span class="animate-pulse w-24 h-6 bg-gray-700 rounded"></span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-gray-500 block mb-2 uppercase">Damage Description</span>
+                            <p class="text-gray-300 bg-gray-800/30 p-4 rounded-xl border border-gray-800 text-sm leading-relaxed"
+                                id="damageNotes">
+                                "No notes provided."
+                            </p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-gray-500 block mb-2 uppercase">Your Estimated Cost</span>
+                            <p class="text-xl font-mono text-gray-400" id="userEstCost">Rp 0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Section -->
+                <div
+                    class="bg-gray-900 rounded-2xl border border-gray-800 shadow-xl overflow-hidden flex flex-col h-[500px]">
+                    <div
+                        class="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur flex justify-between items-center">
+                        <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                            <i class="bi bi-chat-dots mr-2"></i>Discussion
+                        </h3>
+                        <span class="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded">Private Channel</span>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/20" id="chatContainer">
+                        <!-- Messages will be injected here -->
+                        <div class="flex justify-center py-8 text-gray-600 italic">No messages yet. Start the
+                            conversation.</div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-4 border-t border-gray-800 bg-gray-900">
+                        <form id="chatForm" class="flex gap-2">
+                            <button type="button"
+                                class="p-3 rounded-xl bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                                title="Attach Image (Coming Soon)">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                            <input type="text" id="messageInput"
+                                class="flex-1 bg-gray-800 border-0 rounded-xl px-4 text-white placeholder-gray-500 focus:ring-1 focus:ring-blue-500 focus:bg-gray-800/80 transition-all outline-none"
+                                placeholder="Type a message...">
+                            <button type="submit"
+                                class="p-3 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Staff Review & Billing (5 cols) -->
+            <div class="lg:col-span-5 space-y-6">
+
+                <!-- Staff Decision Card -->
+                <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-xl sticky top-24">
+
+                    <!-- STAFF CONTROLS (Only visible to staff) -->
+                    <div id="staffControls" class="hidden mb-6 bg-blue-900/10 border border-blue-500/20 p-4 rounded-xl">
+                        <h4 class="text-blue-400 font-bold mb-3 text-sm uppercase tracking-wider">🛠️ Staff Actions</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">Status</label>
+                                <select id="inputStatus"
+                                    class="w-full bg-gray-800 border-gray-700 rounded-lg text-sm text-white p-2">
+                                    <option value="Waiting for Review">Waiting for Review</option>
+                                    <option value="Under Inspection">Under Inspection</option>
+                                    <option value="Approved with Penalty">Approved with Penalty</option>
+                                    <option value="Rejected (No Damage Fee)">Rejected (No Damage Fee)</option>
+                                    <option value="Dispute Open">Dispute Open</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">Final Damage Cost</label>
+                                <input type="number" id="inputFinalCost"
+                                    class="w-full bg-gray-800 border-gray-700 rounded-lg text-sm text-white p-2"
+                                    placeholder="0">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">Inspection Notes</label>
+                                <textarea id="inputNotes" rows="2"
+                                    class="w-full bg-gray-800 border-gray-700 rounded-lg text-sm text-white p-2"
+                                    placeholder="Inspection details..."></textarea>
+                            </div>
+                            <button onclick="updateReview()"
+                                class="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold text-sm">Save
+                                Decision</button>
+                        </div>
+                    </div>
+
+                    <h3
+                        class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-gray-800 pb-2">
+                        Inspection Result</h3>
+
+                    <div class="mb-6">
+                        <div id="staffNotes"
+                            class="bg-yellow-900/10 border border-yellow-500/20 text-yellow-200/80 p-4 rounded-xl text-sm italic">
+                            <div class="flex items-center gap-2 mb-2 text-yellow-500 font-bold not-italic">
+                                <i class="bi bi-hourglass-split"></i> Awaiting Staff Review
+                            </div>
+                            Staff has not yet inspected this item. Please wait or use the chat to communicate.
+                        </div>
+                    </div>
+
+                    <!-- Final Billing -->
+                    <div class="bg-gray-950 rounded-xl p-5 border border-gray-800 space-y-3">
+                        <div class="flex justify-between items-center text-sm text-gray-400">
+                            <span>Rental Fee (Paid/Billed)</span>
+                            <span class="font-mono" id="rentalFee">Rp -</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-gray-400">
+                            <span>Late Penalty</span>
+                            <span class="font-mono text-red-400" id="lateFee">Rp 0</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center text-sm font-medium pt-2 border-t border-dashed border-gray-800">
+                            <span class="text-red-400">Damage Assessment</span>
+                            <span class="font-mono text-red-400 text-lg" id="finalDamageCost">Rp -</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-gray-800 flex justify-between items-end">
+                        <div class="text-xs uppercase text-gray-500">Total Penalty Due</div>
+                        <div class="text-3xl font-bold text-white tracking-tight" id="totalDue">Rp 0</div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="mt-6">
+                        <button id="payButton" disabled
+                            class="w-full py-4 rounded-xl bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wide cursor-not-allowed transition-all">
+                            Wait for Final Decision
+                        </button>
+                        <button id="disputeButton"
+                            class="w-full mt-3 py-2 text-xs text-gray-500 hover:text-white underline decoration-gray-700 hover:decoration-white transition-all">
+                            File a Dispute
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const loanId = urlParams.get('loan_id');
+        let currentReviewId = null;
+        let currentUserRole = 'user';
+
+        // Role Management
+        function getRoleFromToken(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload).role;
+            } catch (e) { return 'user'; }
+        }
+
+        // On Load
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!loanId) {
+                Swal.fire('Error', 'No Loan ID specified', 'error').then(() => window.location.href = '/dashboard-borrower');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) window.location.href = '/login-new';
+
+            currentUserRole = getRoleFromToken(token);
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            // Show Staff Controls if applicable
+            if (['admin', 'staff', 'petugas'].includes(currentUserRole)) {
+                currentUserRole = 'staff'; // Normalize for chat
+                document.getElementById('staffControls').classList.remove('hidden');
+                document.getElementById('disputeButton').classList.add('hidden'); // Staff don't file disputes
+            }
+
+            await loadData();
+
+            // Poll for messages every 5 seconds
+            setInterval(loadMessages, 5000);
+        });
+
+        async function loadData() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/damage-reviews/loan/${loanId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!data.success) throw new Error(data.message);
+
+                const loan = data.loan;
+                const review = data.review;
+
+                // 1. Render Basic Info
+                document.getElementById('caseId').textContent = loan.loan_number;
+                document.getElementById('itemName').textContent = loan.equipment?.name || 'Unknown Item';
+                document.getElementById('loanDate').textContent = loan.loan_date;
+                document.getElementById('returnDate').textContent = loan.return_date || 'Not returned';
+
+                // 2. User Report
+                const conditionColors = {
+                    'Baik': 'text-green-400',
+                    'Rusak Ringan': 'text-yellow-400',
+                    'Rusak Berat': 'text-red-400',
+                    'Hilang': 'text-gray-400'
+                };
+                document.getElementById('userCondition').innerHTML = `
+                    <i class="bi bi-circle-fill text-[8px] ${conditionColors[loan.return_condition] || 'text-white'}"></i>
+                    ${loan.return_condition}
+                `;
+                document.getElementById('damageNotes').textContent = loan.damage_notes || "No specific notes provided.";
+                document.getElementById('userEstCost').textContent = formatRupiah(loan.damage_cost || 0);
+
+                // 3. Status Badge & Staff Review
+                if (review) {
+                    currentReviewId = review.id;
+                    updateStatusBadge(review.status);
+
+                    renderStaffDecision(review);
+
+                    // Enable pay button only for user and if approved
+                    if (currentUserRole === 'user' && review.status === 'Approved with Penalty') {
+                        const btn = document.getElementById('payButton');
+                        btn.disabled = false;
+                        btn.className = "w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm uppercase tracking-wide shadow-lg shadow-blue-900/30 transition-all hover:scale-[1.02]";
+                        btn.innerHTML = `<i class="bi bi-credit-card mr-2"></i> Pay Penalty`;
+                        btn.onclick = () => alert("Redirecting to payment gateway...");
+                    } else if (currentUserRole === 'staff') {
+                        // Populate form if staff
+                        document.getElementById('inputStatus').value = review.status;
+                        document.getElementById('inputFinalCost').value = review.final_damage_cost;
+                        document.getElementById('inputNotes').value = review.inspection_notes || '';
+                    }
+
+                    loadMessages();
+                } else {
+                    document.getElementById('statusBadge').textContent = 'Generating Review...';
+                }
+
+                // 4. Billing
+                document.getElementById('rentalFee').textContent = formatRupiah(loan.rental_cost);
+                document.getElementById('lateFee').textContent = formatRupiah(loan.late_fee);
+
+                const finalDamage = review ? review.final_damage_cost : 0;
+                document.getElementById('finalDamageCost').textContent = review ? formatRupiah(finalDamage) : "Pending";
+
+                const total = (loan.rental_cost || 0) + (loan.late_fee || 0) + (finalDamage || 0);
+                document.getElementById('totalDue').textContent = formatRupiah(total);
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Failed to load details', 'error');
+            }
+        }
+
+        function updateStatusBadge(status) {
+            const el = document.getElementById('statusBadge');
+            let classes = "px-3 py-1 rounded-full text-sm font-medium border ";
+
+            switch (status) {
+                case 'Waiting for Review':
+                    classes += "bg-yellow-900/20 text-yellow-400 border-yellow-500/30 animate-pulse";
+                    break;
+                case 'Under Inspection':
+                    classes += "bg-blue-900/20 text-blue-400 border-blue-500/30";
+                    break;
+                case 'Approved with Penalty':
+                    classes += "bg-red-900/20 text-red-400 border-red-500/30";
+                    break;
+                case 'Rejected (No Damage Fee)':
+                    classes += "bg-green-900/20 text-green-400 border-green-500/30";
+                    break;
+                case 'Dispute Open':
+                    classes += "bg-purple-900/20 text-purple-400 border-purple-500/30";
+                    break;
+                default:
+                    classes += "bg-gray-800 text-gray-400 border-gray-700";
+            }
+            el.className = classes;
+            el.textContent = status;
+        }
+
+        function renderStaffDecision(review) {
+            const container = document.getElementById('staffNotes');
+            if (review.status === 'Waiting for Review') return;
+
+            let icon = 'bi-clipboard-check';
+            let color = 'text-blue-400';
+            let bg = 'bg-blue-900/10 border-blue-500/20';
+
+            if (review.status === 'Approved with Penalty') {
+                icon = 'bi-exclamation-triangle';
+                color = 'text-red-400';
+                bg = 'bg-red-900/10 border-red-500/20';
+            } else if (review.status.includes('No Damage')) {
+                icon = 'bi-check-circle';
+                color = 'text-green-400';
+                bg = 'bg-green-900/10 border-green-500/20';
+            }
+
+            container.className = `${bg} p-4 rounded-xl text-sm border`;
+            container.innerHTML = `
+                <div class="flex items-center gap-2 mb-2 ${color} font-bold text-base">
+                    <i class="bi ${icon}"></i> Staff Inspection Note
+                </div>
+                <p class="text-gray-300 leading-relaxed">${review.inspection_notes || 'No notes added.'}</p>
+                <div class="mt-3 text-xs text-gray-500">Updated: ${new Date(review.updatedAt).toLocaleString()}</div>
+            `;
+        }
+
+        // Chat Logic
+        async function loadMessages() {
+            if (!currentReviewId) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/damage-reviews/${currentReviewId}/messages`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    renderMessages(data.messages);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('chatContainer');
+
+            // Check if user is scrolling up; if not, we can auto-scroll
+            // For simplicity, just rendering
+
+            if (messages.length === 0) return;
+
+            const html = messages.map(msg => {
+                // Determine alignment:
+                // If I am user, user messages are right.
+                // If I am staff, staff messages are right.
+                const isMe = msg.sender_role === currentUserRole;
+
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-4">
+                        <div class="${isMe ? 'bg-blue-600' : 'bg-gray-800'} text-white px-4 py-2 rounded-2xl chat-bubble shadow-md text-sm">
+                            ${msg.message}
+                        </div>
+                        <span class="text-[10px] text-gray-500 mt-1 px-1">
+                            ${isMe ? 'You' : msg.sender_role.toUpperCase()} • ${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            // Only update if content changed or first load (simple implementation usually ok)
+            if (container.innerHTML !== html) {
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        document.getElementById('chatForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !currentReviewId) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const user = JSON.parse(localStorage.getItem('user'));
+
+                // Get User ID from legacy stored object, fallback if needed
+                const userId = user.id;
+
+                await fetch(`/api/damage-reviews/${currentReviewId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        sender_role: currentUserRole,
+                        sender_id: userId
+                    })
+                });
+
+                input.value = '';
+                loadMessages();
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'Failed to send message', 'error');
+            }
+        });
+
+        // Staff Update Logic
+        async function updateReview() {
+            if (!currentReviewId) return;
+            const status = document.getElementById('inputStatus').value;
+            const cost = document.getElementById('inputFinalCost').value;
+            const notes = document.getElementById('inputNotes').value;
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/damage-reviews/${currentReviewId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        status,
+                        final_damage_cost: cost,
+                        inspection_notes: notes
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire('Success', 'Review updated', 'success');
+                    loadData();
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'Failed to update', 'error');
+            }
+        }
+
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(num).replace('IDR', 'Rp').replace(',00', '');
+        }
+    </script>
+</body>
+
+</html>

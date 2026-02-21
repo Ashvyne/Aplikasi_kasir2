@@ -78,18 +78,22 @@ app.locals.upload = upload;
 let sequelize = null;
 let dbInitialized = false;
 
+// Pre-load all models so Sequelize registers them for sync
+require('./models/Notification');
+require('./models/AuditLog');
+
 (async () => {
   try {
     const { sequelize: db, initDatabase } = require('./config/database');
     sequelize = db;
-    
+
     // Connect ke database
     const connected = await initDatabase();
     if (!connected) {
       throw new Error('Failed to connect to database');
     }
     console.log('✓ Database connected');
-    
+
     // Sync models ke database (alter: true = update existing tables, don't drop data)
     // Skip sync if no models are defined or if it fails
     try {
@@ -111,7 +115,7 @@ let dbInitialized = false;
       console.warn('⚠️ Database sync warning (non-critical):', syncError.message);
       // Don't fail on sync errors - app can work without schema sync
     }
-    
+
     dbInitialized = true;
   } catch (error) {
     console.error('⚠️ Database initialization error:', error.message);
@@ -191,6 +195,21 @@ app.use('/api/export', require('./routes/exports'));
 // Dashboard routes
 app.use('/api/dashboard', require('./routes/dashboard'));
 
+// Damage Review routes
+app.use('/api/damage-reviews', require('./routes/damage-reviews'));
+
+// Chat routes
+app.use('/api/chat', require('./routes/chat'));
+
+// Notification routes (all authenticated users)
+app.use('/api/notifications', require('./routes/notifications'));
+
+// Audit Log routes (Admin only)
+app.use('/api/audit-logs', require('./routes/audit-logs'));
+
+// Analytics routes
+app.use('/api/analytics', require('./routes/analytics'));
+
 // ============ PAGE ROUTES ============
 // Serve HTML pages
 
@@ -259,6 +278,11 @@ app.get('/dashboard-borrower', (req, res) => {
 
 app.get('/dashboard-borrower.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard-borrower.html'));
+});
+
+// Damage Review Page
+app.get('/damage-review', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'damage-review.html'));
 });
 
 // Cashier Dashboard (POS)
@@ -334,7 +358,7 @@ app.get('/index.html', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'OK',
     message: '✓ Server running',
     database: dbInitialized ? '✓ Connected' : '⚠️ Demo mode',
@@ -363,17 +387,17 @@ app.use((req, res) => {
   const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
   const isStaticFile = staticExtensions.some(ext => req.url.toLowerCase().includes(ext));
   const isUploadRequest = req.url.toLowerCase().startsWith('/uploads/');
-  
+
   if (req.url.startsWith('/api/')) {
     console.warn('❌ 404 API Not Found:', req.method, req.url);
     return res.status(404).json({ message: 'API Route not found', path: req.url });
   }
-  
+
   // Only log non-static file 404s
   if (!isStaticFile && !isUploadRequest) {
     console.warn('⚠️ Route not found:', req.method, req.url);
   }
-  
+
   // Serve index.html for SPA routing
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -383,8 +407,8 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Server Error:', err.message);
   console.error('Stack:', err.stack);
-  
-  res.status(500).json({ 
+
+  res.status(500).json({
     message: 'Internal server error',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Unknown error'
   });
