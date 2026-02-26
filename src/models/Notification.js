@@ -14,8 +14,7 @@ const Notification = sequelize.define('Notification', {
     user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        comment: 'Recipient user ID (from users table)',
-        references: { model: 'users', key: 'id' }
+        comment: 'Recipient user ID (from users table)'
     },
     type: {
         type: DataTypes.ENUM(

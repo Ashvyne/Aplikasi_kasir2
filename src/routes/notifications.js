@@ -6,11 +6,11 @@ const { verifyToken } = require('../middleware/authMiddleware');
 // All routes require authentication
 router.use(verifyToken);
 
+// GET unread count (lightweight polling endpoint) - Must be BEFORE /:id routes
+router.get('/unread-count', notificationController.getUnreadCount);
+
 // GET all notifications for current user
 router.get('/', notificationController.getNotifications);
-
-// GET unread count (lightweight polling endpoint)
-router.get('/unread-count', notificationController.getUnreadCount);
 
 // POST mark single notification as read
 router.post('/:id/read', notificationController.markRead);

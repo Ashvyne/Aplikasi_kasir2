@@ -54,7 +54,7 @@ exports.getUserById = async (req, res) => {
 // CREATE new user (Admin only)
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, username, password, role } = req.body;
     
     // Validasi input
     if (!name || !email || !password || !role) {
@@ -65,7 +65,7 @@ exports.createUser = async (req, res) => {
     }
 
     // Validasi role
-    const validRoles = ['admin', 'petugas', 'peminjam'];
+    const validRoles = ['admin', 'petugas', 'peminjam', 'staff', 'borrower', 'customer'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ 
         success: false,
@@ -82,12 +82,24 @@ exports.createUser = async (req, res) => {
       });
     }
 
+    // Check if username already exists (if provided)
+    if (username) {
+      const existingUsername = await User.findOne({ where: { username } });
+      if (existingUsername) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Username sudah digunakan' 
+        });
+      }
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       name,
       email,
+      username: username || null,
       password: hashedPassword,
       role,
       is_active: true
@@ -100,13 +112,23 @@ exports.createUser = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: user.role,
         is_active: user.is_active
       }
     });
   } catch (error) {
     console.error('❌ Error creating user:', error);
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan' });
+    let errorMessage = 'Terjadi kesalahan saat membuat user';
+    
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors?.[0]?.path || 'field';
+      errorMessage = `${field} sudah digunakan`;
+    } else if (error.errors) {
+      errorMessage = error.errors.map(e => e.message).join(', ');
+    }
+    
+    res.status(500).json({ success: false, message: errorMessage });
   }
 };
 
@@ -134,7 +156,7 @@ exports.updateUser = async (req, res) => {
 
     // Validate role if provided
     if (role) {
-      const validRoles = ['admin', 'petugas', 'peminjam'];
+      const validRoles = ['admin', 'petugas', 'peminjam', 'staff', 'borrower', 'customer'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({ 
           success: false,
@@ -242,7 +264,7 @@ exports.getUsersByRole = async (req, res) => {
   try {
     const { role } = req.params;
     
-    const validRoles = ['admin', 'petugas', 'peminjam'];
+    const validRoles = ['admin', 'petugas', 'peminjam', 'staff', 'borrower', 'customer'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ 
         success: false,
