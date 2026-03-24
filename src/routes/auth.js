@@ -10,6 +10,34 @@ const bcrypt = require('bcrypt');
 // Simple in-memory session store untuk demo (akan diganti dengan database di production)
 const demoSessions = new Map();
 
+// Demo users untuk fallback ketika database tidak tersedia
+const DEMO_USERS = {
+  'admin': {
+    id: 1,
+    username: 'admin',
+    name: 'Admin User',
+    email: 'admin@kasir.local',
+    password: '123456',
+    role: 'admin_kasir'
+  },
+  'barang': {
+    id: 2,
+    username: 'barang',
+    name: 'Barang User',
+    email: 'barang@kasir.local',
+    password: '123456',
+    role: 'admin_barang'
+  },
+  'cashier': {
+    id: 3,
+    username: 'cashier',
+    name: 'Cashier User',
+    email: 'cashier@kasir.local',
+    password: '123456',
+    role: 'admin_kasir'
+  }
+};
+
 // ============ REGISTRATION ============
 router.post('/register', authController.register);
 
@@ -58,7 +86,22 @@ router.post('/login', async (req, res) => {
     }
 
     // ============ FIND USER ============
-    const user = await User.findOne({ where: { username } });
+    let user = null;
+    let isUsingDemoData = false;
+    
+    // Try to find user in database first
+    try {
+      user = await User.findOne({ where: { username } });
+    } catch (dbError) {
+      console.warn('⚠️ Database query failed, falling back to demo data:', dbError.message);
+      // Fallback to demo users if database is unavailable
+      user = DEMO_USERS[username] ? { ...DEMO_USERS[username] } : null;
+      isUsingDemoData = !!user;
+      
+      if (user) {
+        console.log(`✓ Using DEMO user: ${username}`);
+      }
+    }
 
     if (!user) {
       return res.status(401).json({ 
@@ -69,7 +112,16 @@ router.post('/login', async (req, res) => {
     }
 
     // ============ VALIDATE PASSWORD ============
-    const isPasswordValid = await user.validatePassword(password);
+    let isPasswordValid = false;
+    
+    if (isUsingDemoData) {
+      // For demo users, do simple password comparison
+      isPasswordValid = (password === user.password);
+    } else {
+      // For database users, use bcrypt comparison
+      isPasswordValid = await user.validatePassword(password);
+    }
+    
     if (!isPasswordValid) {
       return res.status(401).json({ 
         success: false,
@@ -141,11 +193,29 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Login error:', error);
+    console.error('❌ Login error:', error.message || error);
+    console.error('Error stack:', error.stack);
+    
+    // Provide specific error messages based on error type
+    let errorCode = 'SERVER_ERROR';
+    let errorMessage = 'Terjadi kesalahan pada server';
+    
+    if (error.message && error.message.includes('ETIMEDOUT')) {
+      errorCode = 'DATABASE_TIMEOUT';
+      errorMessage = 'Koneksi database timeout. Silakan coba lagi.';
+    } else if (error.message && error.message.includes('ECONNREFUSED')) {
+      errorCode = 'DATABASE_CONNECTION_ERROR';
+      errorMessage = 'Tidak bisa terhubung ke database.';
+    } else if (error.message && error.message.includes('SequelizeConnectionError')) {
+      errorCode = 'DATABASE_ERROR';
+      errorMessage = 'Kesalahan koneksi database.';
+    }
+    
     res.status(500).json({ 
       success: false,
-      code: 'SERVER_ERROR',
-      message: 'Terjadi kesalahan pada server' 
+      code: errorCode,
+      message: errorMessage,
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

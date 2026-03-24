@@ -1,209 +1,570 @@
-const { sequelize } = require('../config/database');
-const Product = require('../models/Product');
-const Transaction = require('../models/Transaction');
-const StockIn = require('../models/StockIn');
-
 /**
- * Get Dashboard Summary Data
- * - Total transactions today
- * - Profit/Revenue today
- * - Total products
- * - Total stock
- * - Low stock items
+ * ENHANCED DASHBOARD CONTROLLER
+ * Analytics, reports, and dashboard metrics for restaurant/cafe POS
  */
+
+const { Order, OrderItem, Product, RestaurantTable, User } = require('../models');
+const { Op, Sequelize } = require('sequelize');
+
+// ============ GET DASHBOARD SUMMARY ============
 exports.getDashboardSummary = async (req, res) => {
   try {
-    // Get today's date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // 1. Total transactions today
-    const transactionCount = await Transaction.count({
+    // Today's metrics
+    const todayOrders = await Order.findAll({
       where: {
-        createdAt: {
-          [sequelize.Sequelize.Op.gte]: today,
-          [sequelize.Sequelize.Op.lt]: tomorrow
-        }
-      }
-    });
-
-    // 2. Revenue and Profit today
-    const todayTransactions = await Transaction.findAll({
-      where: {
-        createdAt: {
-          [sequelize.Sequelize.Op.gte]: today,
-          [sequelize.Sequelize.Op.lt]: tomorrow
-        }
+        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+        status: { [Op.ne]: 'cancelled' }
       },
-      raw: true
+      include: [{ model: OrderItem, as: 'items' }]
     });
 
-    let totalRevenue = 0;
-    let totalCost = 0;
+    const todayRevenue = todayOrders.reduce((sum, order) => sum + parseFloat(order.totalAmount || 0), 0);
+    const totalItemsSold = todayOrders.reduce((sum, order) => {
+      return sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+    }, 0);
 
-    for (const trans of todayTransactions) {
-      totalRevenue += trans.total || 0;
-      
-      if (trans.items) {
-        const items = typeof trans.items === 'string' ? JSON.parse(trans.items) : trans.items;
-        for (const item of items) {
-          const product = await Product.findByPk(item.product_id, { raw: true });
-          if (product) {
-            totalCost += (product.buy_price || 0) * (item.quantity || 0);
-          }
-        }
-      }
-    }
+    // Table stats
+    const tableStats = await RestaurantTable.findAll({
+      attributes: ['status'],
+      where: { isActive: true }
+    });
 
-    const totalProfit = totalRevenue - totalCost;
+    const activeTables = tableStats.filter(t => t.status === 'occupied').length;
+    const availableTables = tableStats.filter(t => t.status === 'available').length;
+    const totalTables = tableStats.length;
 
-    // 3. Total products and stock
-    const products = await Product.findAll({ raw: true });
-    const totalProducts = products.length;
-    const totalStock = products.reduce((sum, p) => sum + (p.stock || 0), 0);
+    // Low stock items
+    const lowStockItems = await Product.findAll({
+      where: {
+        stock: { [Op.lte]: 10 }
+      },
+      limit: 5
+    });
 
-    // 4. Low stock items (stock < 10)
-    const lowStockItems = products.filter(p => p.stock < 10 && p.stock > 0).length;
-    
-    // 4b. Empty stock items (stock = 0)
-    const emptyStockItems = products.filter(p => p.stock === 0).length;
-
-    // 5. Expired or expiring soon products
-    const today_date = new Date();
-    const expiredItems = products.filter(p => {
-      if (!p.expiry_date) return false;
-      const expiryDate = new Date(p.expiry_date);
-      return expiryDate < today_date;
-    }).length;
-
-    // 6. Expiring within 7 days
-    const sevenDaysLater = new Date();
-    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-    
-    const expiringItems = products.filter(p => {
-      if (!p.expiry_date) return false;
-      const expiryDate = new Date(p.expiry_date);
-      return expiryDate >= today_date && expiryDate <= sevenDaysLater;
-    }).length;
+    // Active orders
+    const activeOrders = await Order.findAll({
+      where: {
+        status: { [Op.in]: ['pending', 'confirmed', 'cooking', 'ready'] }
+      },
+      include: [{ model: RestaurantTable, as: 'table' }],
+      order: [['createdAt', 'DESC']],
+      limit: 10
+    });
 
     res.json({
-      transactions_today: transactionCount,
-      revenue_today: totalRevenue,
-      profit_today: totalProfit,
-      total_products: totalProducts,
-      total_stock: totalStock,
-      empty_stock_items: emptyStockItems,
-      low_stock_items: lowStockItems,
-      expired_items: expiredItems,
-      expiring_soon_items: expiringItems
+      success: true,
+      data: {
+        today: {
+          orders: todayOrders.length,
+          revenue: todayRevenue,
+          itemsSold: totalItemsSold,
+          averageOrderValue: todayOrders.length > 0 ? (todayRevenue / todayOrders.length).toFixed(2) : 0
+        },
+        tables: {
+          total: totalTables,
+          active: activeTables,
+          available: availableTables,
+          occupancyRate: totalTables > 0 ? ((activeTables / totalTables) * 100).toFixed(1) + '%' : '0%'
+        },
+        lowStockItems: lowStockItems,
+        activeOrders: activeOrders
+      }
     });
-
   } catch (error) {
-    console.error('getDashboardSummary error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching dashboard summary',
+      error: error.message
+    });
   }
 };
 
-/**
- * Get Monthly Sales Report
- * Returns sales data grouped by month
- */
+
+// ============ GET REVENUE ANALYTICS ============
+exports.getRevenueAnalytics = async (req, res) => {
+  try {
+    const { period = '7days' } = req.query; // 7days, 30days, 90days, yearly
+
+    let startDate = new Date();
+    if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === '90days') {
+      startDate.setDate(startDate.getDate() - 90);
+    } else if (period === 'yearly') {
+      startDate.setFullYear(startDate.getFullYear() - 1);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+
+    const orders = await Order.findAll({
+      where: {
+        createdAt: { [Op.gte]: startDate },
+        status: { [Op.ne]: 'cancelled' }
+      },
+      attributes: [
+        [Sequelize.fn('DATE', Sequelize.col('created_at')), 'date'],
+        [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'total'],
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: [Sequelize.fn('DATE', Sequelize.col('created_at'))],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      period,
+      data: orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching revenue analytics',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET TOP SELLING ITEMS ============
+exports.getTopSellingItems = async (req, res) => {
+  try {
+    const { period = '7days', limit = 10 } = req.query;
+
+    let startDate = new Date();
+    if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === '90days') {
+      startDate.setDate(startDate.getDate() - 90);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+
+    const topItems = await OrderItem.findAll({
+      attributes: [
+        'productName',
+        'productId',
+        [Sequelize.fn('SUM', Sequelize.col('quantity')), 'totalQuantity'],
+        [Sequelize.fn('SUM', Sequelize.col('total_price')), 'totalRevenue']
+      ],
+      include: [
+        {
+          model: Order,
+          where: {
+            createdAt: { [Op.gte]: startDate },
+            status: { [Op.ne]: 'cancelled' }
+          },
+          required: true,
+          attributes: []
+        }
+      ],
+      group: ['productId', 'productName'],
+      order: [[Sequelize.literal('totalQuantity'), 'DESC']],
+      limit: parseInt(limit) || 10,
+      subQuery: false,
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      period,
+      data: topItems
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching top selling items',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET PAYMENT METHOD DISTRIBUTION ============
+exports.getPaymentMethodDistribution = async (req, res) => {
+  try {
+    const { period = '30days' } = req.query;
+
+    let startDate = new Date();
+    if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === '90days') {
+      startDate.setDate(startDate.getDate() - 90);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+
+    const distribution = await Order.findAll({
+      where: {
+        createdAt: { [Op.gte]: startDate },
+        status: { [Op.ne]: 'cancelled' },
+        paymentMethod: { [Op.ne]: null }
+      },
+      attributes: [
+        'paymentMethod',
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count'],
+        [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'total']
+      ],
+      group: ['paymentMethod'],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      period,
+      data: distribution
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching payment distribution',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET ORDER TYPE DISTRIBUTION ============
+exports.getOrderTypeDistribution = async (req, res) => {
+  try {
+    const { period = '30days' } = req.query;
+
+    let startDate = new Date();
+    if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === '90days') {
+      startDate.setDate(startDate.getDate() - 90);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+
+    const distribution = await Order.findAll({
+      where: {
+        createdAt: { [Op.gte]: startDate },
+        status: { [Op.ne]: 'cancelled' }
+      },
+      attributes: [
+        'orderType',
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count'],
+        [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'total']
+      ],
+      group: ['orderType'],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      period,
+      data: distribution
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching order type distribution',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET HOURLY REVENUE ============
+exports.getHourlyRevenue = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const hourly = await Order.findAll({
+      where: {
+        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+        status: { [Op.ne]: 'cancelled' }
+      },
+      attributes: [
+        [Sequelize.fn('HOUR', Sequelize.col('created_at')), 'hour'],
+        [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'total'],
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'orders']
+      ],
+      group: [Sequelize.fn('HOUR', Sequelize.col('created_at'))],
+      order: [[Sequelize.fn('HOUR', Sequelize.col('created_at')), 'ASC']],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      data: hourly
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching hourly revenue',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET RECENT ORDERS ============
+exports.getRecentOrders = async (req, res) => {
+  try {
+    const { limit = 20 } = req.query;
+
+    const orders = await Order.findAll({
+      include: [
+        { model: RestaurantTable, as: 'table' },
+        { model: User, as: 'user', attributes: ['id', 'name'] },
+        {
+          model: OrderItem,
+          as: 'items',
+          limit: 3,
+          attributes: ['productName', 'quantity']
+        }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit) || 20
+    });
+
+    res.json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching recent orders',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET DETAILED REPORT ============
+exports.getDetailedReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ success: false, message: 'Start and end date required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setDate(end.getDate() + 1);
+
+    const orders = await Order.findAll({
+      where: {
+        createdAt: { [Op.gte]: start, [Op.lt]: end },
+        status: { [Op.ne]: 'cancelled' }
+      },
+      include: [
+        { model: RestaurantTable, as: 'table' },
+        { model: User, as: 'user', attributes: ['id', 'name', 'username'] },
+        {
+          model: OrderItem,
+          as: 'items',
+          include: [{ model: Product, as: 'product' }]
+        }
+      ]
+    });
+
+    const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.totalAmount || 0), 0);
+    const totalTax = orders.reduce((sum, order) => sum + parseFloat(order.taxAmount || 0), 0);
+    const totalDiscount = orders.reduce((sum, order) => sum + parseFloat(order.discountAmount || 0), 0);
+
+    res.json({
+      success: true,
+      summary: {
+        totalOrders: orders.length,
+        totalRevenue,
+        totalTax,
+        totalDiscount,
+        averageOrderValue: orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : 0
+      },
+      orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error generating report',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET CUSTOMER STATS ============
+exports.getCustomerStats = async (req, res) => {
+  try {
+    const { period = '30days' } = req.query;
+
+    let startDate = new Date();
+    if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === '90days') {
+      startDate.setDate(startDate.getDate() - 90);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+
+    const totalCustomers = await Order.count({
+      distinct: true,
+      col: 'customerName',
+      where: {
+        createdAt: { [Op.gte]: startDate },
+        customerName: { [Op.ne]: null }
+      }
+    });
+
+    const repeatCustomers = await Order.findAll({
+      attributes: [
+        'customerName',
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'visitCount']
+      ],
+      where: {
+        createdAt: { [Op.gte]: startDate },
+        customerName: { [Op.ne]: null }
+      },
+      group: ['customerName'],
+      having: Sequelize.where(Sequelize.fn('COUNT', Sequelize.col('id')), Op.gt, 1),
+      raw: true,
+      subQuery: false
+    });
+
+    res.json({
+      success: true,
+      period,
+      data: {
+        totalCustomers,
+        repeatCustomers: repeatCustomers.length,
+        repeatCustomerData: repeatCustomers
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching customer stats',
+      error: error.message
+    });
+  }
+};
+
+// ============ GET MONTHLY SALES REPORT (Legacy) ============
 exports.getMonthlySalesReport = async (req, res) => {
   try {
     const { year } = req.query;
     const targetYear = year ? parseInt(year) : new Date().getFullYear();
 
-    const transactions = await sequelize.query(`
-      SELECT 
-        MONTH(createdAt) as month,
-        COUNT(*) as total_transactions,
-        SUM(total) as total_revenue,
-        AVG(total) as avg_transaction
-      FROM transactions
-      WHERE YEAR(createdAt) = ${targetYear}
-      GROUP BY MONTH(createdAt)
-      ORDER BY MONTH(createdAt)
-    `, { type: sequelize.QueryTypes.SELECT });
+    const months = [];
+    for (let i = 1; i <= 12; i++) {
+      const startDate = new Date(targetYear, i - 1, 1);
+      const endDate = new Date(targetYear, i, 1);
+
+      const monthOrders = await Order.findAll({
+        where: {
+          createdAt: { [Op.gte]: startDate, [Op.lt]: endDate },
+          status: { [Op.ne]: 'cancelled' }
+        },
+        attributes: [
+          [Sequelize.fn('COUNT', Sequelize.col('id')), 'total_transactions'],
+          [Sequelize.fn('SUM', Sequelize.col('totalAmount')), 'total_revenue'],
+          [Sequelize.fn('AVG', Sequelize.col('totalAmount')), 'avg_transaction']
+        ],
+        raw: true
+      });
+
+      if (monthOrders.length > 0) {
+        months.push({
+          month: i,
+          total_transactions: monthOrders[0].total_transactions || 0,
+          total_revenue: monthOrders[0].total_revenue || 0,
+          avg_transaction: monthOrders[0].avg_transaction || 0
+        });
+      }
+    }
 
     res.json({
       year: targetYear,
-      months: transactions
+      months
     });
-
   } catch (error) {
-    console.error('getMonthlySalesReport error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching monthly sales report',
+      error: error.message
+    });
   }
 };
 
-/**
- * Get Profit/Loss Report
- */
+// ============ GET PROFIT/LOSS REPORT (Legacy) ============
 exports.getProfitLossReport = async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
 
-    let whereClause = '';
+    let where = {};
     if (start_date && end_date) {
-      whereClause = `WHERE createdAt BETWEEN '${start_date}' AND '${end_date}'`;
+      const startDate = new Date(start_date);
+      const endDate = new Date(end_date);
+      endDate.setDate(endDate.getDate() + 1);
+      where.createdAt = { [Op.gte]: startDate, [Op.lt]: endDate };
     }
 
-    const report = await sequelize.query(`
-      SELECT 
-        DATE(createdAt) as date,
-        COUNT(*) as transactions,
-        SUM(total) as revenue
-      FROM transactions
-      ${whereClause}
-      GROUP BY DATE(createdAt)
-      ORDER BY DATE(createdAt) DESC
-    `, { type: sequelize.QueryTypes.SELECT });
+    const orders = await Order.findAll({
+      where: { ...where, status: { [Op.ne]: 'cancelled' } },
+      include: [{ model: OrderItem, as: 'items' }],
+      order: [['createdAt', 'DESC']]
+    });
 
-    // Calculate profit
-    const reportWithProfit = [];
-    for (const row of report) {
-      let cost = 0;
-      const dayTransactions = await Transaction.findAll({
-        where: {
-          createdAt: sequelize.where(sequelize.fn('DATE', sequelize.col('createdAt')), sequelize.Op.eq, row.date)
-        },
-        raw: true
-      });
+    const reportByDate = {};
 
-      for (const trans of dayTransactions) {
-        if (trans.items) {
-          const items = typeof trans.items === 'string' ? JSON.parse(trans.items) : trans.items;
-          for (const item of items) {
-            const product = await Product.findByPk(item.product_id, { raw: true });
-            if (product) {
-              cost += (product.buy_price || 0) * (item.quantity || 0);
-            }
-          }
-        }
+    for (const order of orders) {
+      const dateStr = new Date(order.createdAt).toISOString().split('T')[0];
+      
+      if (!reportByDate[dateStr]) {
+        reportByDate[dateStr] = {
+          date: dateStr,
+          transactions: 0,
+          revenue: 0,
+          cost: 0
+        };
       }
 
-      reportWithProfit.push({
-        date: row.date,
-        transactions: row.transactions,
-        revenue: row.revenue,
-        cost: cost,
-        profit: row.revenue - cost
-      });
+      reportByDate[dateStr].transactions++;
+      reportByDate[dateStr].revenue += parseFloat(order.totalAmount || 0);
+
+      // Calculate cost from items
+      for (const item of order.items || []) {
+        const product = await Product.findByPk(item.productId);
+        if (product) {
+          reportByDate[dateStr].cost += (product.buy_price || 0) * item.quantity;
+        }
+      }
     }
 
-    res.json(reportWithProfit);
+    const report = Object.values(reportByDate).map(row => ({
+      ...row,
+      profit: row.revenue - row.cost
+    }));
 
+    res.json(report);
   } catch (error) {
-    console.error('getProfitLossReport error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching profit/loss report',
+      error: error.message
+    });
   }
 };
 
-/**
- * Get Product Stock Report
- */
+// ============ GET STOCK REPORT (Legacy) ============
 exports.getStockReport = async (req, res) => {
   try {
     const products = await Product.findAll({
@@ -225,9 +586,12 @@ exports.getStockReport = async (req, res) => {
     }));
 
     res.json(report);
-
   } catch (error) {
-    console.error('getStockReport error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching stock report',
+      error: error.message
+    });
   }
 };
+

@@ -120,6 +120,9 @@ function handleLoginError(statusCode, data) {
   const message = data.message || 'Login gagal';
 
   console.error(`❌ Login error [${statusCode}]:`, code, message);
+  if (data.debug) {
+    console.error('Debug info:', data.debug);
+  }
 
   switch (code) {
     case 'INVALID_INPUT':
@@ -144,9 +147,23 @@ function handleLoginError(statusCode, data) {
     case 'INVALID_ROLE':
       showErrorAlert('Role login tidak valid');
       break;
+
+    case 'DATABASE_TIMEOUT':
+      showErrorAlert('Koneksi database timeout. Pastikan database server berjalan dan dapat diakses. Silakan coba lagi dalam beberapa saat.');
+      console.error('Database connection issue - check database server configuration');
+      break;
+
+    case 'DATABASE_CONNECTION_ERROR':
+      showErrorAlert('Tidak bisa terhubung ke database. Pastikan database server berjalan.');
+      console.error('Database connection refused - check database server');
+      break;
+
+    case 'DATABASE_ERROR':
+      showErrorAlert('Kesalahan koneksi database. Silakan hubungi administrator.');
+      break;
     
     case 'SERVER_ERROR':
-      showErrorAlert('Terjadi kesalahan pada server');
+      showErrorAlert('Terjadi kesalahan pada server. Silakan coba lagi.');
       break;
     
     default:

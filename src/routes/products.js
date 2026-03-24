@@ -97,7 +97,7 @@ router.post('/', verifyToken, requireItemUser, (req, res) => {
       console.log('📝 Product POST received:', { name, sku, category, price, stock, buy_price, sell_price, expiry_date, discount });
 
       // Validasi input
-      if (!name || !sku || !price) {
+      if (!name || !sku || (!price && !sell_price)) {
         if (req.file) {
           fs.unlink(req.file.path, (e) => {});
         }
@@ -199,9 +199,14 @@ router.put('/:id', verifyToken, requireItemUser, (req, res) => {
         return res.status(404).json({ message: 'Produk tidak ditemukan' });
       }
 
-      const { name, sku, category, price, stock } = req.body;
+      const { name, sku, category, price, stock, buy_price, sell_price, expiry_date, discount } = req.body;
       
-      // Jika SKU diubah, cek duplikat
+      if (!name || !sku || (!price && !sell_price)) {
+        if (req.file) {
+          fs.unlink(req.file.path, (e) => {});
+        }
+        return res.status(400).json({ message: 'Nama, SKU, dan harga harus diisi' });
+      }
       if (sku && sku !== product.sku) {
         const existingSku = await Product.findOne({ where: { sku } });
         if (existingSku) {
@@ -224,8 +229,10 @@ router.put('/:id', verifyToken, requireItemUser, (req, res) => {
       await product.update({ 
         name, 
         sku, 
-        category, 
-        price, 
+        category: category || product.category, 
+        price,
+        buy_price: buy_price ? parseInt(buy_price) : product.buy_price,
+        sell_price: sell_price ? parseInt(sell_price) : product.sell_price,
         stock,
         image_url: product.image_url
       });

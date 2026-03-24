@@ -149,16 +149,32 @@ app.use('/api/auth', require('./routes/auth'));
 // Product management routes
 app.use('/api/products', require('./routes/products'));
 
-// Transaction/Sales routes
+// Transaction/Sales routes (legacy)
 app.use('/api/transactions', require('./routes/transactions'));
 
-// Reporting & Analytics routes
+// RESTAURANT/CAFE POS ROUTES (NEW)
+// Category management
+app.use('/api/categories', require('./routes/categories'));
+
+// Table management
+app.use('/api/tables', require('./routes/tables'));
+
+// Order management
+app.use('/api/orders', require('./routes/orders'));
+
+// Kitchen display system
+app.use('/api/kitchen', require('./routes/kitchen'));
+
+// Analytics & Reports (enhanced dashboard)
+app.use('/api/analytics', require('./routes/analytics'));
+
+// Reporting & Analytics routes (legacy)
 app.use('/api/reports', require('./routes/reports'));
 
 // Export routes (Excel, PDF)
 app.use('/api/export', require('./routes/exports'));
 
-// Dashboard routes
+// Dashboard routes (legacy)
 app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Stock In (Barang Masuk) routes
