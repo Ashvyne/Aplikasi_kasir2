@@ -172,7 +172,7 @@ exports.updateTableStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['available', 'occupied', 'reserved'].includes(status)) {
+    if (!['available', 'occupied', 'reserved', 'cleaning'].includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 

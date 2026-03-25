@@ -23,9 +23,9 @@ const RestaurantTable = sequelize.define('RestaurantTable', {
     comment: 'Max number of people at this table'
   },
   status: {
-    type: DataTypes.ENUM('available', 'occupied', 'reserved'),
+    type: DataTypes.ENUM('available', 'occupied', 'reserved', 'cleaning'),
     defaultValue: 'available',
-    comment: 'available, occupied, reserved'
+    comment: 'available, occupied, reserved, cleaning'
   },
   currentOrderId: {
     type: DataTypes.INTEGER,

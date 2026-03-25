@@ -355,10 +355,10 @@ exports.processPayment = async (req, res) => {
       status: 'completed'
     });
 
-    // Update table status back to available
+    // Update table status to cleaning so staff knows to wipe it down
     if (order.tableId) {
       await RestaurantTable.update(
-        { status: 'available', currentOrderId: null },
+        { status: 'cleaning', currentOrderId: null },
         { where: { id: order.tableId } }
       );
     }
