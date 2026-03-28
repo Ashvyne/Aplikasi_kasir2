@@ -9,7 +9,7 @@ const { Op } = require('sequelize');
 // ============ CREATE TABLE ============
 exports.createTable = async (req, res) => {
   try {
-    const { tableNumber, tableName, capacity, location } = req.body;
+    const { tableNumber, tableName, capacity, location, surchargeAmount } = req.body;
 
     if (!tableNumber || !tableName) {
       return res.status(400).json({ success: false, message: 'Table number and name required' });
@@ -20,6 +20,7 @@ exports.createTable = async (req, res) => {
       tableName: tableName || `Table ${tableNumber}`,
       capacity: capacity || 4,
       location: location || null,
+      surchargeAmount: parseFloat(surchargeAmount) || 0,
       status: 'available'
     });
 
@@ -137,7 +138,7 @@ exports.getTableById = async (req, res) => {
 exports.updateTable = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tableName, capacity, location, status, isActive } = req.body;
+    const { tableName, capacity, location, status, isActive, surchargeAmount } = req.body;
 
     const table = await RestaurantTable.findByPk(id);
     if (!table) {
@@ -147,9 +148,10 @@ exports.updateTable = async (req, res) => {
     await table.update({
       tableName: tableName || table.tableName,
       capacity: capacity || table.capacity,
-      location: location || table.location,
+      location: location !== undefined ? location : table.location,
       status: status || table.status,
-      isActive: isActive !== undefined ? isActive : table.isActive
+      isActive: isActive !== undefined ? isActive : table.isActive,
+      surchargeAmount: surchargeAmount !== undefined ? parseFloat(surchargeAmount) : table.surchargeAmount
     });
 
     res.json({

@@ -249,13 +249,22 @@ const recalculateOrderTotals = async (orderId) => {
 
   const subtotal = order.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
   const taxAmount = subtotal * 0.1; // 10% tax
-  const serviceCharge = subtotal * 0.05; // 5% service charge (can be configurable)
-  const totalAmount = subtotal + taxAmount + serviceCharge - (order.discountAmount || 0);
+  const serviceCharge = subtotal * 0.05; // 5% service charge
+
+  // Fetch table surcharge if order is dine-in
+  let tableSurcharge = 0;
+  if (order.tableId) {
+    const table = await RestaurantTable.findByPk(order.tableId);
+    if (table) tableSurcharge = parseFloat(table.surchargeAmount) || 0;
+  }
+
+  const totalAmount = subtotal + taxAmount + serviceCharge + tableSurcharge - (order.discountAmount || 0);
 
   await order.update({
     subtotal,
     taxAmount,
     serviceCharge,
+    tableSurcharge,
     totalAmount
   });
 

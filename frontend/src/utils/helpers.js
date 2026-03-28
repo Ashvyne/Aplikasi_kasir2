@@ -47,13 +47,15 @@ export const calculateChange = (totalAmount, paidAmount) => {
 export const getTableStatusColor = (status) => {
   switch (status) {
     case 'available':
-      return 'bg-accent-green text-white';
+      return 'border-l-4 border-l-green-500';
     case 'occupied':
-      return 'bg-red-600 text-white';
+      return 'border-l-4 border-l-red-500';
     case 'reserved':
-      return 'bg-accent-gold text-black';
+      return 'border-l-4 border-l-yellow-400';
+    case 'cleaning':
+      return 'border-l-4 border-l-orange-500';
     default:
-      return 'bg-gray-600 text-white';
+      return 'border-l-4 border-l-gray-500';
   }
 };
 
@@ -65,6 +67,8 @@ export const getTableStatusLabel = (status) => {
       return 'Terisi';
     case 'reserved':
       return 'Reservasi';
+    case 'cleaning':
+      return 'Proses Pembersihan';
     default:
       return status;
   }

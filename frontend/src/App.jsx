@@ -10,6 +10,7 @@ import TablesPage from './pages/TablesPage';
 import KitchenPage from './pages/KitchenPage';
 import MenuPage from './pages/MenuPage';
 import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
 
 // Layout
 import Sidebar from './components/Sidebar';
@@ -101,6 +102,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           }
         />

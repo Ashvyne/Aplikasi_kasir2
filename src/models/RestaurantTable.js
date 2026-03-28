@@ -40,6 +40,12 @@ const RestaurantTable = sequelize.define('RestaurantTable', {
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  surchargeAmount: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    field: 'surcharge_amount',
+    comment: 'Extra fee automatically added to orders at this table (e.g. VIP fee)'
   }
 }, {
   tableName: 'restaurant_tables',

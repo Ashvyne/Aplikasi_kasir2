@@ -270,7 +270,9 @@ export default function POSPage() {
             >
               <option value="">Pilih Meja...</option>
               {tables.filter(t => t.status === 'available').map(table => (
-                <option key={table.id} value={table.id}>Meja {table.tableName} (Kap: {table.capacity})</option>
+                <option key={table.id} value={table.id}>
+                  {table.tableName} (Kap: {table.capacity}){parseFloat(table.surchargeAmount) > 0 ? ` ⭐ +Rp ${Number(table.surchargeAmount).toLocaleString('id-ID')}` : ''}
+                </option>
               ))}
             </select>
           )}
@@ -318,24 +320,37 @@ export default function POSPage() {
 
         {/* Totals & Checkout */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-800 transition-colors">
-          <div className="space-y-1 text-sm mb-4">
-            <div className="flex justify-between text-gray-600 dark:text-gray-400 transition-colors">
-              <span>Subtotal</span>
-              <span>{formatCurrency(totals.subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-gray-600 dark:text-gray-400 transition-colors">
-              <span>Pajak (10%)</span>
-              <span>{formatCurrency(totals.taxAmount)}</span>
-            </div>
-            <div className="flex justify-between text-gray-600 dark:text-gray-400 transition-colors">
-              <span>Layanan (5%)</span>
-              <span>{formatCurrency(totals.serviceCharge)}</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-800 transition-colors">
-              <span>Total</span>
-              <span className="text-accent-gold">{formatCurrency(totals.total)}</span>
-            </div>
-          </div>
+          {/* Surcharge preview for selected VIP table */}
+          {(() => {
+            const selTable = tables.find(t => t.id === parseInt(selectedTable));
+            const surcharge = parseFloat(selTable?.surchargeAmount) || 0;
+            return (
+              <div className="space-y-1 text-sm mb-4">
+                <div className="flex justify-between text-gray-600 dark:text-gray-400 transition-colors">
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(totals.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-400 transition-colors">
+                  <span>Pajak (10%)</span>
+                  <span>{formatCurrency(totals.taxAmount)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-400 transition-colors">
+                  <span>Layanan (5%)</span>
+                  <span>{formatCurrency(totals.serviceCharge)}</span>
+                </div>
+                {surcharge > 0 && (
+                  <div className="flex justify-between text-yellow-600 dark:text-yellow-400 transition-colors font-medium">
+                    <span>⭐ Biaya Meja VIP</span>
+                    <span>{formatCurrency(surcharge)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-800 transition-colors">
+                  <span>Total</span>
+                  <span className="text-accent-gold">{formatCurrency(totals.total + surcharge)}</span>
+                </div>
+              </div>
+            );
+          })()}
           
           <button 
             onClick={checkout}

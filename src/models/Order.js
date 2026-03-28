@@ -64,6 +64,12 @@ const Order = sequelize.define('Order', {
     defaultValue: 0,
     comment: 'Service charge (5% or custom)'
   },
+  tableSurcharge: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    defaultValue: 0,
+    comment: 'Extra fee from the assigned table (e.g. VIP surcharge)'
+  },
   discountAmount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,

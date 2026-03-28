@@ -59,13 +59,15 @@ export default function ReportsPage() {
           <p className="text-gray-500 dark:text-gray-400 mt-1 transition-colors">Wawasan bisnis dan performa penjualan Anda.</p>
         </div>
         
-        <div className="flex items-center gap-3 bg-gray-200 dark:bg-darker p-1 rounded-lg transition-colors">
+        <div className="flex items-center gap-1 bg-gray-200 dark:bg-bg-darker p-1 rounded-xl transition-colors">
           {['7days', '30days', '90days', 'yearly'].map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-2 rounded-md transition-all text-sm font-semibold ${
-                period === p ? 'bg-accent-gold text-black' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              className={`px-4 py-2 rounded-lg transition-all text-sm font-semibold ${
+                period === p
+                  ? 'bg-accent-gold text-black shadow'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-bg-light hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               {p === '7days' ? '7 Hari' : p === '30days' ? '30 Hari' : p === '90days' ? '3 Bulan' : '1 Tahun'}
