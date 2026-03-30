@@ -62,6 +62,8 @@ exports.createOrder = async (req, res) => {
       subtotal: 0,
       taxAmount: 0,
       serviceCharge: 0,
+      tableSurcharge: 0,
+      discountAmount: 0,
       totalAmount: 0
     });
 
@@ -79,9 +81,10 @@ exports.createOrder = async (req, res) => {
       data: order
     });
   } catch (error) {
+    console.error('[createOrder Error]', error);
     res.status(500).json({
       success: false,
-      message: 'Error creating order',
+      message: error?.message || 'Error creating order',
       error: error.stack
     });
   }

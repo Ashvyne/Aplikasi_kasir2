@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { UtensilsCrossed, Plus, Edit, Trash2, MapPin, CheckCircle2, Sparkles } from 'lucide-react';
-import { tableService } from '../services/api';
-import { getTableStatusColor, getTableStatusLabel } from '../utils/helpers';
+import { UtensilsCrossed, Plus, Edit, Trash2, MapPin, CheckCircle2, Sparkles, CreditCard, X, Banknote, Smartphone } from 'lucide-react';
+import { tableService, orderService } from '../services/api';
+import { getTableStatusColor, getTableStatusLabel, formatCurrency } from '../utils/helpers';
+import NumericInput from '../components/NumericInput';
+import Receipt from '../components/Receipt';
 import Swal from 'sweetalert2';
 
 export default function TablesPage() {
@@ -20,6 +22,17 @@ export default function TablesPage() {
     location: '',
     surchargeAmount: 0
   });
+
+  // Payment Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paidAmount, setPaidAmount] = useState('');
+  const [processingPayment, setProcessingPayment] = useState(false);
+  
+  // Receipt State
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
 
   useEffect(() => {
     loadTables();
@@ -151,6 +164,73 @@ export default function TablesPage() {
     }
   };
 
+  const handleOpenPayment = (order) => {
+    setSelectedOrder(order);
+    setPaymentMethod('cash');
+    setPaidAmount('');
+    setShowPaymentModal(true);
+  };
+
+  const confirmPayment = async () => {
+    if (!selectedOrder) return;
+
+    const totalToPay = parseFloat(selectedOrder.totalAmount);
+    const paid = parseFloat(paidAmount);
+    
+    if (paymentMethod === 'cash' && (!paid || paid < totalToPay)) {
+      return Swal.fire('Error', `Uang yang dibayar kurang! Minimal Rp ${totalToPay.toLocaleString('id-ID')}`, 'error');
+    }
+
+    try {
+      setProcessingPayment(true);
+      
+      await orderService.processPayment(selectedOrder.id, {
+        paidAmount: paymentMethod === 'cash' ? paid : totalToPay,
+        paymentMethod
+      });
+
+      const change = paymentMethod === 'cash' ? Math.max(0, paid - totalToPay) : 0;
+      
+      setShowPaymentModal(false);
+      
+      // For receipt modal
+      setCompletedOrder({
+        ...selectedOrder,
+        paidAmount: paymentMethod === 'cash' ? paid : totalToPay,
+        changeAmount: change,
+        paymentMethod,
+        paidAt: new Date()
+      });
+
+      Swal.fire({
+        title: 'Pembayaran Berhasil! 🎉',
+        html: change > 0
+          ? `<p class="text-gray-700">Total: <strong>Rp ${totalToPay.toLocaleString('id-ID')}</strong></p><p class="text-gray-700">Bayar: <strong>Rp ${paid.toLocaleString('id-ID')}</strong></p><p class="text-2xl font-bold text-green-600 mt-2">Kembalian: Rp ${change.toLocaleString('id-ID')}</p>`
+          : `<p>Pembayaran <strong>${paymentMethod === 'card' ? 'Kartu Debit' : paymentMethod === 'digital' ? 'Digital' : 'Tunai'}</strong> berhasil diproses.</p>`,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonColor: '#FFD700',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Cetak Struk',
+        cancelButtonText: 'OK',
+        customClass: {
+          confirmButton: 'text-black font-bold',
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setShowReceipt(true);
+        }
+      });
+
+      loadTables();
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', error?.response?.data?.message || error.message || 'Gagal memproses pembayaran', 'error');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -245,25 +325,30 @@ export default function TablesPage() {
                   </div>
                 )}
 
-                {/* Occupied: Selesai & Bersihkan */}
-                {table.status === 'occupied' && (
-                  <div className="mt-3 relative group">
+                {/* Occupied: Bayar & Selesai */}
+                {table.status === 'occupied' && currentOrder && (
+                  <div className="mt-3 space-y-2">
                     <button
-                      onClick={() => kitchenDone ? handleMarkCleaning(table) : null}
-                      disabled={!kitchenDone}
-                      className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow
-                        ${kitchenDone
-                          ? 'bg-red-500 hover:bg-red-600 text-white cursor-pointer'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'}`}
+                      onClick={() => handleOpenPayment(currentOrder)}
+                      className="w-full flex items-center justify-center gap-2 bg-accent-gold hover:bg-yellow-400 text-black font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow-glow"
                     >
-                      <Sparkles size={15} />
-                      Selesai &amp; Bersihkan
+                      <CreditCard size={15} />
+                      Bayar Sekarang
                     </button>
-                    {!kitchenDone && (
+                    
+                    <div className="relative group">
+                      <button
+                        onClick={() => kitchenDone ? handleMarkCleaning(table) : null}
+                        disabled={true} // Disabled because they MUST pay first in the new flow
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500`}
+                      >
+                        <Sparkles size={15} />
+                        Selesai &amp; Bersihkan
+                      </button>
                       <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                        ⏳ Makanan belum tersaji
+                        🔒 Silakan proses pembayaran dahulu
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
 
@@ -357,6 +442,111 @@ export default function TablesPage() {
             </form>
           </div>
         </div>
+      )}
+      {/* Payment Modal */}
+      {showPaymentModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-accent-gold/10 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <CreditCard className="text-accent-gold" size={22} /> Pembayaran {selectedOrder.orderNumber}
+              </h2>
+              <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className="bg-gray-50 dark:bg-bg-darker rounded-xl p-4 space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                  <span>Subtotal</span><span>{formatCurrency(selectedOrder.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                  <span>Pajak & Layanan</span><span>{formatCurrency(parseFloat(selectedOrder.taxAmount) + parseFloat(selectedOrder.serviceCharge))}</span>
+                </div>
+                {parseFloat(selectedOrder.tableSurcharge) > 0 && (
+                  <div className="flex justify-between text-yellow-600 dark:text-yellow-400 font-medium">
+                    <span>⭐ Biaya Meja VIP</span><span>{formatCurrency(selectedOrder.tableSurcharge)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <span>Total</span>
+                  <span className="text-accent-gold">{formatCurrency(selectedOrder.totalAmount)}</span>
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 'cash',    label: 'Tunai',          icon: Banknote },
+                  { value: 'card',    label: 'Kartu',          icon: CreditCard },
+                  { value: 'digital', label: 'QRIS',           icon: Smartphone },
+                ].map(m => (
+                  <button
+                    key={m.value}
+                    onClick={() => setPaymentMethod(m.value)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-xs font-semibold transition-all ${
+                      paymentMethod === m.value
+                        ? 'border-accent-gold bg-accent-gold/10 text-accent-gold'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    <m.icon size={20} />
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {paymentMethod === 'cash' && (
+                <div className="space-y-3">
+                  <NumericInput
+                    value={paidAmount}
+                    onChange={val => setPaidAmount(val.toString())}
+                    prefix="Rp"
+                    placeholder="Jumlah Bayar"
+                    className="text-lg font-bold"
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    {[10000, 20000, 50000, 100000].map(amt => (
+                      <button
+                        key={amt}
+                        onClick={() => setPaidAmount(prev => ((parseFloat(prev) || 0) + amt).toString())}
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-bg-darker text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg hover:bg-gray-200 border border-gray-200 dark:border-gray-700 transition"
+                      >
+                        +{amt/1000}rb
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPaidAmount(selectedOrder.totalAmount.toString())}
+                      className="px-3 py-1.5 bg-accent-gold text-black text-xs font-bold rounded-lg hover:bg-yellow-400 transition"
+                    >
+                      Uang Pas
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={confirmPayment}
+                disabled={processingPayment || (paymentMethod === 'cash' && (!paidAmount || parseFloat(paidAmount) < parseFloat(selectedOrder.totalAmount)))}
+                className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
+                  processingPayment || (paymentMethod === 'cash' && (!paidAmount || parseFloat(paidAmount) < parseFloat(selectedOrder.totalAmount)))
+                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-accent-gold text-black hover:bg-yellow-400 shadow-lg'
+                }`}
+              >
+                {processingPayment ? 'Memproses...' : `Konfirmasi Bayar ${formatCurrency(selectedOrder.totalAmount)}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Receipt Modal */}
+      {showReceipt && completedOrder && (
+        <Receipt 
+          order={completedOrder} 
+          onClose={() => setShowReceipt(false)} 
+        />
       )}
     </div>
   );

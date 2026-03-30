@@ -1,22 +1,121 @@
 import React, { useState, useEffect } from 'react';
-import { ChefHat, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { ChefHat, AlertCircle, CheckCircle, Clock, Play, Check, RefreshCcw, Timer } from 'lucide-react';
 import { kitchenService } from '../services/api';
-import { formatDateTime } from '../utils/helpers';
+import { formatTime } from '../utils/helpers';
+import Swal from 'sweetalert2';
+
+const OrderCard = ({ order, onStart, onComplete }) => {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const calculateElapsed = () => {
+      const start = new Date(order.createdAt).getTime();
+      const now = new Date().getTime();
+      setElapsed(Math.floor((now - start) / 60000));
+    };
+
+    calculateElapsed();
+    const timer = setInterval(calculateElapsed, 10000);
+    return () => clearInterval(timer);
+  }, [order.createdAt]);
+
+  const isUrgent = elapsed >= 15;
+  const isPending = order.status === 'pending' || order.status === 'confirmed';
+  const isCooking = order.status === 'cooking';
+
+  return (
+    <div className={`relative bg-white dark:bg-bg-dark border-l-[12px] rounded-2xl shadow-xl overflow-hidden transition-all hover:scale-[1.01] ${
+      isUrgent ? 'border-red-500 shadow-red-500/10' : 
+      isCooking ? 'border-orange-500 animate-pulse-slow shadow-orange-500/10' : 
+      'border-accent-gold shadow-accent-gold/10'
+    }`}>
+      <div className="p-5">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-3xl font-black text-gray-900 dark:text-white transition-colors">{order.orderNumber}</span>
+              {isUrgent && <span className="flex items-center gap-1 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full animate-bounce">URGENT</span>}
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 font-bold transition-colors">📍 Meja: {order.table?.tableName || 'TA'}</p>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 font-mono text-sm mb-1 transition-colors">
+              <Timer size={14} />
+              <span>{elapsed} min</span>
+            </div>
+            <p className="text-xs text-gray-400 transition-colors uppercase tracking-widest font-bold">{formatTime(order.createdAt)}</p>
+          </div>
+        </div>
+
+        {/* Dash Separator */}
+        <div className="border-t-2 border-dashed border-gray-200 dark:border-gray-800 my-4"></div>
+
+        <div className="space-y-3 mb-6">
+          {order.items?.map((item, idx) => (
+            <div key={idx} className="flex items-start gap-4">
+              <div className="bg-gray-100 dark:bg-bg-darker text-gray-900 dark:text-white w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg border border-gray-200 dark:border-gray-700 transition-colors">
+                {item.quantity}
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="font-bold text-gray-900 dark:text-white leading-tight transition-colors">{item.productName}</p>
+                {item.notes && (
+                  <p className="text-xs text-orange-500 font-medium mt-0.5">Note: {item.notes}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {order.notes && (
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-xl p-3 mb-6 transition-colors">
+            <p className="text-xs text-orange-700 dark:text-orange-400 font-bold flex items-center gap-2">
+              <AlertCircle size={14} /> Special Request:
+            </p>
+            <p className="text-sm text-orange-600 dark:text-orange-300 ml-5">{order.notes}</p>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          {isPending && (
+            <button 
+              onClick={() => onStart(order.id)} 
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30 transition-all active:scale-95"
+            >
+              <Play size={20} fill="currentColor" /> MULAI MASAK
+            </button>
+          )}
+          {isCooking && (
+            <button 
+              onClick={() => onComplete(order.id)} 
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 transition-all active:scale-95"
+            >
+              <Check size={24} strokeWidth={4} /> SIAP SAJI
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function KitchenPage() {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     loadKitchenOrders();
-    const interval = setInterval(loadKitchenOrders, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(loadKitchenOrders, 10000);
+    const clock = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(clock);
+    };
   }, []);
 
   const loadKitchenOrders = async () => {
     try {
-      setLoading(true);
       const [ordersRes, statsRes] = await Promise.all([
         kitchenService.getActive(),
         kitchenService.getStats(),
@@ -25,8 +124,6 @@ export default function KitchenPage() {
       setStats(statsRes.data || null);
     } catch (error) {
       console.error('Error loading kitchen orders:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -35,8 +132,7 @@ export default function KitchenPage() {
       await kitchenService.startCooking(orderId);
       loadKitchenOrders();
     } catch (error) {
-      console.error('Error starting cooking:', error);
-      alert('Gagal memulai pesanan');
+      Swal.fire('Error', 'Gagal memulai pesanan', 'error');
     }
   };
 
@@ -45,110 +141,85 @@ export default function KitchenPage() {
       await kitchenService.complete(orderId);
       loadKitchenOrders();
     } catch (error) {
-      console.error('Error completing order:', error);
-      alert('Gagal menyelesaikan pesanan');
+      Swal.fire('Error', 'Gagal menyelesaikan pesanan', 'error');
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-poppins font-bold text-gray-900 dark:text-white flex items-center gap-3 transition-colors">
-          <ChefHat size={32} className="text-accent-gold" />
-          Kitchen Display System
-        </h1>
-        <button
-          onClick={loadKitchenOrders}
-          className="btn-secondary"
-        >
-          Refresh
-        </button>
+    <div className="p-8 space-y-8 bg-gray-50 dark:bg-bg-darker min-h-screen transition-colors">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="bg-accent-gold p-3 rounded-2xl shadow-glow">
+            <ChefHat size={32} className="text-black" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-gray-900 dark:text-white transition-colors">DAPUR POS</h1>
+            <p className="text-gray-500 dark:text-gray-400 font-bold transition-colors uppercase tracking-[0.2em] text-xs">Kitchen Display System</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-6">
+          <div className="text-right hidden md:block">
+            <p className="text-3xl font-mono font-black text-accent-gold">{currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase transition-colors">{currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          </div>
+          <button onClick={loadKitchenOrders} className="p-4 bg-white dark:bg-bg-dark text-gray-900 dark:text-white rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 hover:rotate-180 transition-all duration-500">
+            <RefreshCcw size={24} />
+          </button>
+        </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Dashboard */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="card border-l-4 border-yellow-600">
-            <p className="text-gray-500 dark:text-gray-400 text-sm transition-colors">Menunggu</p>
-            <p className="text-3xl font-bold text-yellow-500">{stats.pending}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800 p-6 rounded-3xl shadow-xl transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="bg-yellow-500/10 p-3 rounded-2xl text-yellow-500"><Clock size={24} /></div>
+              <div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Menunggu</p>
+                <p className="text-4xl font-black text-gray-900 dark:text-white transition-colors">{stats.pending}</p>
+              </div>
+            </div>
           </div>
-          <div className="card border-l-4 border-orange-600">
-            <p className="text-gray-500 dark:text-gray-400 text-sm transition-colors">Sedang Masak</p>
-            <p className="text-3xl font-bold text-orange-500">{stats.cooking}</p>
+          <div className="bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800 p-6 rounded-3xl shadow-xl transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-500/10 p-3 rounded-2xl text-orange-500"><Play size={24} /></div>
+              <div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Sedang Masak</p>
+                <p className="text-4xl font-black text-gray-900 dark:text-white transition-colors">{stats.cooking}</p>
+              </div>
+            </div>
           </div>
-          <div className="card border-l-4 border-accent-green">
-            <p className="text-gray-500 dark:text-gray-400 text-sm transition-colors">Siap Disajikan</p>
-            <p className="text-3xl font-bold text-accent-green">{stats.ready}</p>
+          <div className="bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800 p-6 rounded-3xl shadow-xl transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="bg-green-500/10 p-3 rounded-2xl text-green-500"><CheckCircle size={24} /></div>
+              <div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Siap Saji</p>
+                <p className="text-4xl font-black text-gray-900 dark:text-white transition-colors">{stats.ready}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Orders */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading...</div>
-        ) : orders.length === 0 ? (
-          <div className="card text-center py-16">
-            <CheckCircle size={48} className="mx-auto mb-4 text-accent-green" />
-            <p className="text-xl font-bold text-accent-green">No Pending Orders!</p>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 transition-colors">Semua pesanan sudah selesai</p>
+      {/* Orders Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {orders.length === 0 ? (
+          <div className="col-span-full py-20 text-center space-y-4">
+            <div className="bg-green-500/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto text-green-500 shadow-glow">
+              <CheckCircle size={48} />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white transition-colors">SEMUA PESANAN SELESAI!</h2>
+            <p className="text-gray-500 dark:text-gray-400 font-bold transition-colors">Dapur bersih, koki senang.</p>
           </div>
         ) : (
           orders.map((order) => (
-            <div
-              key={order.id}
-              className="card border-l-4 border-accent-gold animate-slide-in"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-2xl font-bold text-accent-gold">{order.orderNumber}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">Meja {order.table?.tableName || 'N/A'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">Order masuk</p>
-                  <p className="text-accent-gold">{formatDateTime(order.createdAt)}</p>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="bg-gray-100 dark:bg-bg-darker rounded-lg p-4 mb-4 transition-colors">
-                <div className="space-y-2">
-                  {order.items?.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white transition-colors">{item.productName}</p>
-                        {item.notes && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 italic transition-colors">📝 {item.notes}</p>
-                        )}
-                      </div>
-                      <span className="bg-accent-gold text-black px-3 py-1 rounded-full font-bold">
-                        ×{item.quantity}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Notes */}
-              {order.notes && (
-                <div className="bg-amber-600/20 border border-amber-600/50 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-amber-100">
-                    <AlertCircle className="inline mr-2" size={16} />
-                    {order.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                {order.status === 'pending' || order.status === 'confirmed' ? (
-                  <button onClick={() => handleStartCooking(order.id)} className="flex-1 btn-primary text-sm">Start Cooking</button>
-                ) : null}
-                {order.status === 'cooking' ? (
-                  <button onClick={() => handleComplete(order.id)} className="flex-1 btn-success text-sm bg-accent-green text-black font-bold">Mark Ready</button>
-                ) : null}
-              </div>
-            </div>
+            <OrderCard 
+              key={order.id} 
+              order={order} 
+              onStart={handleStartCooking} 
+              onComplete={handleComplete} 
+            />
           ))
         )}
       </div>

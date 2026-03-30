@@ -10,6 +10,7 @@ import TablesPage from './pages/TablesPage';
 import KitchenPage from './pages/KitchenPage';
 import MenuPage from './pages/MenuPage';
 import ReportsPage from './pages/ReportsPage';
+import TransactionsPage from './pages/TransactionsPage';
 import SettingsPage from './pages/SettingsPage';
 
 // Layout
@@ -102,6 +103,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute>
+              <TransactionsPage />
             </ProtectedRoute>
           }
         />

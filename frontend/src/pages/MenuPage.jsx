@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash2, LayoutGrid, List, Upload, Image as ImageIcon } from 'lucide-react';
 import { productService, categoryService, API_BASE } from '../services/api';
 import { formatCurrency } from '../utils/helpers';
+import NumericInput from '../components/NumericInput';
 import Swal from 'sweetalert2';
 
 export default function MenuPage() {
@@ -396,15 +397,26 @@ export default function MenuPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Harga Beli</label>
-                  <input type="number" required min="0" className="input-field" value={productForm.buy_price} onChange={e => setProductForm({...productForm, buy_price: parseInt(e.target.value)})} />
+                  <NumericInput 
+                    value={productForm.buy_price} 
+                    onChange={val => setProductForm({...productForm, buy_price: val})} 
+                    prefix="Rp"
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Harga Jual</label>
-                  <input type="number" required min="0" className="input-field" value={productForm.sell_price} onChange={e => setProductForm({...productForm, sell_price: parseInt(e.target.value)})} />
+                  <NumericInput 
+                    value={productForm.sell_price} 
+                    onChange={val => setProductForm({...productForm, sell_price: val})} 
+                    prefix="Rp"
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Stok Awal</label>
-                  <input type="number" required min="0" className="input-field" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: parseInt(e.target.value)})} />
+                  <NumericInput 
+                    value={productForm.stock} 
+                    onChange={val => setProductForm({...productForm, stock: val})} 
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-8">

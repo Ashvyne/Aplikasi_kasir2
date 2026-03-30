@@ -5,36 +5,7 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const SETTINGS_KEY = 'cafepos_settings';
-
-const defaultSettings = {
-  // Store Info
-  storeName: 'CaféPOS',
-  storeAddress: '',
-  storePhone: '',
-  storeEmail: '',
-  storeFooter: 'Terima kasih telah berkunjung!',
-  // Tax & Fees
-  taxRate: 10,
-  serviceChargeRate: 5,
-  taxEnabled: true,
-  serviceChargeEnabled: true,
-  // Appearance
-  theme: 'dark',
-  primaryColor: 'gold',
-  // Notifications
-  kitchenSound: true,
-  orderAlerts: true,
-};
-
-export function useSettings() {
-  const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-  return { ...defaultSettings, ...saved };
-}
-
-export function saveSettings(settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-}
+import { getSettings, saveSettings, defaultSettings, SETTINGS_KEY } from '../utils/settings';
 
 const TABS = [
   { id: 'store',      label: 'Toko',        icon: Store },
@@ -163,6 +134,10 @@ export default function SettingsPage() {
               <div>
                 <label className={labelClass}>No. Telepon</label>
                 <input className={inputClass} value={settings.storePhone} onChange={e => update('storePhone', e.target.value)} placeholder="+62 812 xxxx xxxx" />
+              </div>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Deskripsi Toko (Slogan)</label>
+                <input className={inputClass} value={settings.storeDescription} onChange={e => update('storeDescription', e.target.value)} placeholder="Premium Coffee & Eatery" />
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>Alamat</label>

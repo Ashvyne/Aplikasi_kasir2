@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -57,6 +58,11 @@ export default function Sidebar({ isOpen, onClose }) {
       label: 'Laporan',
       path: '/reports',
       icon: BarChart3,
+    },
+    {
+      label: 'Riwayat Transaksi',
+      path: '/transactions',
+      icon: FileText,
     },
     {
       label: 'Pengaturan',
