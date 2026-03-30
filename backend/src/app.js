@@ -181,71 +181,13 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/stockin', require('./routes/stockin'));
 
 // ============ PAGE ROUTES ============
-// Serve HTML pages
-
-// Login pages - Role selection
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Login Admin Barang
-app.get('/login-barang', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login-barang.html'));
-});
-
-app.get('/login-barang.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login-barang.html'));
-});
-
-// Login Admin Kasir
-app.get('/login-kasir', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
-});
-
-app.get('/login-kasir.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login-kasir.html'));
-});
-
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Dashboard page routes - serve index.html dan biarkan frontend handle routing dengan JavaScript
-// Semua routes ini serve file yang sama (index.html) - SPA pattern
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/products', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/stockin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/stock', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/pos', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/transactions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/reports', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Main dashboard (default)
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/', (req, res) => {
+// Serve index.html for SPA routing
+// Semua routes selain /api dan /uploads akan diarahkan ke frontend React
+app.get('*', (req, res, next) => {
+  // Jika request ke API, biarkan API handler yang handle (next)
+  if (req.url.startsWith('/api/') || req.url.startsWith('/uploads/')) {
+    return next();
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -265,34 +207,10 @@ app.get('/favicon.ico', (req, res) => {
   res.status(204).end();
 });
 
-// ============ 404 HANDLER ============
-// Main index route - check auth dan redirect accordingly
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.use((req, res) => {
-  // Don't log 404 for static files (images, css, js, etc) - they should be handled by express.static
-  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
-  const isStaticFile = staticExtensions.some(ext => req.url.toLowerCase().includes(ext));
-  const isUploadRequest = req.url.toLowerCase().startsWith('/uploads/');
-  
-  if (req.url.startsWith('/api/')) {
-    console.warn('❌ 404 API Not Found:', req.method, req.url);
-    return res.status(404).json({ message: 'API Route not found', path: req.url });
-  }
-  
-  // Only log non-static file 404s
-  if (!isStaticFile && !isUploadRequest) {
-    console.warn('⚠️ Route not found:', req.method, req.url);
-  }
-  
-  // Serve index.html for SPA routing
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// No 404 handler needed for pages as we use catch-all above, 
+// but we handle missing API routes specifically.
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API Route not found', path: req.url });
 });
 
 // ============ ERROR HANDLER ============
