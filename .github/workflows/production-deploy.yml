@@ -43,6 +43,11 @@ jobs:
                     echo "Warning: .env file not found"
                   fi
 
+            - name: Stop and remove legacy container
+              run: |
+                  sudo docker stop kasir-prod || true
+                  sudo docker rm kasir-prod || true
+
             - name: Deploy with Docker Compose
               run: |
                   sudo IMAGE_TAG=${{ steps.get_tag.outputs.tag }} docker-compose -f docker-compose.yml up -d --build
