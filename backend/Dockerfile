@@ -1,10 +1,4 @@
-# =====================================
-# DOCKERFILE FOR APLIKASI KASIR MODERN
-# =====================================
-# Multi-stage build for production optimization
-
-# Stage 1: Base
-FROM node:18-alpine AS base
+FROM node:18-alpine
 
 # Install dependencies for node-gyp (needed for bcrypt, sqlite3)
 RUN apk add --no-cache \
@@ -19,17 +13,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Stage 2: Dependencies
-FROM base AS dependencies
-
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
-
-# Stage 3: Production
-FROM base AS production
-
-# Copy only production dependencies
-COPY package*.json ./
+# Install ONLY production dependencies
 RUN npm ci --only=production
 
 # Copy application code
@@ -45,10 +29,10 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nodejs
 
-# Expose port
+# Expose port (Internal to Docker network)
 EXPOSE 3000
 
-# Health check
+# Health check setup for internal API health route
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 

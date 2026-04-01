@@ -131,8 +131,7 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-// Serve static files dari public folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files dihapus (dipindah ke frontend)
 
 // Serve uploads folder
 app.use('/uploads', express.static(uploadsDir, {
@@ -180,16 +179,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 // Stock In (Barang Masuk) routes
 app.use('/api/stockin', require('./routes/stockin'));
 
-// ============ PAGE ROUTES ============
-// Serve index.html for SPA routing
-// Semua routes selain /api dan /uploads akan diarahkan ke frontend React
-app.get('*', (req, res, next) => {
-  // Jika request ke API, biarkan API handler yang handle (next)
-  if (req.url.startsWith('/api/') || req.url.startsWith('/uploads/')) {
-    return next();
-  }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Serve index.html dihapus (frontend menangani routing)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -231,15 +221,9 @@ app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║                 🚀Aplikasi Kasir Modern Berjalan!                   ║
+║                 🚀 API Server Kasir Berjalan!                        ║
 ║                                                                      ║
-║   Server     : http://localhost:${PORT}                              ║
-║   Login      : http://localhost:${PORT}/login                        ║
-║   Dashboard  : http://localhost:${PORT}/                             ║
-║                                                                      ║
-║   Demo Credentials:                                                  ║
-║     • Username : admin                                               ║
-║     • Password : 123456                                              ║
+║   API URL    : http://localhost:${PORT}/api                          ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
   `);

@@ -35,15 +35,6 @@ jobs:
                   echo "tag=$NEXT_TAG" >> $GITHUB_OUTPUT
                   echo "Next production tag: $NEXT_TAG"
 
-            - name: Build Docker image
-              run: |
-                  sudo docker build \
-                    --no-cache \
-                    --target production \
-                    -t ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }} \
-                    -f ./Dockerfile \
-                    .
-
             - name: Copy environment file
               run: |
                   if [ -f .env ]; then
@@ -52,41 +43,34 @@ jobs:
                     echo "Warning: .env file not found"
                   fi
 
-            - name: Stop and remove old container
+            - name: Deploy with Docker Compose
               run: |
-                  sudo docker stop kasir-prod || true
-                  sudo docker rm kasir-prod || true
+                  sudo IMAGE_TAG=${{ steps.get_tag.outputs.tag }} docker-compose -f docker-compose.yml up -d --build
 
-            - name: Deploy production container
+            - name: Wait for containers to be healthy
               run: |
-                  sudo docker run -d \
-                    --name kasir-prod \
-                    --restart unless-stopped \
-                    -p 3000:3000 \
-                    -v /data/prod_kasir/uploads:/app/src/public/uploads \
-                    --env-file /opt/Aplikasi_kasir2/.env \
-                    ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}
-
-            - name: Wait for container to be healthy
-              run: |
-                  echo "Waiting for container to start..."
+                  echo "Waiting for containers to start..."
                   sleep 10
-                  sudo docker ps | grep kasir-prod
+                  sudo docker-compose -f docker-compose.yml ps
 
             - name: Check container logs
               if: always()
               run: |
-                  echo "Container logs:"
-                  sudo docker logs kasir-prod --tail 50
+                  echo "Backend Logs:"
+                  sudo docker logs kasir-prod-backend --tail 50
+                  echo "Frontend Logs:"
+                  sudo docker logs kasir-prod-frontend --tail 50
 
             - name: Clean up old images
               run: |
-                  echo "Cleaning up old production images..."
-                  sudo docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | \
-                    grep -E '^[0-9]+$' | \
-                    sort -rn | \
-                    tail -n +3 | \
-                    xargs -I {} sudo docker rmi ${{ env.IMAGE_NAME }}:{} 2>/dev/null || true
+                  echo "Cleaning up old production images (backend)..."
+                  sudo docker images kasir-prod-backend --format "{{.Tag}}" | \
+                    grep -E '^[0-9]+$' | sort -rn | tail -n +3 | \
+                    xargs -I {} sudo docker rmi kasir-prod-backend:{} 2>/dev/null || true
+                  echo "Cleaning up old production images (frontend)..."
+                  sudo docker images kasir-prod-frontend --format "{{.Tag}}" | \
+                    grep -E '^[0-9]+$' | sort -rn | tail -n +3 | \
+                    xargs -I {} sudo docker rmi kasir-prod-frontend:{} 2>/dev/null || true
                   echo "Cleanup completed"
 
             - name: Deployment summary
@@ -95,9 +79,9 @@ jobs:
                   echo "Production Deployment Summary"
                   echo "================================"
                   echo "Branch: main"
-                  echo "Image: ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}"
-                  echo "Container: kasir-prod"
-                  echo "Port: 3000"
+                  echo "Tag/Version: ${{ steps.get_tag.outputs.tag }}"
+                  echo "Containers: kasir-prod-frontend, kasir-prod-backend"
+                  echo "Port: 3000 (Frontend Nginx)"
                   echo "Directory: /opt/Aplikasi_kasir2"
                   echo "Uploads: /data/prod_kasir/uploads"
                   echo "================================"
