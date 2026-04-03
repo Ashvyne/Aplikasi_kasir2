@@ -346,7 +346,7 @@ exports.updateOrderStatus = async (req, res) => {
 exports.processPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { paidAmount, paymentMethod } = req.body;
+    const { paidAmount, paymentMethod, keepActive } = req.body;
 
     if (!paidAmount || !paymentMethod) {
       return res.status(400).json({ success: false, message: 'Paid amount and payment method required' });
@@ -359,16 +359,22 @@ exports.processPayment = async (req, res) => {
 
     const changeAmount = paidAmount - order.totalAmount;
 
-    await order.update({
+    const updateData = {
       paidAmount,
       changeAmount: Math.max(0, changeAmount),
       paymentMethod,
-      paidAt: new Date(),
-      status: 'completed'
-    });
+      paidAt: new Date()
+    };
+
+    if (!keepActive) {
+      updateData.status = 'completed';
+    }
+
+    await order.update(updateData);
 
     // Update table status to cleaning so staff knows to wipe it down
-    if (order.tableId) {
+    // ONLY if order is completed
+    if (!keepActive && order.tableId) {
       await RestaurantTable.update(
         { status: 'cleaning', currentOrderId: null },
         { where: { id: order.tableId } }

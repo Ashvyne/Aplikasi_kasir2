@@ -4,17 +4,17 @@
  * ============================================
  * 
  * Comprehensive role-based access control system
- * with clear role enforcement for Item User and Cashier
+ * with clear role enforcement: Admin, Cashier, Kitchen, Customer
  */
 
 const jwt = require('jsonwebtoken');
 
-// ============ DEFAULT ROLE DEFINITIONS ============
+// ============ ROLE DEFINITIONS ============
 const ROLES = {
-  ITEM_USER: 'item_user',      // Can access inventory/product management
-  CASHIER: 'cashier',          // Can access POS/transaction management
-  ADMIN_BARANG: 'admin_barang', // Legacy: maps to item_user
-  ADMIN_KASIR: 'admin_kasir'    // Legacy: maps to cashier
+  ADMIN: 'admin',
+  CASHIER: 'cashier',
+  KITCHEN: 'kitchen',
+  CUSTOMER: 'customer'
 };
 
 // ============ TOKEN VERIFICATION ============
@@ -58,135 +58,80 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
-// ============ ITEM USER AUTHORIZATION ============
-/**
- * Restrict access to Item User (Inventory Management)
- * Can access: Products, Stock In, Product Dashboard
- * Cannot access: Cashier/POS, Transactions
- */
-exports.requireItemUser = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ 
-      success: false,
-      error: 'Unauthorized - No user found',
-      message: 'Silakan login terlebih dahulu' 
-    });
-  }
-  
-  // Allowing all typical roles during testing/development to prevent 403 blocks
-  const itemUserRoles = [ROLES.ITEM_USER, ROLES.ADMIN_BARANG, ROLES.ADMIN_KASIR, ROLES.CASHIER, 'admin'];
-  
-  if (!itemUserRoles.includes(req.user.role)) {
-    console.warn(`❌ Access Denied: User ${req.user.username} (${req.user.role}) attempted to access Item User area`);
+// ============ ADMIN AUTHORIZATION ============
+exports.requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== ROLES.ADMIN) {
     return res.status(403).json({ 
       success: false,
-      error: 'Access Denied',
-      message: 'Anda tidak memiliki akses ke fitur ini. Hanya Staff Barang/Inventory yang dapat mengakses.',
-      requiredRole: 'Item User',
-      userRole: req.user.role
+      message: 'Akses ditolak. Membutuhkan hak akses Admin.'
     });
   }
-  
-  console.log(`✓ Item User access granted to ${req.user.username}`);
   next();
 };
-
-exports.requireAdminBarang = exports.requireItemUser; // Legacy alias
 
 // ============ CASHIER AUTHORIZATION ============
-/**
- * Restrict access to Cashier (POS Management)
- * Can access: Transactions, POS Dashboard
- * Cannot access: Product Management, Inventory, Stock In
- */
 exports.requireCashier = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ 
-      success: false,
-      error: 'Unauthorized - No user found',
-      message: 'Silakan login terlebih dahulu' 
-    });
-  }
-  
-  const cashierRoles = [ROLES.CASHIER, ROLES.ADMIN_KASIR];
-  
-  if (!cashierRoles.includes(req.user.role)) {
-    console.warn(`❌ Access Denied: User ${req.user.username} (${req.user.role}) attempted to access Cashier area`);
+  if (!req.user || ![ROLES.ADMIN, ROLES.CASHIER].includes(req.user.role)) {
     return res.status(403).json({ 
       success: false,
-      error: 'Access Denied',
-      message: 'Anda tidak memiliki akses ke fitur ini. Hanya Cashier/POS yang dapat mengakses.',
-      requiredRole: 'Cashier',
-      userRole: req.user.role
+      message: 'Akses ditolak. Membutuhkan hak akses Kasir.'
     });
   }
-  
-  console.log(`✓ Cashier access granted to ${req.user.username}`);
   next();
 };
 
-exports.requireAdminKasir = exports.requireCashier; // Legacy alias
+// ============ KITCHEN AUTHORIZATION ============
+exports.requireKitchen = (req, res, next) => {
+  if (!req.user || ![ROLES.ADMIN, ROLES.KITCHEN].includes(req.user.role)) {
+    return res.status(403).json({ 
+      success: false,
+      message: 'Akses ditolak. Membutuhkan hak akses Dapur.'
+    });
+  }
+  next();
+};
+
+// ============ CUSTOMER AUTHORIZATION ============
+exports.requireCustomer = (req, res, next) => {
+  if (!req.user || req.user.role !== ROLES.CUSTOMER) {
+    return res.status(403).json({ 
+      success: false,
+      message: 'Akses ditolak. Membutuhkan hak akses Pelanggan.'
+    });
+  }
+  next();
+};
 
 // ============ FLEXIBLE ROLE CHECKING ============
-/**
- * Check if user has one of the allowed roles
- * Dynamic: Can be used for any role combination
- */
 exports.requireRole = (allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ 
         success: false,
-        error: 'Unauthorized',
         message: 'Silakan login terlebih dahulu' 
       });
     }
     
     const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
     
-    if (!roles.includes(req.user.role)) {
-      console.warn(`❌ Access Denied: User ${req.user.username} (${req.user.role}) required: ${roles.join(', ')}`);
+    // Admin has access to everything by default except explicitly denied
+    // If you want pure strict checking, remove the "roles.includes('admin')" assuming 'admin' wasn't passed.
+    // In this app, Admin runs everything:
+    if (!roles.includes(req.user.role) && req.user.role !== ROLES.ADMIN) {
       return res.status(403).json({ 
         success: false,
-        error: 'Access Denied',
         message: 'Anda tidak memiliki akses ke fitur ini',
-        requiredRoles: roles,
-        userRole: req.user.role
+        requiredRoles: roles
       });
     }
     
-    console.log(`✓ Role check passed for ${req.user.username}`);
     next();
   };
 };
 
-// ============ UTILITY FUNCTIONS ============
-/**
- * Check if user is Item User
- */
-exports.isItemUser = (user) => {
-  return user && [ROLES.ITEM_USER, ROLES.ADMIN_BARANG].includes(user.role);
-};
+// Legacy exports for backwards compatibility during migration
+exports.requireItemUser = exports.requireAdmin;
+exports.requireAdminBarang = exports.requireAdmin;
+exports.requireAdminKasir = exports.requireCashier;
 
-/**
- * Check if user is Cashier
- */
-exports.isCashier = (user) => {
-  return user && [ROLES.CASHIER, ROLES.ADMIN_KASIR].includes(user.role);
-};
-
-/**
- * Map legacy roles to new role names
- */
-exports.normalizeRole = (role) => {
-  const roleMap = {
-    'admin_barang': ROLES.ITEM_USER,
-    'item_user': ROLES.ITEM_USER,
-    'admin_kasir': ROLES.CASHIER,
-    'cashier': ROLES.CASHIER
-  };
-  return roleMap[role] || role;
-};
-
-// Export role definitions for use in other files
 exports.ROLES = ROLES;

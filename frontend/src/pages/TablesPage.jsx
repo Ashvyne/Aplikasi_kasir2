@@ -283,6 +283,9 @@ export default function TablesPage() {
             const colors = statusColors[table.status] || { icon: 'text-gray-500', badge: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' };
             const currentOrder = table.orders?.[0];
             const kitchenDone = !currentOrder || ['ready', 'delivered', 'served'].includes(currentOrder.kitchenStatus);
+            
+            // Check if customer already paid (Customer app QRIS flow)
+            const isPaid = currentOrder && parseFloat(currentOrder.paidAmount || 0) > 0 && parseFloat(currentOrder.paidAmount || 0) >= parseFloat(currentOrder.totalAmount || 0);
 
             return (
               <div
@@ -328,26 +331,39 @@ export default function TablesPage() {
                 {/* Occupied: Bayar & Selesai */}
                 {table.status === 'occupied' && currentOrder && (
                   <div className="mt-3 space-y-2">
-                    <button
-                      onClick={() => handleOpenPayment(currentOrder)}
-                      className="w-full flex items-center justify-center gap-2 bg-accent-gold hover:bg-yellow-400 text-black font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow-glow"
-                    >
-                      <CreditCard size={15} />
-                      Bayar Sekarang
-                    </button>
+                    {!isPaid ? (
+                      <button
+                        onClick={() => handleOpenPayment(currentOrder)}
+                        className="w-full flex items-center justify-center gap-2 bg-accent-gold hover:bg-yellow-400 text-black font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow-glow"
+                      >
+                        <CreditCard size={15} />
+                        Bayar Sekarang
+                      </button>
+                    ) : (
+                      <div className="w-full flex items-center justify-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-bold text-sm py-2 px-3 rounded-lg transition-colors">
+                        <CheckCircle2 size={15} />
+                        Lunas ({currentOrder.paymentMethod === 'digital' ? 'QRIS' : currentOrder.paymentMethod === 'card' ? 'Kartu' : 'Tunai'})
+                      </div>
+                    )}
                     
                     <div className="relative group">
                       <button
-                        onClick={() => kitchenDone ? handleMarkCleaning(table) : null}
-                        disabled={true} // Disabled because they MUST pay first in the new flow
-                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500`}
+                        onClick={() => (kitchenDone && isPaid) ? handleMarkCleaning(table) : null}
+                        disabled={!isPaid}
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-2 px-3 rounded-lg transition-colors shadow ${
+                          !isPaid 
+                            ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                            : 'bg-white dark:bg-bg-darker text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
                       >
                         <Sparkles size={15} />
                         Selesai &amp; Bersihkan
                       </button>
-                      <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                        🔒 Silakan proses pembayaran dahulu
-                      </div>
+                      {!isPaid && (
+                        <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          🔒 Silakan proses pembayaran dahulu
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

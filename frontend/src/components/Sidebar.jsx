@@ -29,26 +29,31 @@ export default function Sidebar({ isOpen, onClose }) {
       label: 'Dashboard',
       path: '/dashboard',
       icon: LayoutDashboard,
+      roles: ['admin', 'cashier']
     },
     {
       label: 'POS / Pesanan',
       path: '/pos',
       icon: ShoppingCart,
       badge: 'new',
+      roles: ['admin', 'cashier']
     },
     {
       label: 'Meja',
       path: '/tables',
       icon: UtensilsCrossed,
+      roles: ['admin', 'cashier']
     },
     {
       label: 'Dapur',
       path: '/kitchen',
       icon: ChefHat,
+      roles: ['admin', 'kitchen']
     },
     {
       label: 'Menu',
       icon: Settings,
+      roles: ['admin'],
       submenu: [
         { label: 'Kategori', path: '/menu/categories' },
         { label: 'Produk', path: '/menu/products' },
@@ -58,18 +63,25 @@ export default function Sidebar({ isOpen, onClose }) {
       label: 'Laporan',
       path: '/reports',
       icon: BarChart3,
+      roles: ['admin']
     },
     {
       label: 'Riwayat Transaksi',
       path: '/transactions',
       icon: FileText,
+      roles: ['admin', 'cashier']
     },
     {
       label: 'Pengaturan',
       path: '/settings',
       icon: Settings,
+      roles: ['admin']
     },
   ];
+
+  const allowedMenus = menuItems.filter(item => 
+    !item.roles || item.roles.includes(user?.role || 'admin')
+  );
 
   const handleLogout = () => {
     logout();
@@ -117,7 +129,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-          {menuItems.map((item, idx) => (
+          {allowedMenus.map((item, idx) => (
             <div key={idx}>
               {item.submenu ? (
                 <>

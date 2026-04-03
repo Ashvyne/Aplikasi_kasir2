@@ -91,7 +91,7 @@ const Order = sequelize.define('Order', {
     defaultValue: 0
   },
   paymentMethod: {
-    type: DataTypes.ENUM('cash', 'card', 'digital', 'split'),
+    type: DataTypes.ENUM('cash', 'card', 'digital', 'split', 'transfer', 'pay_at_cashier'),
     allowNull: true,
     defaultValue: null
   },

@@ -29,8 +29,8 @@ const User = sequelize.define('User', {
   role: {
     type: DataTypes.STRING(100),
     allowNull: false,
-    defaultValue: 'admin_barang',
-    comment: 'Role pengguna: admin_barang, admin_kasir, borrower'
+    defaultValue: 'admin',
+    comment: 'Role pengguna: admin, cashier, kitchen, customer'
   }
 }, {
   tableName: 'users',
