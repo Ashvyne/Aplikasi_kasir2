@@ -101,6 +101,39 @@ exports.logout = async (req, res) => {
   res.json({ message: 'Logout berhasil' });
 };
 
+// Change Password
+exports.changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, error: 'Semua field wajib diisi' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ success: false, error: 'Password baru minimal 6 karakter' });
+  }
+
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User tidak ditemukan' });
+    }
+
+    const isValid = await user.validatePassword(currentPassword);
+    if (!isValid) {
+      return res.status(401).json({ success: false, error: 'Password saat ini salah' });
+    }
+
+    user.password = newPassword; // beforeUpdate hook will hash it
+    await user.save();
+
+    res.json({ success: true, message: 'Password berhasil diubah' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // Get current user
 exports.getCurrentUser = async (req, res) => {
   try {

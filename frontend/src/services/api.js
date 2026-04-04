@@ -47,6 +47,8 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('token');
   },
+  changePassword: (currentPassword, newPassword) =>
+    api.put('/auth/change-password', { currentPassword, newPassword }),
 };
 
 // ============ DASHBOARD API ============

@@ -31,6 +31,9 @@ router.post('/logout-device/:sessionId', verifyToken, (req, res) => {
   res.json({ success: true, message: 'Device logged out locally' });
 });
 
+// ============ CHANGE PASSWORD ============
+router.put('/change-password', verifyToken, authController.changePassword);
+
 // ============ GET CURRENT USER ============
 router.get('/me', verifyToken, authController.getCurrentUser);
 

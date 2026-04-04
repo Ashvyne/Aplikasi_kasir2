@@ -6,6 +6,7 @@ import {
 import Swal from 'sweetalert2';
 
 import { getSettings, saveSettings, defaultSettings, SETTINGS_KEY } from '../utils/settings';
+import { authService } from '../services/api';
 
 const TABS = [
   { id: 'store',      label: 'Toko',        icon: Store },
@@ -20,6 +21,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' });
+  const [changingPass, setChangingPass] = useState(false);
 
   const update = (key, value) => setSettings(prev => ({ ...prev, [key]: value }));
 
@@ -61,9 +63,17 @@ export default function SettingsPage() {
     if (passwords.newPass.length < 6) {
       return Swal.fire('Error', 'Password minimal 6 karakter.', 'error');
     }
-    // Would call API here — for now just show success
-    Swal.fire({ title: 'Berhasil', text: 'Password berhasil diubah.', icon: 'success', timer: 1500, showConfirmButton: false });
-    setPasswords({ current: '', newPass: '', confirm: '' });
+    setChangingPass(true);
+    try {
+      await authService.changePassword(passwords.current, passwords.newPass);
+      Swal.fire({ title: 'Berhasil!', text: 'Password berhasil diubah.', icon: 'success', timer: 1800, showConfirmButton: false });
+      setPasswords({ current: '', newPass: '', confirm: '' });
+    } catch (err) {
+      const msg = err?.error || err?.message || 'Gagal mengubah password. Coba lagi.';
+      Swal.fire('Gagal', msg, 'error');
+    } finally {
+      setChangingPass(false);
+    }
   };
 
   useEffect(() => {
@@ -331,8 +341,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ))}
-              <button type="submit" className="btn-primary flex items-center gap-2 px-6">
-                <Shield size={16} /> Ubah Password
+              <button type="submit" disabled={changingPass} className="btn-primary flex items-center gap-2 px-6 disabled:opacity-60 disabled:cursor-not-allowed">
+                {changingPass ? <span className="animate-spin border-2 border-black border-t-transparent rounded-full w-4 h-4" /> : <Shield size={16} />}
+                {changingPass ? 'Menyimpan...' : 'Ubah Password'}
               </button>
             </form>
           </>
