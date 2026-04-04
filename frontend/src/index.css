@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply font-inter;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-poppins font-bold;
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-accent-gold text-black rounded-lg font-semibold hover:bg-accent-yellow transition-all duration-200 shadow-md hover:shadow-lg dark:shadow-glow dark:hover:shadow-glow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-200 dark:bg-bg-light text-gray-800 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-bg-darker transition-all duration-200 border border-gray-300 dark:border-bg-light;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all duration-200;
+  }
+
+  .btn-success {
+    @apply px-4 py-2 bg-accent-green text-white rounded-lg font-semibold hover:bg-accent-emerald transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white dark:bg-bg-light rounded-2xl p-6 shadow-md dark:shadow-glow border border-gray-200 dark:border-gray-700/30 backdrop-blur-lg transition-colors duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:bg-gray-50 dark:hover:bg-bg-darker hover:shadow-lg dark:hover:shadow-glow-lg transition-all duration-300 cursor-pointer;
+  }
+
+  .input-base, .input-field {
+    @apply w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold/50 transition-all;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFD700;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FFC107;
+}
+
+/* Smooth animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

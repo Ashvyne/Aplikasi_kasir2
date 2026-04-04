@@ -35,15 +35,6 @@ jobs:
                   echo "tag=$NEXT_TAG" >> $GITHUB_OUTPUT
                   echo "Next development tag: $NEXT_TAG"
 
-            - name: Build Docker image
-              run: |
-                  sudo docker build \
-                    --no-cache \
-                    --target production \
-                    -t ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }} \
-                    -f ./Dockerfile \
-                    .
-
             - name: Copy environment file
               run: |
                   if [ -f .env ]; then
@@ -52,41 +43,39 @@ jobs:
                     echo "Warning: .env file not found"
                   fi
 
-            - name: Stop and remove old container
+            - name: Stop and remove legacy container
               run: |
                   sudo docker stop kasir-dev || true
                   sudo docker rm kasir-dev || true
 
-            - name: Deploy development container
+            - name: Deploy with Docker Compose
               run: |
-                  sudo docker run -d \
-                    --name kasir-dev \
-                    --restart unless-stopped \
-                    -p 3001:3001 \
-                    -v /data/dev_kasir/uploads:/app/src/public/uploads \
-                    --env-file /opt/dev-Aplikasi_kasir2/.env \
-                    ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}
+                  sudo IMAGE_TAG=${{ steps.get_tag.outputs.tag }} docker-compose -f docker-compose.dev.yml up -d --build
 
-            - name: Wait for container to be healthy
+            - name: Wait for containers to be healthy
               run: |
-                  echo "Waiting for container to start..."
+                  echo "Waiting for containers to start..."
                   sleep 10
-                  sudo docker ps | grep kasir-dev
+                  sudo docker-compose -f docker-compose.dev.yml ps
 
             - name: Check container logs
               if: always()
               run: |
-                  echo "Container logs:"
-                  sudo docker logs kasir-dev --tail 50
+                  echo "Backend Logs:"
+                  sudo docker logs kasir-dev-backend --tail 50
+                  echo "Frontend Logs:"
+                  sudo docker logs kasir-dev-frontend --tail 50
 
             - name: Clean up old images
               run: |
-                  echo "Cleaning up old development images..."
-                  sudo docker images ${{ env.IMAGE_NAME }} --format "{{.Tag}}" | \
-                    grep -E '^[0-9]+$' | \
-                    sort -rn | \
-                    tail -n +4 | \
-                    xargs -I {} sudo docker rmi ${{ env.IMAGE_NAME }}:{} 2>/dev/null || true
+                  echo "Cleaning up old development images (backend)..."
+                  sudo docker images kasir-dev-backend --format "{{.Tag}}" | \
+                    grep -E '^[0-9]+$' | sort -rn | tail -n +4 | \
+                    xargs -I {} sudo docker rmi kasir-dev-backend:{} 2>/dev/null || true
+                  echo "Cleaning up old development images (frontend)..."
+                  sudo docker images kasir-dev-frontend --format "{{.Tag}}" | \
+                    grep -E '^[0-9]+$' | sort -rn | tail -n +4 | \
+                    xargs -I {} sudo docker rmi kasir-dev-frontend:{} 2>/dev/null || true
                   echo "Cleanup completed"
 
             - name: Deployment summary
@@ -95,9 +84,9 @@ jobs:
                   echo "Development Deployment Summary"
                   echo "================================"
                   echo "Branch: development"
-                  echo "Image: ${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.tag }}"
-                  echo "Container: kasir-dev"
-                  echo "Port: 3001"
+                  echo "Tag/Version: ${{ steps.get_tag.outputs.tag }}"
+                  echo "Containers: kasir-dev-frontend, kasir-dev-backend"
+                  echo "Port: 3001 (Frontend Nginx)"
                   echo "Directory: /opt/dev-Aplikasi_kasir2"
                   echo "Uploads: /data/dev_kasir/uploads"
                   echo "================================"

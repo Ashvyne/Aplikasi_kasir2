@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: kasir-dev-backend:${IMAGE_TAG:-latest}
+    container_name: kasir-dev-backend
+    restart: unless-stopped
+    env_file:
+      - /opt/dev-Aplikasi_kasir2/.env
+    volumes:
+      - /data/dev_kasir/uploads:/app/src/public/uploads
+    networks:
+      - kasir_dev_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: kasir-dev-frontend:${IMAGE_TAG:-latest}
+    container_name: kasir-dev-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    networks:
+      - kasir_dev_network
+
+networks:
+  kasir_dev_network:
+    name: kasir_dev_network
+    driver: bridge
