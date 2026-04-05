@@ -12,6 +12,7 @@ import MenuPage from './pages/MenuPage';
 import ReportsPage from './pages/ReportsPage';
 import TransactionsPage from './pages/TransactionsPage';
 import SettingsPage from './pages/SettingsPage';
+import StockPage from './pages/StockPage';
 
 // Customer Pages
 import CustomerLayout from './layouts/CustomerLayout';
@@ -129,6 +130,10 @@ export default function App() {
 
         <Route path="/settings" element={
           <ProtectedRoute allowedRoles={['admin']}><SettingsPage /></ProtectedRoute>
+        } />
+
+        <Route path="/stock" element={
+          <ProtectedRoute allowedRoles={['admin']}><StockPage /></ProtectedRoute>
         } />
 
         {/* Default Catch-All */}

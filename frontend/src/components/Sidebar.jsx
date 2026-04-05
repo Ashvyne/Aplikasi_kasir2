@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   FileText,
+  Package,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -58,6 +59,12 @@ export default function Sidebar({ isOpen, onClose }) {
         { label: 'Kategori', path: '/menu/categories' },
         { label: 'Produk', path: '/menu/products' },
       ],
+    },
+    {
+      label: 'Stok',
+      path: '/stock',
+      icon: Package,
+      roles: ['admin']
     },
     {
       label: 'Laporan',

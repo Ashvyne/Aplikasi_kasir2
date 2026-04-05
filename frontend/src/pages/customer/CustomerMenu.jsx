@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrderStore } from '../../context/store';
 import { ShoppingBag, ChevronRight, Plus, Search } from 'lucide-react';
+import { getImageUrl } from '../../utils/helpers';
 
 export default function CustomerMenu() {
   const [categories, setCategories] = useState([]);
@@ -121,7 +122,7 @@ export default function CustomerMenu() {
                   {/* Thumbnail */}
                   <div className="w-full aspect-square rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 dark:from-bg-darker dark:to-gray-900 flex items-center justify-center mb-4 relative overflow-hidden">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                      <img src={getImageUrl(product.image_url)} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" onError={(e)=>{e.target.style.display='none';}} />
                     ) : (
                       <span className="text-5xl font-black text-gray-200 dark:text-gray-800 uppercase group-hover:scale-125 transition duration-500">
                         {product.name.charAt(0)}

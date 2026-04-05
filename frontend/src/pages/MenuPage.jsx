@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash2, LayoutGrid, List, Upload, Image as ImageIcon } from 'lucide-react';
 import { productService, categoryService, API_BASE } from '../services/api';
-import { formatCurrency } from '../utils/helpers';
+import { formatCurrency, getImageUrl } from '../utils/helpers';
 import NumericInput from '../components/NumericInput';
 import Swal from 'sweetalert2';
 
@@ -243,7 +243,7 @@ export default function MenuPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded overflow-hidden bg-gray-100 dark:bg-bg-darker flex-shrink-0 flex items-center justify-center">
                               {product.image_url ? (
-                                <img src={`${API_BASE.replace('/api', '')}${product.image_url}`} alt={product.name} className="w-full h-full object-cover" />
+                                <img src={getImageUrl(product.image_url)} alt={product.name} className="w-full h-full object-cover" onError={(e)=>{e.target.style.display='none';}} />
                               ) : (
                                 <ImageIcon size={20} className="text-gray-400" />
                               )}
@@ -376,7 +376,7 @@ export default function MenuPage() {
                     {productForm.imagePreview || productForm.image_url ? (
                       <>
                         <img 
-                          src={productForm.imagePreview || `${API_BASE.replace('/api', '')}${productForm.image_url}`} 
+                          src={productForm.imagePreview || getImageUrl(productForm.image_url)} 
                           alt="Preview" 
                           className="absolute inset-0 w-full h-full object-cover"
                         />

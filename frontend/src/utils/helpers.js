@@ -117,3 +117,21 @@ export const getKitchenStatusLabel = (status) => {
   };
   return labels[status] || status;
 };
+
+/**
+ * Resolves a product image URL to an absolute URL.
+ * Handles: full URLs (http/https), relative paths (/uploads/...), and null/empty.
+ */
+export const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return null;
+  // Already an absolute URL
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  // Relative path — prefix with backend URL
+  const backendUrl = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace('/api', '')
+    : 'http://localhost:3000';
+  const path = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return `${backendUrl}${path}`;
+};

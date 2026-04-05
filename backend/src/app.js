@@ -83,6 +83,10 @@ let dbInitialized = false;
     const { sequelize: db, initDatabase } = require('./config/database');
     sequelize = db;
     
+    // Register all models for synchronization
+    const models = require('./models');
+    console.log('📦 Models registered:', Object.keys(sequelize.models).join(', '));
+    
     // Connect ke database
     const connected = await initDatabase();
     if (!connected) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UtensilsCrossed, Plus, Edit, Trash2, MapPin, CheckCircle2, Sparkles, CreditCard, X, Banknote, Smartphone } from 'lucide-react';
+import { UtensilsCrossed, Plus, Edit, Trash2, MapPin, CheckCircle2, Sparkles, CreditCard, X, Banknote, Smartphone, Copy } from 'lucide-react';
 import { tableService, orderService } from '../services/api';
 import { getTableStatusColor, getTableStatusLabel, formatCurrency } from '../utils/helpers';
 import NumericInput from '../components/NumericInput';
@@ -116,6 +116,36 @@ export default function TablesPage() {
       } catch (error) {
         Swal.fire('Error', error.message || 'Gagal menghapus meja', 'error');
       }
+    }
+  };
+
+  const handleDuplicate = async (table) => {
+    try {
+      setLoading(true);
+      // Temukan nomor meja tertinggi untuk menyarankan nomor meja berikutnya
+      const maxTableNumber = Math.max(...tables.map(t => parseInt(t.tableNumber) || 0), 0);
+      
+      const duplicateData = {
+        tableNumber: maxTableNumber + 1,
+        tableName: `${table.tableName} (Copy)`,
+        capacity: table.capacity,
+        location: table.location || '',
+        surchargeAmount: parseFloat(table.surchargeAmount) || 0
+      };
+
+      await tableService.create(duplicateData);
+      Swal.fire({
+        title: 'Sukses',
+        text: `Meja ${table.tableName} berhasil diduplikat menjadi ${duplicateData.tableName}`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      loadTables();
+    } catch (error) {
+      Swal.fire('Error', error.message || 'Gagal menduplikat meja', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -389,6 +419,13 @@ export default function TablesPage() {
                     <Edit size={13} /> Edit
                   </button>
                   <button
+                    onClick={() => handleDuplicate(table)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400 text-xs font-semibold transition-colors"
+                    title="Duplikat Meja"
+                  >
+                    <Copy size={13} /> Copy
+                  </button>
+                  <button
                     onClick={() => handleDelete(table.id)}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                       table.status !== 'available'
@@ -415,42 +452,70 @@ export default function TablesPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Nomor Meja</label>
-                  <input type="number" required className="input-field" value={formData.tableNumber} onChange={e => setFormData({...formData, tableNumber: parseInt(e.target.value)})} />
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors">Nomor Meja</label>
+                  <input type="number" required className="input-field font-bold" placeholder="1" value={formData.tableNumber} onChange={e => setFormData({...formData, tableNumber: parseInt(e.target.value)})} />
+                  <p className="text-[10px] text-gray-500 flex items-center gap-1 pl-1"><Sparkles size={10} /> ID unik sistem</p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Kapasitas</label>
-                  <input type="number" required min="1" className="input-field" value={formData.capacity} onChange={e => setFormData({...formData, capacity: parseInt(e.target.value)})} />
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors">Kapasitas</label>
+                  <input type="number" required min="1" className="input-field font-bold" placeholder="4" value={formData.capacity} onChange={e => setFormData({...formData, capacity: parseInt(e.target.value)})} />
+                  <p className="text-[10px] text-gray-500 flex items-center gap-1 pl-1">👥 Maks. tamu</p>
                 </div>
               </div>
+
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Nama/Label Meja (contoh: Meja 1, VIP 2)</label>
-                <input type="text" required className="input-field" value={formData.tableName} onChange={e => setFormData({...formData, tableName: e.target.value})} />
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors">Nama / Label Meja</label>
+                <div className="relative group">
+                  <input type="text" required className="input-field pl-10" placeholder="Meja 1, VIP A, Outdoor 5" value={formData.tableName} onChange={e => setFormData({...formData, tableName: e.target.value})} />
+                  <UtensilsCrossed size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent-gold transition-colors" />
+                </div>
+                <div className="p-2.5 rounded-lg bg-blue-500/5 border border-blue-500/10 flex items-center gap-2 animate-in fade-in duration-300">
+                  <span className="text-xs">💡</span>
+                  <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Contoh: Meja 1, VIP A, atau Meja Taman 1.</p>
+                </div>
               </div>
+
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors">Lokasi / Area (opsional)</label>
-                <input type="text" className="input-field" placeholder="contoh: Indoor, Outdoor" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors">Lokasi / Area (Opsional)</label>
+                <div className="relative group">
+                  <input type="text" className="input-field pl-10" placeholder="Indoor, Outdoor, Lantai 2" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                  <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent-gold transition-colors" />
+                </div>
+                <div className="p-2.5 rounded-lg bg-green-500/5 border border-green-500/10 flex items-center gap-2 animate-in fade-in duration-300">
+                  <span className="text-xs">📍</span>
+                  <p className="text-[11px] text-green-600 dark:text-green-400 font-medium">Gunakan untuk mengelompokkan area meja.</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400 transition-colors flex items-center gap-2">
-                  Biaya Tambahan Meja (Rp)
-                  <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full">VIP / Premium</span>
+              
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors flex items-center justify-between">
+                  <span className="flex items-center gap-2">Biaya Tambahan Meja</span>
+                  <span className="text-[10px] uppercase tracking-wider bg-accent-gold/20 text-accent-gold font-bold px-2 py-0.5 rounded-md border border-accent-gold/30">VIP / Premium</span>
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1000"
-                  className="input-field"
-                  placeholder="0 = tidak ada biaya tambahan"
+                
+                <NumericInput
                   value={formData.surchargeAmount}
-                  onChange={e => setFormData({...formData, surchargeAmount: parseFloat(e.target.value) || 0})}
+                  onChange={val => setFormData({...formData, surchargeAmount: val})}
+                  prefix="Rp"
+                  placeholder="0"
+                  className="font-bold text-lg text-accent-gold !bg-accent-gold/5 border-accent-gold/30 focus:border-accent-gold"
                 />
-                {formData.surchargeAmount > 0 && (
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                    💰 Pelanggan di meja ini akan dikenakan biaya tambahan Rp {Number(formData.surchargeAmount).toLocaleString('id-ID')} per kunjungan.
-                  </p>
+
+                {formData.surchargeAmount > 0 ? (
+                  <div className="p-3 rounded-lg bg-accent-gold/10 border border-accent-gold/20 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <span className="text-lg">💰</span>
+                    <p className="text-xs text-accent-gold font-medium leading-relaxed">
+                      Pelanggan di meja ini akan dikenakan biaya tambahan <span className="font-bold underline">Rp {Number(formData.surchargeAmount).toLocaleString('id-ID')}</span> secara otomatis di setiap pesanan.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-lg bg-gray-500/5 border border-gray-500/10 flex items-center gap-2 animate-in fade-in duration-300">
+                    <span className="text-xs text-gray-500">ℹ️</span>
+                    <p className="text-[11px] text-gray-500 italic font-medium">Isi biaya jika ini adalah meja dengan fasilitas khusus (VIP).</p>
+                  </div>
                 )}
               </div>
+
               <div className="flex justify-end gap-3 mt-8">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Batal</button>
                 <button type="submit" className="btn-primary px-6">Simpan</button>
