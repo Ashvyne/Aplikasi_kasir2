@@ -5,6 +5,7 @@ import { formatCurrency, calculateOrderTotals } from '../utils/helpers';
 import NumericInput from '../components/NumericInput';
 import Receipt from '../components/Receipt';
 import Swal from 'sweetalert2';
+import { useAuthStore } from '../context/store';
 
 export default function POSPage() {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,8 @@ export default function POSPage() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  const { user } = useAuthStore();
   
   // Checkout State
   const [cartItems, setCartItems] = useState([]);
@@ -158,7 +161,7 @@ export default function POSPage() {
         tableId: orderType === 'dine_in' ? selectedTable : null,
         orderType,
         customerName: customerName || 'Pelanggan',
-        userId: 1
+        userId: user?.id || null
       });
       const orderId = res.data.id;
 
@@ -179,8 +182,9 @@ export default function POSPage() {
 
       const change = paymentMethod === 'cash' ? Math.max(0, paid - totalToPay) : 0;
       
-      // Store for receipt
-      setCompletedOrder(res.data);
+      // Store for receipt (fetch full populated order before showing)
+      const fullOrderResponse = await orderService.getById(orderId);
+      setCompletedOrder(fullOrderResponse.data || fullOrderResponse);
       
       Swal.fire({
         title: 'Pembayaran Berhasil! 🎉',
@@ -222,7 +226,7 @@ export default function POSPage() {
         tableId: orderType === 'dine_in' ? selectedTable : null,
         orderType,
         customerName: customerName || 'Pelanggan',
-        userId: 1
+        userId: user?.id || null
       });
       const orderId = res.data.id;
 

@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     try {
       const response = await authService.login(username, password);
-      
+
       // Backend returns: { success: true, message, token, sessionId, user }
       if (response.success && response.token && response.user) {
         const { user, token } = response;
@@ -133,14 +133,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-700/30">
-            <p className="text-xs text-gray-500 mb-3">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-gray-400 bg-bg-darker p-3 rounded-lg">
-              <p>👤 Username: <span className="text-accent-gold">admin</span></p>
-              <p>🔑 Password: <span className="text-accent-gold">123456</span></p>
-            </div>
-          </div>
+
         </div>
 
         {/* Footer */}

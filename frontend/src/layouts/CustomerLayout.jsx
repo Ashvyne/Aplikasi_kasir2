@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UtensilsCrossed, LogOut } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function CustomerLayout({ children }) {
   const { user, logout } = useAuth();
@@ -9,8 +10,24 @@ export default function CustomerLayout({ children }) {
   const location = useLocation();
 
   const handleLogout = () => {
-    logout();
-    navigate('/customer/login');
+    Swal.fire({
+      title: 'Keluar Akun?',
+      text: 'Yakin mau keluar dari pelanggan CafePOS?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Keluar',
+      cancelButtonText: 'Batal',
+      customClass: {
+        confirmButton: 'font-bold',
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout();
+        navigate('/customer/login');
+      }
+    });
   };
 
   // Auto scroll to top on route change
@@ -32,20 +49,19 @@ export default function CustomerLayout({ children }) {
           </div>
         </div>
         
-        {user && (
-          <div className="flex items-center space-x-4 bg-gray-50 dark:bg-bg-dark px-3 py-1.5 rounded-full border border-gray-200/50 dark:border-gray-800">
-            <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-              Hai, {user.name?.split(' ')[0] || user.username}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="p-1.5 bg-white dark:bg-black text-gray-500 hover:text-red-500 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95"
-              title="Keluar"
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center space-x-4 bg-gray-50 dark:bg-bg-dark px-3 py-1.5 rounded-full border border-gray-200/50 dark:border-gray-800">
+          <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+            {user ? `Hai, ${user.name?.split(' ')[0] || user.username}` : 'Hai, Pelanggan'}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="px-3 py-1.5 flex items-center gap-1.5 bg-white dark:bg-black text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95 font-bold border border-gray-100 dark:border-gray-800"
+            title="Log Out"
+          >
+            <LogOut size={14} />
+            <span className="text-[10px] uppercase tracking-wider hidden sm:inline">Log Out</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}

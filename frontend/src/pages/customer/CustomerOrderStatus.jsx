@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Check, Utensils, Clock } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Check, Utensils, Clock, Receipt as ReceiptIcon } from 'lucide-react';
+import Receipt from '../../components/Receipt';
 
 export default function CustomerOrderStatus() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
+  const location = useLocation();
+  const [order, setOrder] = useState(location.state?.order || null);
+  const [showReceipt, setShowReceipt] = useState(false);
   
   useEffect(() => {
-    // In a real app, you might want to fetch order details by orderNumber (id)
-    // For now we just show a static success screen
-    setOrder({ orderNumber: id });
+    // If order is not in state, we might fetch it here
+    if (!order) {
+      setOrder({ orderNumber: id });
+    }
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [id, order]);
 
   return (
     <div className="flex-1 flex flex-col justify-center items-center py-12 px-6 bg-white dark:bg-black min-h-[calc(100vh-80px)] transition-colors duration-300 relative overflow-hidden">
@@ -42,12 +46,22 @@ export default function CustomerOrderStatus() {
           
           <div className="border-t-2 border-dashed border-gray-100 dark:border-gray-800 my-6" />
           
-          <div className="flex items-start gap-4 text-left bg-orange-50 dark:bg-orange-900/10 p-4 rounded-xl border border-orange-100 dark:border-orange-900/20">
+          <div className="flex items-start gap-4 text-left bg-orange-50 dark:bg-orange-900/10 p-4 rounded-xl border border-orange-100 dark:border-orange-900/20 mb-6">
             <Clock className="text-orange-500 shrink-0 mt-0.5" size={20} />
             <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 leading-snug">
               Harap tunjukkan nomor ini di kasir jika Anda memilih Bayar di Kasir.
             </p>
           </div>
+
+          {order && order.id && (
+            <button 
+              onClick={() => setShowReceipt(true)}
+              className="w-full flex items-center justify-center gap-2 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold dark:text-yellow-400 font-bold py-3 rounded-xl transition-colors border border-accent-gold/20"
+            >
+              <ReceiptIcon size={20} />
+              Tampilkan Struk
+            </button>
+          )}
         </div>
         
         <button 
@@ -60,6 +74,14 @@ export default function CustomerOrderStatus() {
           </div>
         </button>
       </div>
+
+      {/* Receipt Modal */}
+      {showReceipt && order && (
+        <Receipt 
+          order={order} 
+          onClose={() => setShowReceipt(false)} 
+        />
+      )}
     </div>
   );
 }

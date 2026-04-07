@@ -5,6 +5,9 @@ import { getSettings } from '../utils/settings';
 
 const Receipt = ({ order, onClose }) => {
   const settings = getSettings();
+  
+  // Debug to verify what is actually being passed as items:
+  console.log('Receipt rendering. Order details:', JSON.stringify(order, null, 2));
 
   const handlePrint = () => {
     const windowUrl = 'about:blank';
@@ -160,17 +163,19 @@ const Receipt = ({ order, onClose }) => {
             <div className="border-t border-dashed border-gray-300 my-4"></div>
 
             <div className="space-y-4 mb-6">
-              {order.items?.map((item, idx) => (
+              {order.items && order.items.length > 0 ? order.items.map((item, idx) => (
                 <div key={idx}>
                   <div className="flex justify-between font-bold text-xs">
-                    <span className="uppercase">{item.productName}</span>
+                    <span className="uppercase">{item.productName || item.product?.name || item.name || 'Item'}</span>
                     <span>{formatCurrency(item.totalPrice).replace('Rp', '').trim()}</span>
                   </div>
                   <div className="text-[10px] opacity-60">
                     {item.quantity} x {formatCurrency(item.unitPrice).replace('Rp', '').trim()}
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center text-xs opacity-50 py-2">Memuat item...</div>
+              )}
             </div>
 
             <div className="border-t-2 border-dashed border-black/10 my-4"></div>
@@ -179,6 +184,12 @@ const Receipt = ({ order, onClose }) => {
               <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(order.subtotal).replace('Rp', '').trim()}</span></div>
               <div className="flex justify-between"><span>Tax (${order.taxRate || 10}%)</span><span>{formatCurrency(order.taxAmount).replace('Rp', '').trim()}</span></div>
               <div className="flex justify-between"><span>Service (${order.serviceChargeRate || 5}%)</span><span>{formatCurrency(order.serviceCharge).replace('Rp', '').trim()}</span></div>
+              {parseFloat(order.tableSurcharge) > 0 && (
+                <div className="flex justify-between"><span>Biaya Meja VIP</span><span>{formatCurrency(order.tableSurcharge).replace('Rp', '').trim()}</span></div>
+              )}
+              {parseFloat(order.discountAmount) > 0 && (
+                <div className="flex justify-between"><span>Diskon</span><span>-{formatCurrency(order.discountAmount).replace('Rp', '').trim()}</span></div>
+              )}
               <div className="flex justify-between font-bold text-lg pt-2 mt-2 border-t border-black">
                 <span>TOTAL</span><span>{formatCurrency(order.totalAmount).replace('Rp', '').trim()}</span>
               </div>

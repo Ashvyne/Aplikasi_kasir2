@@ -37,12 +37,113 @@ h1, h2, h3, h4, h5, h6 {
     @apply card hover:bg-gray-50 dark:hover:bg-bg-darker hover:shadow-lg dark:hover:shadow-glow-lg transition-all duration-300 cursor-pointer;
   }
 
+  /* Input: responsive to dark/light mode */
   .input-base, .input-field {
-    @apply w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold/50 transition-all;
+    @apply w-full bg-white dark:bg-bg-darker border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold/50 transition-all;
   }
 }
 
-/* Scrollbar Styling */
+/* ═══════════════════════════════════════════════════
+   SweetAlert2 — Dark Mode Theme Override
+   Matches the app's dark color palette exactly
+═══════════════════════════════════════════════════ */
+.dark .swal2-popup {
+  background-color: #1c1c1e !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .swal2-title {
+  color: #ffffff !important;
+}
+
+.dark .swal2-html-container,
+.dark .swal2-content {
+  color: #d1d5db !important;
+}
+
+.dark .swal2-icon.swal2-success {
+  border-color: #22c55e !important;
+}
+.dark .swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+.dark .swal2-icon.swal2-success [class^='swal2-success-line'] {
+  background-color: #22c55e !important;
+}
+
+.dark .swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+}
+.dark .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+  background-color: #ef4444 !important;
+}
+
+.dark .swal2-icon.swal2-warning {
+  border-color: #f97316 !important;
+  color: #f97316 !important;
+}
+
+.dark .swal2-icon.swal2-info {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+.dark .swal2-icon.swal2-question {
+  border-color: #a855f7 !important;
+  color: #a855f7 !important;
+}
+
+/* Buttons inside SweetAlert2 */
+.dark .swal2-confirm {
+  background-color: #FFD700 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+.dark .swal2-confirm:hover {
+  background-color: #FFC107 !important;
+}
+
+.dark .swal2-cancel {
+  background-color: #374151 !important;
+  color: #d1d5db !important;
+}
+.dark .swal2-cancel:hover {
+  background-color: #4b5563 !important;
+}
+
+.dark .swal2-deny {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* Input inside SweetAlert2 (e.g. input prompts) */
+.dark .swal2-input,
+.dark .swal2-textarea {
+  background-color: #2a2a2e !important;
+  border-color: #374151 !important;
+  color: #ffffff !important;
+}
+.dark .swal2-input::placeholder,
+.dark .swal2-textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Close button */
+.dark .swal2-close {
+  color: #9ca3af !important;
+}
+.dark .swal2-close:hover {
+  color: #ffffff !important;
+}
+
+/* Timer progress bar */
+.dark .swal2-timer-progress-bar {
+  background-color: #FFD700 !important;
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

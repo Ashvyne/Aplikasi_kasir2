@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash2, LayoutGrid, List, Upload, Image as ImageIcon } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, LayoutGrid, List, Upload, Image as ImageIcon, Search } from 'lucide-react';
 import { productService, categoryService, API_BASE } from '../services/api';
 import { formatCurrency, getImageUrl } from '../utils/helpers';
 import NumericInput from '../components/NumericInput';
@@ -10,6 +10,7 @@ export default function MenuPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -182,6 +183,11 @@ export default function MenuPage() {
     }
   };
 
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -209,11 +215,25 @@ export default function MenuPage() {
       {/* PRODUCTS TAB */}
       {activeTab === 'products' && (
         <div className="card space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white transition-colors">Daftar Produk</h2>
-            <button onClick={() => handleOpenProductModal()} className="btn-primary flex items-center gap-2">
-              <Plus size={18} /> Tambah Produk
-            </button>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Cari produk (Nama / SKU)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="input-field pl-10 w-full relative z-10"
+                />
+              </div>
+              <button onClick={() => handleOpenProductModal()} className="btn-primary flex items-center gap-2 whitespace-nowrap">
+                <Plus size={18} /> Tambah Produk
+              </button>
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -231,10 +251,10 @@ export default function MenuPage() {
               <tbody>
                 {loading ? (
                   <tr><td colSpan="6" className="text-center py-4">Loading...</td></tr>
-                ) : products.length === 0 ? (
-                  <tr><td colSpan="6" className="text-center py-4 text-gray-500">Belum ada produk</td></tr>
+                ) : filteredProducts.length === 0 ? (
+                  <tr><td colSpan="6" className="text-center py-4 text-gray-500">Produk tidak ditemukan</td></tr>
                 ) : (
-                  products.map(product => {
+                  filteredProducts.map(product => {
                     const catName = categories.find(c => c.id.toString() === product.category)?.name || product.category;
                     return (
                       <tr key={product.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">

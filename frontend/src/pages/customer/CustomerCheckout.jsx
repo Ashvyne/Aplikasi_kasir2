@@ -4,6 +4,8 @@ import { useOrderStore } from '../../context/store';
 import { useAuth } from '../../hooks/useAuth';
 import { ArrowLeft, Loader2, Wallet, Banknote, Edit3, MapPin } from 'lucide-react';
 import { orderService, tableService } from '../../services/api';
+import Swal from 'sweetalert2';
+import Receipt from '../../components/Receipt';
 
 export default function CustomerCheckout() {
   const { orderItems, getCartTotal, clearOrder } = useOrderStore();
@@ -14,6 +16,8 @@ export default function CustomerCheckout() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const [completedOrder, setCompletedOrder] = useState(null);
   
   // Table selection state
   const [tables, setTables] = useState([]);
@@ -35,8 +39,14 @@ export default function CustomerCheckout() {
     fetchTables();
   }, []);
 
-  if (orderItems.length === 0) {
-    navigate('/customer/menu');
+  // Redirect if cart is empty, UNLESS we already completed an order (which means we are viewing receipt)
+  useEffect(() => {
+    if (orderItems.length === 0 && !completedOrder) {
+      navigate('/customer/menu');
+    }
+  }, [orderItems.length, navigate, completedOrder]);
+
+  if (orderItems.length === 0 && !completedOrder) {
     return null;
   }
 
@@ -100,8 +110,20 @@ export default function CustomerCheckout() {
         });
       }
       
-      clearOrder();
-      navigate(`/customer/status/${res.data.orderNumber}`);
+      const fullOrderResponse = await orderService.getById(actualOrderId);
+      const finalOrder = fullOrderResponse.data || fullOrderResponse;
+      setCompletedOrder(finalOrder);
+
+      Swal.fire({
+        title: paymentMethod === 'transfer' ? 'Pembayaran Berhasil! 🎉' : 'Pesanan Diterima! 📝',
+        text: 'Mengalihkan ke halaman status...',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        clearOrder();
+        navigate(`/customer/status/${res.data?.orderNumber || res.data?.id}`, { state: { order: finalOrder } });
+      });
       
     } catch (err) {
       console.error(err);

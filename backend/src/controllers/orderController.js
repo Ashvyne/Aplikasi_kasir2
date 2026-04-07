@@ -402,7 +402,13 @@ exports.getAllOrders = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const where = {};
-    if (status) where.status = status;
+    if (status) {
+      if (status.includes(',')) {
+        where.status = { [Op.in]: status.split(',') };
+      } else {
+        where.status = status;
+      }
+    }
     if (orderType) where.orderType = orderType;
 
     if (startDate || endDate) {
