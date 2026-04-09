@@ -136,10 +136,21 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-gray-500 text-xs mt-6">
-          CaféPOS © 2024 - Professional POS System
-        </p>
+        {/* Footer & Links */}
+        <div className="mt-6 text-center space-y-4">
+          <p className="text-gray-400 text-sm">
+            Bukan staff?{' '}
+            <button 
+              onClick={() => navigate('/customer/login')}
+              className="text-accent-gold hover:text-accent-yellow transition font-semibold"
+            >
+              Masuk sebagai Pelanggan
+            </button>
+          </p>
+          <p className="text-center text-gray-500 text-xs mt-6">
+            CaféPOS © 2024 - Professional POS System
+          </p>
+        </div>
       </div>
     </div>
   );

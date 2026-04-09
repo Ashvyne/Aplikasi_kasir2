@@ -12,6 +12,16 @@ h1, h2, h3, h4, h5, h6 {
   @apply font-poppins font-bold;
 }
 
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer components {
   .btn-primary {
     @apply px-4 py-2 bg-accent-gold text-black rounded-lg font-semibold hover:bg-accent-yellow transition-all duration-200 shadow-md hover:shadow-lg dark:shadow-glow dark:hover:shadow-glow-lg disabled:opacity-50 disabled:cursor-not-allowed;

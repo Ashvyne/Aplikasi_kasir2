@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Coffee, ChevronRight, Loader2 } from 'lucide-react';
+import api from '../../services/api';
 
 export default function CustomerLogin() {
   const [username, setUsername] = useState('');
@@ -17,15 +18,9 @@ export default function CustomerLogin() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      const data = await api.post('/auth/login', { username, password });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         if (data.user.role !== 'customer') {
           setError('Hanya pelanggan yang dapat masuk ke area ini.');
           return;
@@ -37,7 +32,7 @@ export default function CustomerLogin() {
         setError(data.error || data.message || 'Login gagal.');
       }
     } catch (err) {
-      setError('Koneksi jaringan bermasalah.');
+      setError(err.error || err.message || 'Koneksi jaringan bermasalah.');
     } finally {
       setLoading(false);
     }
@@ -113,12 +108,20 @@ export default function CustomerLogin() {
           </form>
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400 font-medium">
-          Belum punya akun?{' '}
-          <Link to="/customer/register" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-gold to-orange-500 hover:opacity-80 transition font-black ml-1">
-            Daftar Gratis
-          </Link>
-        </p>
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+            Belum punya akun?{' '}
+            <Link to="/customer/register" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-gold to-orange-500 hover:opacity-80 transition font-black ml-1">
+              Daftar Gratis
+            </Link>
+          </p>
+          <p className="text-sm text-gray-500 font-medium">
+            Atau {' '}
+            <Link to="/login" className="text-blue-600 hover:underline transition font-bold">
+              Masuk sebagai Staff
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -398,7 +398,7 @@ exports.processPayment = async (req, res) => {
 // ============ GET ALL ORDERS ============
 exports.getAllOrders = async (req, res) => {
   try {
-    const { status, orderType, startDate, endDate, page = 1, limit = 20 } = req.query;
+    const { status, orderType, startDate, endDate, page = 1, limit = 20, userId } = req.query;
     const offset = (page - 1) * limit;
 
     const where = {};
@@ -410,6 +410,7 @@ exports.getAllOrders = async (req, res) => {
       }
     }
     if (orderType) where.orderType = orderType;
+    if (userId) where.userId = parseInt(userId, 10);
 
     if (startDate || endDate) {
       where.createdAt = {};

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export const useAuthStore = create(
   persist(
@@ -24,7 +24,7 @@ export const useAuthStore = create(
     }),
     {
       name: 'auth-store',
-      storage: localStorage,
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
@@ -35,9 +35,26 @@ export const useOrderStore = create((set, get) => ({
   
   createOrder: (order) => set({ currentOrder: order, orderItems: [] }),
   
-  addItem: (item) => set((state) => ({
-    orderItems: [...state.orderItems, { ...item, id: Date.now() }],
-  })),
+  addItem: (newItem) => set((state) => {
+    // Find item by productId or id
+    const existingIndex = state.orderItems.findIndex(i => 
+      (i.productId === newItem.productId && newItem.productId) || 
+      (i.id === newItem.id && newItem.id)
+    );
+    
+    if (existingIndex >= 0) {
+      // Increment existing quantity
+      const newItems = [...state.orderItems];
+      newItems[existingIndex] = {
+        ...newItems[existingIndex],
+        quantity: newItems[existingIndex].quantity + (newItem.quantity || 1)
+      };
+      return { orderItems: newItems };
+    }
+    
+    // Add as new item
+    return { orderItems: [...state.orderItems, { ...newItem, id: newItem.id || Date.now() }] };
+  }),
   
   updateItem: (itemId, updates) => set((state) => ({
     orderItems: state.orderItems.map(item =>

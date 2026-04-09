@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UtensilsCrossed, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import api from '../../services/api';
 
 export default function CustomerRegister() {
   const [formData, setFormData] = useState({ name: '', username: '', email: '', password: '' });
@@ -17,22 +18,16 @@ export default function CustomerRegister() {
     setError('');
     
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, role: 'customer' })
-      });
+      const data = await api.post('/auth/register', { ...formData, role: 'customer' });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         setSuccess('Pendaftaran berhasil! Mengalihkan...');
         setTimeout(() => navigate('/customer/login'), 2000);
       } else {
         setError(data.error || data.message || 'Pendaftaran gagal');
       }
     } catch (err) {
-      setError('Koneksi jaringan bermasalah.');
+      setError(err.error || err.message || 'Koneksi jaringan bermasalah.');
     } finally {
       setLoading(false);
     }

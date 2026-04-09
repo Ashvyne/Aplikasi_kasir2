@@ -19,6 +19,7 @@ import CustomerLayout from './layouts/CustomerLayout';
 import CustomerLogin from './pages/customer/CustomerLogin';
 import CustomerRegister from './pages/customer/CustomerRegister';
 import CustomerMenu from './pages/customer/CustomerMenu';
+import CustomerHistory from './pages/customer/CustomerHistory.jsx';
 import CustomerCheckout from './pages/customer/CustomerCheckout';
 import CustomerOrderStatus from './pages/customer/CustomerOrderStatus';
 
@@ -96,6 +97,7 @@ export default function App() {
 
         {/* Protected Customer Routes */}
         <Route path="/customer/menu" element={<CustomerRoute><CustomerMenu /></CustomerRoute>} />
+        <Route path="/customer/history" element={<CustomerRoute><CustomerHistory /></CustomerRoute>} />
         <Route path="/customer/checkout" element={<CustomerRoute><CustomerCheckout /></CustomerRoute>} />
         <Route path="/customer/status/:id" element={<CustomerRoute><CustomerOrderStatus /></CustomerRoute>} />
 

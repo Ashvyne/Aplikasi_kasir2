@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrderStore } from '../../context/store';
-import { ShoppingBag, ChevronRight, Plus, Search } from 'lucide-react';
+import { ShoppingBag, ChevronRight, Plus, Search, History } from 'lucide-react';
 import { getImageUrl } from '../../utils/helpers';
 
 export default function CustomerMenu() {
@@ -52,7 +52,16 @@ export default function CustomerMenu() {
     <div className="flex-1 flex flex-col h-full bg-gray-50/50 dark:bg-black w-full relative pb-24">
       {/* Search Header */}
       <div className="px-4 py-4 pt-6 bg-white dark:bg-bg-dark border-b border-gray-100 dark:border-gray-800 rounded-b-3xl shadow-sm z-10 sticky top-0">
-        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-4">Mau makan apa<br/>hari ini? 😋</h2>
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white">Mau makan apa<br/>hari ini? 😋</h2>
+          <button 
+            onClick={() => navigate('/customer/history')}
+            className="bg-gray-100 dark:bg-bg-darker p-3 rounded-2xl text-gray-700 dark:text-gray-300 active:scale-90 transition-transform shadow-sm flex flex-col items-center justify-center border border-gray-200 dark:border-gray-800"
+          >
+            <History size={20} />
+            <span className="text-[10px] font-bold mt-1">Riwayat</span>
+          </button>
+        </div>
         
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -67,14 +76,14 @@ export default function CustomerMenu() {
       </div>
 
       {/* Categories Horizontal Scroll */}
-      <div className="px-4 py-5 flex overflow-x-auto space-x-3 hide-scrollbar">
+      <div className="px-4 py-5 flex overflow-x-auto space-x-3 hide-scrollbar snap-x snap-mandatory scroll-smooth touch-pan-x">
         {categories.map(cat => {
           const isActive = activeCategory === cat.id;
           return (
             <button
               key={cat.id || 'all'}
               onClick={() => setActiveCategory(cat.id)}
-              className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all transform active:scale-95 ${
+              className={`snap-start whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all transform active:scale-95 ${
                 isActive 
                   ? 'bg-gray-900 text-white dark:bg-accent-gold dark:text-black shadow-lg shadow-gray-900/20 dark:shadow-accent-gold/20' 
                   : 'bg-white text-gray-600 border border-gray-200 dark:bg-bg-dark dark:text-gray-400 dark:border-gray-800'
@@ -110,7 +119,11 @@ export default function CustomerMenu() {
               const quantity = cartItem ? cartItem.quantity : 0;
               
               return (
-                <div key={product.id} className="group bg-white dark:bg-bg-dark border border-gray-100 dark:border-gray-800/50 p-4 rounded-[2rem] flex flex-col hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] transition-all overflow-hidden relative">
+                <div 
+                  key={product.id} 
+                  onClick={() => addItem({ ...product, productId: product.id, quantity: 1, unitPrice: product.price || product.sell_price })}
+                  className="group cursor-pointer bg-white dark:bg-bg-dark border border-gray-100 dark:border-gray-800/50 p-4 rounded-[2rem] flex flex-col hover:shadow-xl active:opacity-70 active:scale-[0.98] transition-all overflow-hidden relative select-none"
+                >
                   
                   {/* Item Quantity Badge */}
                   {quantity > 0 && (
@@ -120,7 +133,7 @@ export default function CustomerMenu() {
                   )}
 
                   {/* Thumbnail */}
-                  <div className="w-full aspect-square rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 dark:from-bg-darker dark:to-gray-900 flex items-center justify-center mb-4 relative overflow-hidden">
+                  <div className="w-full aspect-square rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 dark:from-bg-darker dark:to-gray-900 flex items-center justify-center mb-4 relative overflow-hidden pointer-events-none">
                     {product.image_url ? (
                       <img src={getImageUrl(product.image_url)} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" onError={(e)=>{e.target.style.display='none';}} />
                     ) : (
@@ -132,17 +145,21 @@ export default function CustomerMenu() {
                   
                   {/* Details */}
                   <div className="flex-1 flex flex-col relative z-10">
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-snug mb-1 line-clamp-2">{product.name}</h3>
-                    <p className="text-accent-gold font-black mt-auto pt-2">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-snug mb-1 line-clamp-2 pointer-events-none">{product.name}</h3>
+                    <p className="text-accent-gold font-black mt-auto pt-2 pointer-events-none">
                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price || product.sell_price)}
                     </p>
                     
                     <button 
-                      onClick={() => addItem({ ...product, productId: product.id, quantity: 1, unitPrice: product.price || product.sell_price })}
-                      className="mt-4 w-full py-3 bg-gray-50 dark:bg-bg-darker hover:bg-gray-900 hover:text-white dark:hover:bg-accent-gold dark:hover:text-black text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-colors flex justify-center items-center gap-1 active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Mencegah double-trigger dari card parent
+                        addItem({ ...product, productId: product.id, quantity: 1, unitPrice: product.price || product.sell_price });
+                      }}
+                      className="mt-4 w-full py-3 bg-gray-50 dark:bg-bg-darker hover:bg-gray-900 hover:text-white dark:hover:bg-accent-gold dark:hover:text-black text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-colors flex justify-center items-center gap-1 active:scale-90"
                     >
                       <Plus size={16} /> Tambah
                     </button>
+
                   </div>
                 </div>
               );
