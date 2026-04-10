@@ -251,6 +251,14 @@ Semua akun menggunakan password: **`password123`**
 
 ---
 
+## 🎤 Persiapan Presentasi (Q&A)
+
+Apakah kamu sedang mempersiapkan presentasi untuk project ini? Kami telah menyusun daftar lengkap **20 Pertanyaan & Jawaban** yang berpotensi ditanyakan oleh penguji, rekruter, maupun dosen. 
+
+👉 **[Baca Daftar Tanya Jawab (Q&A) Presentasi di sini](./QNA_PRESENTATION.md)**
+
+---
+
 ## 📄 Lisensi
 
 ISC License — Bebas digunakan untuk keperluan belajar maupun komersial.

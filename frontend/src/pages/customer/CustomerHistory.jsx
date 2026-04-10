@@ -19,7 +19,7 @@ export default function CustomerHistory() {
       setLoading(true);
       // Fetch orders for this specific customer
       const res = await api.get(`/orders?userId=${user?.id}`);
-      setOrders(res.data?.data || []);
+      setOrders(res.data || []);
     } catch (err) {
       console.error('Error fetching history:', err);
     } finally {

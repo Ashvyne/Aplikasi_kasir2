@@ -1,13 +1,32 @@
 const express = require('express');
 const router = express.Router();
+const { body } = require('express-validator');
 const authController = require('../controllers/authController');
 const { verifyToken } = require('../middleware/authMiddleware');
 
+// ============ VALIDATION RULES ============
+const registerValidation = [
+  body('username').trim().isLength({ min: 3 }).withMessage('Username minimal 3 karakter'),
+  body('email').isEmail().withMessage('Format email tidak valid').normalizeEmail(),
+  body('password').isLength({ min: 6 }).withMessage('Password minimal 6 karakter'),
+  body('name').optional().trim().notEmpty().withMessage('Nama tidak boleh kosong jika diisi')
+];
+
+const loginValidation = [
+  body('username').trim().notEmpty().withMessage('Username wajib diisi'),
+  body('password').notEmpty().withMessage('Password wajib diisi')
+];
+
+const passwordValidation = [
+  body('currentPassword').notEmpty().withMessage('Password saat ini wajib diisi'),
+  body('newPassword').isLength({ min: 6 }).withMessage('Password baru minimal 6 karakter')
+];
+
 // ============ REGISTRATION ============
-router.post('/register', authController.register);
+router.post('/register', registerValidation, authController.register);
 
 // ============ LOGIN ============
-router.post('/login', authController.login);
+router.post('/login', loginValidation, authController.login);
 
 // ============ LOGOUT ============
 router.post('/logout', authController.logout);
@@ -32,7 +51,7 @@ router.post('/logout-device/:sessionId', verifyToken, (req, res) => {
 });
 
 // ============ CHANGE PASSWORD ============
-router.put('/change-password', verifyToken, authController.changePassword);
+router.put('/change-password', verifyToken, passwordValidation, authController.changePassword);
 
 // ============ GET CURRENT USER ============
 router.get('/me', verifyToken, authController.getCurrentUser);

@@ -1,72 +1,81 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const { validationResult } = require('express-validator');
 const User = require('../models/User');
 
 // Register
 exports.register = async (req, res) => {
-  const { username, email, password, role, name } = req.body;
-  
-  if (!username || !email || !password) {
-    return res.status(400).json({ success: false, error: 'Data tidak lengkap' });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
   }
+
+  const { username, email, password, role, name } = req.body;
   
   // Valid roles: admin, cashier, kitchen, customer
   const validRoles = ['admin', 'cashier', 'kitchen', 'customer'];
   
-  // If no role provided, default to 'customer' for public registration
-  // For other roles, a token/admin auth might be checked in the route, but for now we accept what's passed or default
+  // Restricted roles usually should be created by an Admin, but for this demo 
+  // we allow public registration or default to customer
   const userRole = validRoles.includes(role) ? role : 'customer'; 
 
   try {
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
-      return res.status(400).json({ success: false, error: 'Username sudah terdaftar' });
+      return res.status(400).json({ success: false, message: 'Username sudah terdaftar' });
     }
 
     const existingEmail = await User.findOne({ where: { email } });
     if (existingEmail) {
-      return res.status(400).json({ success: false, error: 'Email sudah terdaftar' });
+      return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
     }
 
-    // Note: User model has beforeCreate hook that hashes the password automatically.
     const newUser = await User.create({
-      username,
-      email,
-      password, // Plain password, will be hashed by beforeCreate
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
+      password, // Plain password, will be hashed by User model beforeCreate hook
       name: name || username,
       role: userRole
     });
 
     res.status(201).json({ 
       success: true,
-      message: 'User berhasil dibuat', 
-      userId: newUser.id,
-      role: newUser.role
+      message: 'Registrasi berhasil! Silakan login.', 
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role
+      }
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Registration error:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan saat pendaftaran' });
   }
 };
 
 // Login
 exports.login = async (req, res) => {
-  const { username, password } = req.body;
-  
-  if (!username || !password) {
-    return res.status(400).json({ success: false, error: 'Username dan password diperlukan' });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
   }
 
+  const { username, password } = req.body;
+
   try {
-    const user = await User.findOne({ where: { username } });
+    // Search by username or email
+    const user = await User.findOne({ 
+      where: { username: username.toLowerCase() } 
+    });
+
     if (!user) {
-      return res.status(401).json({ success: false, error: 'User tidak ditemukan' });
+      return res.status(401).json({ success: false, message: 'Username atau password salah' });
     }
 
     const validPassword = await user.validatePassword(password);
     if (!validPassword) {
-      return res.status(401).json({ success: false, error: 'Password salah' });
+      return res.status(401).json({ success: false, message: 'Username atau password salah' });
     }
 
     // Generate token
@@ -79,58 +88,61 @@ exports.login = async (req, res) => {
         sessionId: sessionId
       },
       process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRE || '24h' }
     );
 
     res.json({ 
       success: true,
       message: 'Login berhasil',
       token,
-      sessionId,
-      user: { id: user.id, username: user.username, role: user.role, name: user.name }
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        role: user.role, 
+        name: user.name,
+        email: user.email 
+      }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Login error:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
   }
 };
 
 // Logout 
 exports.logout = async (req, res) => {
-  // Since we removed DB sessions table, logout is handled purely client-side by dropping the JWT
-  res.json({ message: 'Logout berhasil' });
+  // In JWT architecture, logout is usually handled by client clearing the token.
+  // Optionally you can blacklist the token in Redis here.
+  res.json({ success: true, message: 'Logout berhasil' });
 };
 
 // Change Password
 exports.changePassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   const { currentPassword, newPassword } = req.body;
-
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ success: false, error: 'Semua field wajib diisi' });
-  }
-
-  if (newPassword.length < 6) {
-    return res.status(400).json({ success: false, error: 'Password baru minimal 6 karakter' });
-  }
 
   try {
     const user = await User.findByPk(req.user.id);
     if (!user) {
-      return res.status(404).json({ success: false, error: 'User tidak ditemukan' });
+      return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
     }
 
     const isValid = await user.validatePassword(currentPassword);
     if (!isValid) {
-      return res.status(401).json({ success: false, error: 'Password saat ini salah' });
+      return res.status(401).json({ success: false, message: 'Password saat ini tidak sesuai' });
     }
 
-    user.password = newPassword; // beforeUpdate hook will hash it
+    user.password = newPassword; 
     await user.save();
 
-    res.json({ success: true, message: 'Password berhasil diubah' });
+    res.json({ success: true, message: 'Password berhasil diperbarui' });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Change password error:', error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui password' });
   }
 };
 

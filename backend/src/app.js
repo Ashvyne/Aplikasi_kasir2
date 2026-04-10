@@ -21,6 +21,8 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -128,7 +130,29 @@ let dbInitialized = false;
 })();
 
 // ============ MIDDLEWARE SETUP ============
-// Enable CORS untuk frontend dapat akses API
+// Security Headers
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // limit each IP to 20 login/register attempts per hour
+  message: { message: 'Terlalu banyak percobaan masuk, silakan coba lagi dalam satu jam.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Enable CORS
 app.use(cors());
 
 // Parse JSON dan form data (max 50MB untuk large file transfers)
@@ -146,8 +170,11 @@ app.use('/uploads', express.static(uploadsDir, {
 // ============ API ROUTES ============
 // Semua route menggunakan JWT authentication middleware
 
-// Authentication routes
-app.use('/api/auth', require('./routes/auth'));
+// Authentication routes (protected by authLimiter)
+app.use('/api/auth', authLimiter, require('./routes/auth'));
+
+// General API routes (protected by apiLimiter)
+app.use('/api', apiLimiter);
 
 // Product management routes
 app.use('/api/products', require('./routes/products'));
