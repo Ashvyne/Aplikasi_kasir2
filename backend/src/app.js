@@ -152,8 +152,11 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with credentials support (Required for Cloudflare Anti-Bot)
+app.use(cors({
+  origin: true, // This reflects the incoming origin instead of '*'
+  credentials: true
+}));
 
 // Parse JSON dan form data (max 50MB untuk large file transfers)
 app.use(bodyParser.json({ limit: '50mb' }));
