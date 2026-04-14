@@ -17,8 +17,8 @@ const Product = sequelize.define('Product', {
     unique: true
   },
   category: {
-    type: DataTypes.STRING(50),
-    defaultValue: '1'
+    type: DataTypes.INTEGER,
+    defaultValue: 1
   },
   buy_price: {
     type: DataTypes.INTEGER,
