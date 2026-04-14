@@ -223,14 +223,9 @@ export default function TablesPage() {
       
       setShowPaymentModal(false);
       
-      // For receipt modal
-      setCompletedOrder({
-        ...selectedOrder,
-        paidAmount: paymentMethod === 'cash' ? paid : totalToPay,
-        changeAmount: change,
-        paymentMethod,
-        paidAt: new Date()
-      });
+      // For receipt modal (fetch full populated order before showing)
+      const fullOrderResponse = await orderService.getById(selectedOrder.id);
+      setCompletedOrder(fullOrderResponse.data || fullOrderResponse);
 
       Swal.fire({
         title: 'Pembayaran Berhasil! 🎉',

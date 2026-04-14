@@ -27,7 +27,11 @@ export default function CustomerRegister() {
         setError(data.error || data.message || 'Pendaftaran gagal');
       }
     } catch (err) {
-      setError(err.error || err.message || 'Koneksi jaringan bermasalah.');
+      if (err.errors && Array.isArray(err.errors)) {
+        setError(err.errors.map(e => e.msg).join(', '));
+      } else {
+        setError(err.error || err.message || 'Koneksi jaringan bermasalah.');
+      }
     } finally {
       setLoading(false);
     }

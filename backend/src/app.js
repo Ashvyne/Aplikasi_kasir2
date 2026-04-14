@@ -170,6 +170,14 @@ app.use('/uploads', express.static(uploadsDir, {
   index: false
 }));
 
+// ============ SERVE PRODUCTION FRONTEND ============
+// Jika folder dist dari frontend ada, server akan melayani tampilannya juga (Prod Merging)
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+  console.log('✅ Memuat file statis Frontend dari:', frontendDist);
+  app.use(express.static(frontendDist));
+}
+
 // ============ API ROUTES ============
 // Semua route menggunakan JWT authentication middleware
 
@@ -214,6 +222,14 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/stockin', require('./routes/stockin'));
 
 // Serve index.html dihapus (frontend menangani routing)
+// KECUALI jika folder dist ada (artinya sedang di mode Production Merged)
+if (fs.existsSync(frontendDist)) {
+  // Semua request selain API diarahkan ke index.html milik React (Client-side routing)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
