@@ -146,7 +146,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20, // limit each IP to 20 login/register attempts per hour
+  max: 500, // Increased limit for testing (was 20)
   message: { message: 'Terlalu banyak percobaan masuk, silakan coba lagi dalam satu jam.' },
   standardHeaders: true,
   legacyHeaders: false,

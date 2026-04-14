@@ -75,7 +75,7 @@ export default function CustomerRegister() {
             </div>
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Username Login</label>
-              <input type="text" name="username" required className="w-full px-5 py-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-bg-darker focus:bg-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 dark:text-white rounded-xl transition-all" placeholder="username_unik" onChange={handleChange} />
+              <input type="text" name="username" required minLength="3" className="w-full px-5 py-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-bg-darker focus:bg-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 dark:text-white rounded-xl transition-all" placeholder="username_unik" onChange={handleChange} />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Alamat Email</label>
@@ -83,7 +83,7 @@ export default function CustomerRegister() {
             </div>
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Kata Sandi Rahasia</label>
-              <input type="password" name="password" required className="w-full px-5 py-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-bg-darker focus:bg-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 dark:text-white rounded-xl transition-all" placeholder="••••••••" onChange={handleChange} />
+              <input type="password" name="password" required minLength="6" className="w-full px-5 py-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-bg-darker focus:bg-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 dark:text-white rounded-xl transition-all" placeholder="••••••••" onChange={handleChange} />
             </div>
             
             <button type="submit" disabled={loading} className="group w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30">
