@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash2, LayoutGrid, List, Upload, Image as ImageIcon, Search } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { productService, categoryService, API_BASE } from '../services/api';
 import { formatCurrency, getImageUrl } from '../utils/helpers';
 import NumericInput from '../components/NumericInput';
 import Swal from 'sweetalert2';
 
 export default function MenuPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -20,6 +23,17 @@ export default function MenuPage() {
   // Form states
   const [productForm, setProductForm] = useState({ name: '', sku: '', category: '', buy_price: 0, sell_price: 0, stock: 0, image_url: '', imageFile: null, imagePreview: null });
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '', icon: '', color: '#FFD700' });
+
+  // Sync tab with URL
+  useEffect(() => {
+    if (location.pathname.includes('/categories')) setActiveTab('categories');
+    else if (location.pathname.includes('/products')) setActiveTab('products');
+  }, [location.pathname]);
+
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    navigate(`/menu/${tabName}`);
+  };
 
   useEffect(() => {
     loadData();
@@ -194,7 +208,7 @@ export default function MenuPage() {
         <h1 className="text-3xl font-poppins font-bold text-gray-900 dark:text-white transition-colors">Menu Management</h1>
         <div className="flex bg-gray-100 dark:bg-bg-darker rounded-lg p-1 transition-colors">
           <button
-            onClick={() => setActiveTab('products')}
+            onClick={() => handleTabChange('products')}
             className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all ${
               activeTab === 'products' ? 'bg-accent-gold text-black font-bold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
@@ -202,7 +216,7 @@ export default function MenuPage() {
             <Package size={18} /> Produk
           </button>
           <button
-            onClick={() => setActiveTab('categories')}
+            onClick={() => handleTabChange('categories')}
             className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all ${
               activeTab === 'categories' ? 'bg-accent-gold text-black font-bold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}

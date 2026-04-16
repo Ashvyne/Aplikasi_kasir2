@@ -69,8 +69,14 @@ function AddStockModal({ products, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchProd, setSearchProd] = useState('');
 
   const selectedProduct = products.find((p) => p.id === parseInt(productId));
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchProd.toLowerCase()) || 
+    p.sku?.toLowerCase().includes(searchProd.toLowerCase())
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -135,24 +141,111 @@ function AddStockModal({ products, onClose, onSuccess }) {
               Produk <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <select
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-                className="input-field appearance-none pr-10"
-                required
+              {/* Custom Dropdown Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="input-field w-full flex items-center justify-between text-left focus:ring-accent-gold focus:border-accent-gold"
               >
-                <option value="">-- Pilih Produk --</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.sku}) — Stok: {p.stock}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              />
+                {selectedProduct ? (
+                  <div className="flex items-center gap-3">
+                    {getImageUrl(selectedProduct.image_url) ? (
+                      <img 
+                        src={getImageUrl(selectedProduct.image_url)} 
+                        alt={selectedProduct.name}
+                        className="w-6 h-6 rounded object-cover border border-gray-200 dark:border-gray-700"
+                        onError={(e) => { e.target.onerror = null; e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                      />
+                    ) : null}
+                    <div className="w-6 h-6 rounded bg-gray-200 dark:bg-bg-dark border border-gray-300 dark:border-gray-700 items-center justify-center" style={{display: getImageUrl(selectedProduct.image_url) ? 'none' : 'flex'}}>
+                      <Package size={12} className="text-gray-400" />
+                    </div>
+                    <span className="font-medium text-gray-900 dark:text-white truncate">
+                      {selectedProduct.name} ({selectedProduct.sku})
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-500">-- Pilih Produk --</span>
+                )}
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Custom Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute z-20 w-full mt-2 bg-white dark:bg-bg-darker border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-72 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                  <div className="sticky top-0 z-10 bg-white dark:bg-bg-darker p-3 border-b border-gray-200 dark:border-gray-700 backdrop-blur-md">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input 
+                        type="text" 
+                        placeholder="Cari nama / SKU produk..." 
+                        value={searchProd}
+                        onChange={(e) => setSearchProd(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-bg-dark rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-accent-gold text-gray-900 dark:text-white"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="p-1">
+                    {filteredProducts.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-gray-500">Produk tidak ditemukan</div>
+                    ) : (
+                      filteredProducts.map((p) => (
+                        <div 
+                          key={p.id} 
+                          className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                            productId === p.id 
+                              ? 'bg-accent-gold/10 border border-accent-gold/20' 
+                              : 'hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent'
+                          }`}
+                          onClick={() => { 
+                            setProductId(p.id); 
+                            setIsDropdownOpen(false); 
+                            setSearchProd('');
+                          }}
+                        >
+                          <div className="relative flex-shrink-0">
+                            {getImageUrl(p.image_url) ? (
+                              <img 
+                                src={getImageUrl(p.image_url)} 
+                                alt={p.name}
+                                className="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-700 shadow-sm"
+                                onError={(e) => { e.target.onerror = null; e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                              />
+                            ) : null}
+                            <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-bg-dark border border-gray-300 dark:border-gray-700 items-center justify-center" style={{display: getImageUrl(p.image_url) ? 'none' : 'flex'}}>
+                              <Package size={20} className="text-gray-400" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-gray-900 dark:text-white truncate">{p.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[11px] font-mono bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300">{p.sku}</span>
+                              <span className="text-[11px] text-gray-500">• Stok: <span className="font-bold text-accent-gold">{p.stock}</span></span>
+                            </div>
+                          </div>
+                          {productId === p.id && (
+                            <div className="pr-2 text-accent-gold">
+                              <Check size={18} />
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {/* Backdrop for closing dropdown when clicking outside */}
+            {isDropdownOpen && (
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setIsDropdownOpen(false)}
+              />
+            )}
+
             {selectedProduct && (
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Stok saat ini:{' '}

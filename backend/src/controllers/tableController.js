@@ -30,6 +30,10 @@ exports.createTable = async (req, res) => {
       data: table
     });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ success: false, message: 'Nomor meja sudah digunakan. Silakan gunakan nomor lain.' });
+    }
+    console.error('Error creating table:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating table',
@@ -252,6 +256,10 @@ exports.bulkCreateTables = async (req, res) => {
       data: tables
     });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ success: false, message: 'Beberapa nomor meja dalam urutan tersebut sudah terpakai. Coba buat secara manual.' });
+    }
+    console.error('Error in bulk create tables:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating tables',

@@ -39,7 +39,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-dark via-bg-darker to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-br dark:from-bg-dark dark:via-bg-darker dark:to-black transition-colors duration-200 flex items-center justify-center p-4">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-20 w-72 h-72 bg-accent-gold/10 rounded-full blur-3xl" />
@@ -56,10 +56,10 @@ export default function LoginPage() {
                 <UtensilsCrossed size={32} className="text-accent-gold" />
               </div>
             </div>
-            <h1 className="text-3xl font-poppins font-bold text-white mb-2">
+            <h1 className="text-3xl font-poppins font-bold text-gray-900 dark:text-white mb-2 transition-colors">
               CaféPOS
             </h1>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm transition-colors">
               Sistem POS Modern untuk Cafe & Restoran
             </p>
           </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors">
                 Username
               </label>
               <input
@@ -84,7 +84,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors">
                 Password
               </label>
               <input
@@ -107,8 +107,8 @@ export default function LoginPage() {
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-400 hover:text-gray-300 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-700" />
+              <label className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 cursor-pointer transition-colors">
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-accent-gold focus:ring-accent-gold" />
                 Remember me
               </label>
               <a href="#" className="text-accent-gold hover:text-accent-yellow transition">
@@ -138,7 +138,7 @@ export default function LoginPage() {
 
         {/* Footer & Links */}
         <div className="mt-6 text-center space-y-4">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">
             Bukan staff?{' '}
             <button 
               onClick={() => navigate('/customer/login')}

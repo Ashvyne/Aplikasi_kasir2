@@ -64,6 +64,15 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Prevent rendering child components while parsing user session (avoiding premature fetch that causes 403)
+  if (token && !user) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-bg-dark">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-gold"></div>
+      </div>
+    );
+  }
+
   return <MainLayout>{children}</MainLayout>;
 }
 

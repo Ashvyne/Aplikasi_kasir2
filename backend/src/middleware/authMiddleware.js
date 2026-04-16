@@ -130,8 +130,20 @@ exports.requireRole = (allowedRoles) => {
 };
 
 // Legacy exports for backwards compatibility during migration
-exports.requireItemUser = exports.requireAdmin;
-exports.requireAdminBarang = exports.requireAdmin;
+exports.requireItemUser = (req, res, next) => {
+  if (!req.user || !['admin', 'item_user'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: `Akses ditolak. Role Anda (${req.user?.role || 'none'}) tidak memiliki izin.`
+    });
+  }
+  next();
+};
+
+exports.requireAdminBarang = exports.requireItemUser;
 exports.requireAdminKasir = exports.requireCashier;
+
+exports.isItemUser = (user) => user && ['admin', 'item_user'].includes(user.role);
+exports.isCashier = (user) => user && ['admin', 'cashier'].includes(user.role);
 
 exports.ROLES = ROLES;

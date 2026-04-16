@@ -138,7 +138,7 @@ app.use(helmet({
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 5000, // Boost limit untuk masa testing
   message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' },
   standardHeaders: true,
   legacyHeaders: false,

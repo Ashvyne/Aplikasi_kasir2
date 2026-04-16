@@ -5,8 +5,11 @@ import { getTableStatusColor, getTableStatusLabel, formatCurrency } from '../uti
 import NumericInput from '../components/NumericInput';
 import Receipt from '../components/Receipt';
 import Swal from 'sweetalert2';
+import { useAuth } from '../hooks/useAuth';
 
 export default function TablesPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
@@ -263,10 +266,12 @@ export default function TablesPage() {
           <MapPin size={32} className="text-accent-gold" />
           Manajemen Meja
         </h1>
-        <button onClick={() => handleOpenModal()} className="btn-primary flex items-center gap-2">
-          <Plus size={20} />
-          Tambah Meja
-        </button>
+        {isAdmin && (
+          <button onClick={() => handleOpenModal()} className="btn-primary flex items-center gap-2">
+            <Plus size={20} />
+            Tambah Meja
+          </button>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -404,35 +409,37 @@ export default function TablesPage() {
                   </button>
                 )}
 
-                {/* Edit & Delete */}
-                <div className="flex gap-2 mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
-                  <button
-                    onClick={() => handleOpenModal(table)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors"
-                    title="Edit Meja"
-                  >
-                    <Edit size={13} /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDuplicate(table)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400 text-xs font-semibold transition-colors"
-                    title="Duplikat Meja"
-                  >
-                    <Copy size={13} /> Copy
-                  </button>
-                  <button
-                    onClick={() => handleDelete(table.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                      table.status !== 'available'
-                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-40'
-                        : 'bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40'
-                    }`}
-                    disabled={table.status !== 'available'}
-                    title={table.status !== 'available' ? 'Meja sedang digunakan' : 'Hapus meja'}
-                  >
-                    <Trash2 size={13} /> Hapus
-                  </button>
-                </div>
+                {/* Edit & Delete (Admin Only) */}
+                {isAdmin && (
+                  <div className="flex gap-2 mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <button
+                      onClick={() => handleOpenModal(table)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors"
+                      title="Edit Meja"
+                    >
+                      <Edit size={13} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(table)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400 text-xs font-semibold transition-colors"
+                      title="Duplikat Meja"
+                    >
+                      <Copy size={13} /> Copy
+                    </button>
+                    <button
+                      onClick={() => handleDelete(table.id)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        table.status !== 'available'
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-40'
+                          : 'bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40'
+                      }`}
+                      disabled={table.status !== 'available'}
+                      title={table.status !== 'available' ? 'Meja sedang digunakan' : 'Hapus meja'}
+                    >
+                      <Trash2 size={13} /> Hapus
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })
