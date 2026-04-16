@@ -75,7 +75,7 @@ exports.printStruk = (req, res) => {
 };
 
 // Helper function untuk format currency
-function formatCurrency(value) {
+function formatCurrency(value) { 
   return parseInt(value) || 0;
 }
 

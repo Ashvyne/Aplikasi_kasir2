@@ -43,7 +43,7 @@ export default function CustomerMenu() {
 
   // Handle filtering
   const filteredProducts = products.filter(p => {
-    const matchCategory = activeCategory === null || p.categoryId === activeCategory;
+    const matchCategory = activeCategory === null || p.category == activeCategory;
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCategory && matchSearch;
   });
