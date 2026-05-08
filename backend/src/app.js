@@ -176,6 +176,9 @@ app.use('/api/auth', authLimiter, require('./routes/auth'));
 // General API routes (protected by apiLimiter)
 app.use('/api', apiLimiter);
 
+// User management routes
+app.use('/api/users', require('./routes/users'));
+
 // Product management routes
 app.use('/api/products', require('./routes/products'));
 

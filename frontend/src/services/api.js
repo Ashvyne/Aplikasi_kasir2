@@ -29,7 +29,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    // Jangan redirect kalau error 401 berasal dari endpoint login atau sedang di halaman login
+    const url = error.config?.url || '';
+    const isLoginRequest = url.includes('/auth/login') || url.includes('auth/login');
+    const isLoginPage = window.location.pathname.includes('/login');
+    
+    if (error.response?.status === 401 && !isLoginRequest && !isLoginPage) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
@@ -122,6 +127,14 @@ export const kitchenService = {
     api.patch(`/kitchen/${orderId}/items/${itemId}/status`, { status }),
   startCooking: (orderId) => api.patch(`/kitchen/${orderId}/start-cooking`),
   complete: (orderId) => api.patch(`/kitchen/${orderId}/complete`),
+};
+
+// ============ USERS API ============
+export const userService = {
+  getAll: () => api.get('/users'),
+  update: (id, data) => api.put(`/users/${id}`, data),
+  delete: (id) => api.delete(`/users/${id}`),
+  register: (data) => api.post('/auth/register', data),
 };
 
 export default api;
