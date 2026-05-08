@@ -13,6 +13,8 @@ import ReportsPage from './pages/ReportsPage';
 import TransactionsPage from './pages/TransactionsPage';
 import SettingsPage from './pages/SettingsPage';
 import StockPage from './pages/StockPage';
+import UsersPage from './pages/UsersPage';
+import AdminRegister from './pages/AdminRegister';
 
 // Customer Pages
 import CustomerLayout from './layouts/CustomerLayout';
@@ -75,9 +77,8 @@ function CustomerRoute({ children }) {
     return <Navigate to="/customer/login" replace />;
   }
 
-  // If staff tries to access, redirect to dashboard? 
-  // Let's just allow anyone to use customer facing app for now, or strictly:
-  if (user && user.role !== 'customer' && user.role !== 'admin') {
+  // Only customers can access customer-facing routes
+  if (user && user.role !== 'customer') {
      return <Navigate to="/dashboard" replace />;
   }
 
@@ -90,6 +91,7 @@ export default function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/register" element={<AdminRegister />} />
         
         {/* Customer Public Routes */}
         <Route path="/customer/login" element={<CustomerLogin />} />
@@ -132,6 +134,10 @@ export default function App() {
 
         <Route path="/settings" element={
           <ProtectedRoute allowedRoles={['admin']}><SettingsPage /></ProtectedRoute>
+        } />
+
+        <Route path="/users" element={
+          <ProtectedRoute allowedRoles={['admin']}><UsersPage /></ProtectedRoute>
         } />
 
         <Route path="/stock" element={

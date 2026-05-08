@@ -14,6 +14,7 @@ import {
   X,
   FileText,
   Package,
+  Users as UsersIcon,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -82,6 +83,12 @@ export default function Sidebar({ isOpen, onClose }) {
       label: 'Pengaturan',
       path: '/settings',
       icon: Settings,
+      roles: ['admin']
+    },
+    {
+      label: 'Kelola User',
+      path: '/users',
+      icon: UsersIcon,
       roles: ['admin']
     },
   ];

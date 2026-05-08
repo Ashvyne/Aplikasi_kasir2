@@ -147,6 +147,15 @@ export default function LoginPage() {
               Masuk sebagai Pelanggan
             </button>
           </p>
+          <p className="text-gray-500 text-xs">
+            Admin baru?{' '}
+            <button 
+              onClick={() => navigate('/admin/register')}
+              className="text-gray-400 hover:text-white transition underline decoration-dotted"
+            >
+              Daftar Akun Admin
+            </button>
+          </p>
           <p className="text-center text-gray-500 text-xs mt-6">
             CaféPOS © 2024 - Professional POS System
           </p>
