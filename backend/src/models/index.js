@@ -16,8 +16,8 @@ const StockIn = require('./StockIn');
 // ============ MODEL RELATIONSHIPS ============
 
 // Category -> Product (1:N)
-Product.belongsTo(Category, { foreignKey: 'category', as: 'categoryData' });
-Category.hasMany(Product, { foreignKey: 'category', as: 'products' });
+Product.belongsTo(Category, { foreignKey: 'category', as: 'categoryData', constraints: false });
+Category.hasMany(Product, { foreignKey: 'category', as: 'products', constraints: false });
 
 // RestaurantTable -> Order (1:N)
 Order.belongsTo(RestaurantTable, { foreignKey: 'tableId', as: 'table' });
